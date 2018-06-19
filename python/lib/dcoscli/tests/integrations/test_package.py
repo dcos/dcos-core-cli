@@ -753,27 +753,37 @@ def test_search_ends_with_wildcard():
 
 
 def test_search_start_with_wildcard():
+    assert_command(['dcos', 'package', 'repo', 'remove', 'Universe'])
+
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'package', 'search', '*nos', '--json'])
+        ['dcos', 'package', 'search', '*world', '--json'])
 
     assert returncode == 0
-    assert b'chronos' in stdout
     assert stderr == b''
 
     registries = json.loads(stdout.decode('utf-8'))
     assert len(registries['packages']) == 1
+    assert registries['packages'][0]['name'] == 'helloworld'
+
+    assert_command(
+        ['dcos', 'package', 'repo', 'add', 'Universe', UNIVERSE_REPO])
 
 
 def test_search_middle_with_wildcard():
+    assert_command(['dcos', 'package', 'repo', 'remove', 'Universe'])
+
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'package', 'search', 'c*s', '--json'])
+        ['dcos', 'package', 'search', 'hellow*d', '--json'])
 
     assert returncode == 0
-    assert b'chronos' in stdout
     assert stderr == b''
 
     registries = json.loads(stdout.decode('utf-8'))
-    assert len(registries['packages']) == 5
+    assert len(registries['packages']) == 1
+    assert registries['packages'][0]['name'] == 'helloworld'
+
+    assert_command(
+        ['dcos', 'package', 'repo', 'add', 'Universe', UNIVERSE_REPO])
 
 
 def _get_app_labels(app_id):
