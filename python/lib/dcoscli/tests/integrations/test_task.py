@@ -13,7 +13,7 @@ from dcos.util import create_schema
 
 from dcoscli.test.common import (assert_command, assert_lines,
                                  assert_lines_range, exec_command)
-from dcoscli.test.marathon import (add_app, app, pod, remove_app,
+from dcoscli.test.marathon import (add_app, app, remove_app,
                                    watch_all_deployments)
 from ..fixtures.task import task_fixture
 
@@ -25,6 +25,7 @@ FOLLOW = 'tests/data/file/follow.json'
 TWO_TASKS = 'tests/data/file/two_tasks.json'
 TWO_TASKS_FOLLOW = 'tests/data/file/two_tasks_follow.json'
 LS = 'tests/data/tasks/ls-app.json'
+HELLO_STDERR = 'tests/data/marathon/apps/hello-stderr.json'
 
 INIT_APPS = ((LS, 'ls-app'),
              (SLEEP1, 'test-app1'),
@@ -119,18 +120,15 @@ def test_log_single_file():
     assert len(stdout.decode('utf-8').split('\n')) > 0
 
 
-def test_log_pod_task():
-    good_pod_file = 'tests/data/marathon/pods/good.json'
-    with pod(good_pod_file, 'good-pod'):
+def test_log_task():
+    with app(HELLO_STDERR, 'test-hello-stderr'):
         returncode, stdout, stderr = exec_command(
-            ['dcos', 'task', 'log', 'good-container', 'stderr'])
+            ['dcos', 'task', 'log', 'test-hello-stderr', 'stderr',
+             '--lines=-1'])
 
-        # pod task log are not executor logs, so normal executor stderr
-        # logs shouldn't be seen and this pod shouldn't have any logging
-        # to stderr
         assert returncode == 0
         assert not stderr
-        assert not stdout
+        assert stdout == b'hello\n'
 
 
 def test_log_missing_file():
@@ -141,11 +139,6 @@ def test_log_missing_file():
     assert returncode == 1
     assert stdout == b''
     assert stderr == b'No logs found\n'
-
-
-def test_log_lines():
-    """ Test --lines """
-    assert_lines(['dcos', 'task', 'log', 'test-app1', '--lines=2'], 2)
 
 
 def test_log_lines_invalid():
@@ -188,13 +181,13 @@ def test_log_completed():
     assert stderr.startswith(b'No running tasks match ID [test-app-completed]')
 
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'log', '--completed', 'test-app-completed'])
+        ['dcos', 'task', 'log', '--completed', 'test-app-completed', 'stderr'])
     assert returncode == 0
     assert stderr == b''
     assert len(stdout.decode('utf-8').split('\n')) >= 3
 
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'log', '--all', 'test-app-completed'])
+        ['dcos', 'task', 'log', '--all', 'test-app-completed', 'stderr'])
     assert returncode == 0
     assert stderr == b''
     assert len(stdout.decode('utf-8').split('\n')) >= 3
