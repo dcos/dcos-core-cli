@@ -15,11 +15,10 @@ from urllib.parse import urlparse
 import click
 import pytest
 
-from dcos import config, constants, util
+from dcos import auth, config, constants, util
 from dcos_e2e.backends import AWS, Docker
 from dcos_e2e.cluster import Cluster
 from dcos_e2e.node import Node
-from dcoscli.cluster.main import setup
 from passlib.hash import sha512_crypt
 
 
@@ -126,11 +125,13 @@ def _run_tests(cluster, admin_username, admin_password):
 
     with dcos_tempdir():
         print(master_ip)
-        setup(
-            master_ip,
-            no_check=True,
+
+        dcos_url = "http://" + master_ip
+        config.set_val("core.dcos_url", dcos_url)
+        auth._get_dcostoken_by_dcos_uid_password_auth(
+            dcos_url,
             username=admin_username,
-            password_str=admin_password
+            password=admin_password
         )
 
         os.chdir("../cli")
