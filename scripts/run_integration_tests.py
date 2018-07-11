@@ -135,6 +135,8 @@ def _run_tests(cluster, admin_username, admin_password):
         )
 
         os.chdir("../cli")
+        os.chmod("tests/data/dcos.toml", 0o600)
+        os.chmod("tests/data/config/parse_error.toml", 0o600)
 
         retcode = pytest.main([
             '-vv',
