@@ -63,7 +63,8 @@ def test_get_missing_property(env):
 def test_dcos_url_without_scheme(env):
     with update_config("core.dcos_url", None, env):
         new = b"abc.com"
-        out = b"[core.dcos_url]: set to 'https://%b'\n" % (new)
+        out = (b"[core.dcos_url]: changed from 'http://dcos.snakeoil"
+               b".mesosphere.com' to 'https://%b'\n" % (new))
         assert_command(
             ['dcos', 'config', 'set', 'core.dcos_url', new.decode('utf-8')],
             stderr=out,
