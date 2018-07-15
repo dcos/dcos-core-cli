@@ -44,7 +44,7 @@ def run_tests(e2e_backend, installer_url, dcos_url, admin_username, admin_passwo
     }
 
     if e2e_backend == 'dcos_launch':
-        cluster_backend = AWS()
+        cluster_backend = AWS(aws_instance_type="m4.xlarge")
 
         with Cluster(cluster_backend=cluster_backend, agents=1) as cluster:
             dcos_config = {**cluster.base_config, **extra_config}
@@ -87,7 +87,7 @@ def run_tests(e2e_backend, installer_url, dcos_url, admin_username, admin_passwo
             public_ip_address=dcos_ip,
             private_ip_address=dcos_ip,
             ssh_key_path=Path(ssh_key_path),
-            default_ssh_user=ssh_user,
+            default_user=ssh_user,
         )])
 
         cluster = Cluster.from_nodes(
