@@ -44,7 +44,7 @@ node('py36') {
 
             print(master_ip)
 
-            withEnv(["DCOS_TEST_URL=${master_ip}"]) {
+            withEnv(["DCOS_TEST_URL=http://${master_ip}"]) {
                 node('windows') {
                     ws('C:\\windows\\workspace') {
                         dir("dcos-core-cli") {
@@ -69,8 +69,8 @@ node('py36') {
                                 export CLI_TEST_SSH_USER=centos; \
                                 export CLI_TEST_SSH_KEY_PATH=${DCOS_TEST_SSH_KEY_PATH}; \
                                 export CLI_TEST_MASTER_PROXY=true; \
-                                dist/dcos cluster setup ${DCOS_TEST_URL} \
-                                    --insecure --username=${DCOS_TEST_ADMIN_USERNAME} \
+                                dist/dcos config set core.dcos_url ${DCOS_TEST_URL}; \
+                                dist/dcos auth login --username=${DCOS_TEST_ADMIN_USERNAME} \
                                     --password-env=DCOS_TEST_ADMIN_PASSWORD; \
                                 dist/dcos config set core.reporting false; \
                                 dist/dcos config set core.timeout 30; \
