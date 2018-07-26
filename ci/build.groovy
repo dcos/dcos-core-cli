@@ -39,8 +39,8 @@ pipeline {
 
             sh '''
               bash -exc "
-                mkdir -p build/linux; \
-                cp python/lib/dcoscli/dist/dcos build/linux/"
+                mkdir -p build/linux/plugin/bin; \
+                cp python/lib/dcoscli/dist/dcos build/linux/plugin/bin/"
             '''
 
             stash includes: "build/**", name: "dcos-linux"
@@ -59,8 +59,8 @@ pipeline {
 
             sh '''
               bash -exc " \
-                mkdir -p build/darwin; \
-                cp python/lib/dcoscli/dist/dcos build/darwin/"
+                mkdir -p build/darwin/plugin/bin; \
+                cp python/lib/dcoscli/dist/dcos build/darwin/plugin/bin/"
             '''
 
             stash includes: "build/**", name: "dcos-darwin"
@@ -84,8 +84,8 @@ pipeline {
 
             bat '''
               bash -exc " \
-                mkdir -p build/windows; \
-                cp python/lib/dcoscli/dist/dcos.exe build/windows/"
+                mkdir -p build/windows/plugin/bin; \
+                cp python/lib/dcoscli/dist/dcos.exe build/windows/plugin/bin/"
             '''
 
             stash includes: "build/**", name: "dcos-windows"
@@ -176,7 +176,7 @@ pipeline {
       }
     }
 
-    stage("Publish binaries to S3") {
+    stage("Publish binaries and plugins to S3") {
       when {
         anyOf {
           branch 'master'
@@ -204,7 +204,8 @@ pipeline {
                 python -m venv env; \
                 source env/bin/activate; \
                 pip install -r requirements.txt; \
-                ./publish_binaries.py"
+                ./publish_binaries.py; \
+                ./publish_plugins.py"
             '''
         }
       }
