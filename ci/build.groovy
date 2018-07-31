@@ -184,7 +184,7 @@ pipeline {
         }
       }
 
-      agent { label 'py35' }
+      agent { label 'py36' }
 
       steps {
         withCredentials([
