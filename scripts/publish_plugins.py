@@ -60,9 +60,8 @@ for platform in platforms:
     )
 
 s3_client = boto3.resource('s3', region_name='us-west-2').meta.client
-artifacts = [
-    ("/linux/dcos-core-cli.zip", 'cli/plugins/dcos-core-cli/linux/x86-64/dcos-core-cli-{}.zip'.format(version)),
-]
 
-for f, bucket_key in artifacts:
-    s3_client.upload_file(build_path + "/" + f, "downloads.dcos.io", bucket_key)
+for platform in platforms:
+    zip_file = platform + "/dcos-core-cli.zip"
+    bucket_key = 'cli/plugins/dcos-core-cli/{}/{}/x86-64/dcos-core-cli.zip'.format(version, platform)
+    s3_client.upload_file(build_path + "/" + zip_file, "downloads.dcos.io", bucket_key)
