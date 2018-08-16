@@ -205,7 +205,6 @@ pipeline {
                 source env/bin/activate; \
                 pip install --upgrade pip setuptools; \
                 pip install -r requirements.txt; \
-                ./publish_binaries.py; \
                 ./publish_plugins.py"
             '''
         }
