@@ -484,7 +484,7 @@ class Client(object):
             deployments = response.json()
 
         return deployments
-        
+
     def _cancel_deployment(self, deployment_id, force):
         """Cancels an application deployment.
 
