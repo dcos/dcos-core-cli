@@ -125,11 +125,15 @@ def _find_distributions(subcommand_dir):
     if subcommand_dir and os.path.isdir(subcommand_dir):
         for subdir in os.listdir(subcommand_dir):
             full_subdir = os.path.join(subcommand_dir, subdir)
-            bin_subdir = os.path.join(full_subdir, constants.DCOS_SUBCOMMAND_ENV_SUBDIR)
+            bin_subdir = os.path.join(
+                full_subdir,
+                constants.DCOS_SUBCOMMAND_ENV_SUBDIR)
 
-            # this is package.json check is to prevent plugins that may not have a package.json file from
-            # breaking `dcos package list` by ignoring that subcommand
-            if os.path.isdir(bin_subdir) and os.path.isfile(os.path.join(full_subdir, "package.json")) :
+            # this is package.json check is to prevent plugins that may not
+            # have a package.json file from breaking `dcos package list` by
+            # ignoring that subcommand
+            if os.path.isdir(bin_subdir) and os.path.isfile(
+                    os.path.join(full_subdir, "package.json")):
                 subcommand_dirs.append(subdir)
 
     return subcommand_dirs
