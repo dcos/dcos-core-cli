@@ -98,7 +98,7 @@ class PackageManager:
         """
         return self.cosmos.enabled()
 
-    def install_app(self, pkg, options, manager_id = None):
+    def install_app(self, pkg, options, manager_id):
         """Installs a package's application
 
         :param pkg: the package to install
@@ -117,7 +117,7 @@ class PackageManager:
 
         self.cosmos_post("install", params)
 
-    def uninstall_app(self, package_name, remove_all, app_id, manager_id = None):
+    def uninstall_app(self, package_name, remove_all, app_id, manager_id):
         """Uninstalls an app.
 
         :param package_name: The package to uninstall

@@ -53,7 +53,12 @@ def uninstall(pkg, package_name, remove_all, app_id, cli, app, manager_id):
         # `remove_all` and `app_id` as described in the docstring for this
         # function).
         if app and installed_app:
-            if not pkg.uninstall_app(package_name, remove_all, app_id, manager_id):
+            if not pkg.uninstall_app(
+                package_name, 
+                remove_all, 
+                app_id, 
+                manager_id):
+                     
                 raise DCOSException("Couldn't uninstall package")
 
         # This forces an unconditional uninstall of the CLI associated with the
