@@ -98,7 +98,7 @@ class PackageManager:
         """
         return self.cosmos.enabled()
 
-    def install_app(self, pkg, options):
+    def install_app(self, pkg, options, manager_id = None):
         """Installs a package's application
 
         :param pkg: the package to install
@@ -106,15 +106,18 @@ class PackageManager:
         :param options: user supplied package parameters
         :type options: dict
         :rtype: None
+        :param manager_id: the custom manager to forward this request to
+        :type manager_id: str
         """
 
-        params = {"packageName": pkg.name(), "packageVersion": pkg.version()}
+        params = {"packageName": pkg.name(), "packageVersion": pkg.version()
+                  "managerId": manager_id}
         if options is not None:
             params["options"] = options
 
         self.cosmos_post("install", params)
 
-    def uninstall_app(self, package_name, remove_all, app_id):
+    def uninstall_app(self, package_name, remove_all, app_id, manager_id = None):
         """Uninstalls an app.
 
         :param package_name: The package to uninstall
@@ -125,9 +128,11 @@ class PackageManager:
         :type app_id: str
         :returns: whether uninstall was successful or not
         :rtype: bool
+        :param manager_id: the custom manager to forward this request to
+        :type manager_id: str
         """
 
-        params = {"packageName": package_name}
+        params = {"packageName": package_name, "managerId": manager_id}
         if remove_all is True:
             params["all"] = True
         if app_id is not None:

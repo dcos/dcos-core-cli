@@ -8,7 +8,7 @@ logger = util.get_logger(__name__)
 emitter = emitting.FlatEmitter()
 
 
-def uninstall(pkg, package_name, remove_all, app_id, cli, app):
+def uninstall(pkg, package_name, remove_all, app_id, cli, app, manager_id):
     """Uninstalls a package.
 
     :param pkg: package manager to uninstall with
@@ -24,6 +24,8 @@ def uninstall(pkg, package_name, remove_all, app_id, cli, app):
     :param app: Whether to remove app only
     :type app: boolean
     :rtype: None
+    :param manager_id: the custom manager to forward this request to
+    :type manager_id: str
     """
 
     installed = installed_packages(
@@ -51,7 +53,7 @@ def uninstall(pkg, package_name, remove_all, app_id, cli, app):
         # `remove_all` and `app_id` as described in the docstring for this
         # function).
         if app and installed_app:
-            if not pkg.uninstall_app(package_name, remove_all, app_id):
+            if not pkg.uninstall_app(package_name, remove_all, app_id, manager_id):
                 raise DCOSException("Couldn't uninstall package")
 
         # This forces an unconditional uninstall of the CLI associated with the
@@ -71,7 +73,7 @@ def uninstall(pkg, package_name, remove_all, app_id, cli, app):
     # leave the CLI in place so other instances of the app can continue to
     # interact with it.
     if installed_app:
-        if not pkg.uninstall_app(package_name, remove_all, app_id):
+        if not pkg.uninstall_app(package_name, remove_all, app_id, manager_id):
             raise DCOSException("Couldn't uninstall package")
 
     if installed_cli and (remove_all or len(installed_app) <= 1):
