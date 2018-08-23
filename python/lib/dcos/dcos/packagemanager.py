@@ -110,7 +110,7 @@ class PackageManager:
         :type manager_id: str
         """
 
-        params = {"packageName": pkg.name(), "packageVersion": pkg.version()
+        params = {"packageName": pkg.name(), "packageVersion": pkg.version(),
                   "managerId": manager_id}
         if options is not None:
             params["options"] = options
