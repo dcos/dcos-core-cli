@@ -73,7 +73,7 @@ def _cmds():
         cmds.Command(
             hierarchy=['package', 'install'],
             arg_keys=['<package-name>', '--package-version', '--options',
-                      '--cli', '--global', '--app', '--yes'],
+                      '--cli', '--global', '--app', '--yes', '--manager-id'],
             function=_install),
 
         cmds.Command(
@@ -89,7 +89,7 @@ def _cmds():
         cmds.Command(
             hierarchy=['package', 'uninstall'],
             arg_keys=['<package-name>', '--all', '--app-id', '--cli', '--app',
-                      '--yes'],
+                      '--yes', '--manager-id'],
             function=_uninstall),
 
         cmds.Command(
@@ -298,7 +298,7 @@ def _describe(package_name,
 
 
 def _install(package_name, package_version, options_path, cli,
-             global_, app, yes):
+             global_, app, yes, manager_id):
     """Install the specified package.
 
     :param package_name: the package to install
@@ -317,6 +317,7 @@ def _install(package_name, package_version, options_path, cli,
     :type yes: bool
     :returns: process status
     :rtype: int
+    :manager_id: str defines the custom manager to forward this operation to
     """
 
     if global_:
@@ -367,7 +368,7 @@ def _install(package_name, package_version, options_path, cli,
 
         emitter.publish(msg)
 
-        package_manager.install_app(pkg, user_options)
+        package_manager.install_app(pkg, user_options, manager_id)
 
     if cli and pkg.cli_definition():
         # Install subcommand
@@ -480,7 +481,7 @@ def _search(json_, query):
     return 0
 
 
-def _uninstall(package_name, remove_all, app_id, cli, app, skip_confirmation):
+def _uninstall(package_name, remove_all, app_id, cli, app, skip_confirmation, manager_id):
     """Uninstall the specified package.
 
     :param package_name: The package to uninstall
@@ -493,6 +494,9 @@ def _uninstall(package_name, remove_all, app_id, cli, app, skip_confirmation):
     :type skip_confirmation: boolean
     :returns: Process status
     :rtype: int
+    :param manager_id: defines the custom manager to forward this operation to
+    :manager_id: str
+
     """
 
     package_manager = get_package_manager()
@@ -512,7 +516,7 @@ def _uninstall(package_name, remove_all, app_id, cli, app, skip_confirmation):
             return 0
 
     package.uninstall(
-        package_manager, package_name, remove_all, app_id, cli, app)
+        package_manager, package_name, remove_all, app_id, cli, app, manager_id)
 
     return 0
 
