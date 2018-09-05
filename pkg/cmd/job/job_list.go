@@ -12,6 +12,7 @@ import (
 // newCmdClusterList lists the jobs.
 func newCmdJobList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
+	var quietOutput bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all job definitions",
@@ -29,6 +30,13 @@ func newCmdJobList(ctx api.Context) *cobra.Command {
 			)
 			if err != nil {
 				return err
+			}
+
+			if quietOutput {
+				for _, job := range jobs {
+					fmt.Fprintln(ctx.Out(), job.ID)
+				}
+				return nil
 			}
 
 			if jsonOutput {
@@ -50,6 +58,7 @@ func newCmdJobList(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns clusters in json format")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns jobs in json format")
+	cmd.Flags().BoolVar(&quietOutput, "quiet", false, "returns only IDs of listed jobs")
 	return cmd
 }
