@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const apiTimeFormat = "2006-01-02T15:04:05.000-0700"
+
 // Job represents a Job returned by the Metronome API.
 type Job struct {
 	ID          string            `json:"id"`
@@ -139,12 +141,12 @@ func (j *Job) LastRunStatus() (string, error) {
 		return "Failure", nil
 	}
 
-	lastSuccess, err := time.Parse(time.RFC3339, j.HistorySummary.LastSuccessAt)
+	lastSuccess, err := time.Parse(apiTimeFormat, j.HistorySummary.LastSuccessAt)
 	if err != nil {
 		return "", err
 	}
 
-	lastFailure, err := time.Parse(time.RFC3339, j.HistorySummary.LastFailureAt)
+	lastFailure, err := time.Parse(apiTimeFormat, j.HistorySummary.LastFailureAt)
 	if err != nil {
 		return "", err
 	}
