@@ -2,6 +2,7 @@ package job
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
@@ -9,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newCmdClusterList lists the jobs.
+// newCmdJobList lists the jobs.
 func newCmdJobList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	var quietOutput bool
