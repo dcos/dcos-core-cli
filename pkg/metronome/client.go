@@ -104,3 +104,26 @@ func (c *Client) RunJob(runID string) (*Run, error) {
 		return nil, apiError
 	}
 }
+
+// RemoveJob removes a job.
+func (c *Client) RemoveJob(jobID string) error {
+	resp, err := c.http.Delete("/v1/jobs/" + jobID)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 409:
+		return fmt.Errorf("job %s is running", jobID)
+	default:
+		var apiError *dcos.Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return err
+		}
+		return apiError
+	}
+}
