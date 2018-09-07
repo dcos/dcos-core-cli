@@ -17,7 +17,9 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		newCmdJobAdd(ctx),
 		newCmdJobList(ctx),
+		newCmdJobUpdate(ctx),
 		newCmdJobRemove(ctx),
 		newCmdJobRun(ctx),
 	)

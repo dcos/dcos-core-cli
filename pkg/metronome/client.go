@@ -1,9 +1,13 @@
 package metronome
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/dcos/dcos-cli/pkg/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
@@ -77,6 +81,57 @@ func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 	err = json.NewDecoder(resp.Body).Decode(&jobs)
 
 	return jobs, err
+}
+
+func (c *Client) addOrUpdate(filename string, add bool) (*Job, error) {
+	jsonFile, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonBytes, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var job Job
+	if err = json.Unmarshal(jsonBytes, &job); err != nil {
+		return nil, err
+	}
+
+	var req *http.Request
+	buf := bytes.NewBuffer(jsonBytes)
+	if add {
+		req, err = c.http.NewRequest("POST", "/v1/jobs", buf, httpclient.FailOnErrStatus(true))
+	} else {
+		req, err = c.http.NewRequest("PUT", "/v1/jobs/"+job.ID, buf, httpclient.FailOnErrStatus(true))
+	}
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err = json.NewDecoder(resp.Body).Decode(&job); err != nil {
+		return nil, err
+	}
+
+	return &job, nil
+}
+
+// Add creates a job
+func (c *Client) Add(filename string) (*Job, error) {
+	return c.addOrUpdate(filename, true)
+}
+
+// Update updates an existing job 
+func (c *Client) Update(filename string) (*Job, error) {
+	return c.addOrUpdate(filename, false)
 }
 
 // RunJob triggers a run of the job with a given runID right now.
