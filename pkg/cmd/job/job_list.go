@@ -48,11 +48,7 @@ func newCmdJobList(ctx api.Context) *cobra.Command {
 
 			table := cli.NewTable(ctx.Out(), []string{"ID", "STATUS", "LAST RUN"})
 			for _, job := range jobs {
-				lastRunStatus, err := job.LastRunStatus()
-				if err != nil {
-					return err
-				}
-				table.Append([]string{job.ID, job.Status(), lastRunStatus})
+				table.Append([]string{job.ID, job.Status(), job.LastRunStatus()})
 			}
 			table.Render()
 
