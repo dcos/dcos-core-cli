@@ -1162,6 +1162,13 @@ class TaskIO(object):
         # exiting.
         self.exception = None
 
+        # Allow an exit sequence to be used to break the CLIs attachment to
+        # the remote task. Depending on the call, this may be disabled, or
+        # the exit sequence to be used may be overwritten.
+        self.supports_exit_sequence = True
+        self.exit_sequence = b'\x10\x11'  # Ctrl-p, Ctrl-q
+        self.exit_sequence_detected = False
+
     def attach(self, _no_stdin=False):
         """ Attach the stdin/stdout/stderr of the CLI to the
         STDIN/STDOUT/STDERR of a running task.
@@ -1469,6 +1476,10 @@ class TaskIO(object):
             while True:
                 record = self.input_queue.get()
                 if not record:
+                    if self.exit_sequence_detected:
+                        sys.stdout.write("\r\n")
+                        sys.stdout.flush()
+                        self.exit_event.set()
                     break
                 yield record
 
@@ -1515,6 +1526,38 @@ class TaskIO(object):
             timeout=None,
             **req_extra_args)
 
+    def _detect_exit_sequence(self, chunk):
+        """Detects if 'self.exit_sequence' is present in 'chunk'.
+
+        If a partial exit sequence is detected at the end of 'chunk', then
+        more characters are read from 'stdin' and appended to 'chunk' in
+        search of the full sequence. Since python cannot pass variables by
+        reference, we return a modified 'chunk' with the extra characters
+        read if necessary.
+
+        If the exit sequence is found, the class variable
+        'exit_sequence_detected' is set to True.
+
+        :param chunk: a byte array to search for the exit sequence in
+        :type chunk: byte array
+        :returns: a modified byte array containing the original 'chunk' plus
+                  any extra characters read in search of the exit sequence
+        :rtype: byte array
+        """
+        if not self.supports_exit_sequence:
+            return chunk
+
+        if chunk.find(self.exit_sequence) != -1:
+            self.exit_sequence_detected = True
+            return chunk
+
+        for i in reversed(range(1, len(self.exit_sequence))):
+            if self.exit_sequence[:-i] == chunk[len(chunk)-i:]:
+                chunk += os.read(sys.stdin.fileno(), 1)
+                return self._detect_exit_sequence(chunk)
+
+        return chunk
+
     def _input_thread(self):
         """Reads from STDIN and places a message
         with that data onto the input_queue.
@@ -1531,6 +1574,10 @@ class TaskIO(object):
                         'data': ''}}}}
 
         for chunk in iter(partial(os.read, sys.stdin.fileno(), 1024), b''):
+            chunk = self._detect_exit_sequence(chunk)
+            if self.exit_sequence_detected:
+                break
+
             message[
                 'attach_container_input'][
                     'process_io'][
