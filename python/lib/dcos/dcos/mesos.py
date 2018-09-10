@@ -1268,7 +1268,12 @@ class TaskIO(object):
         try:
             if self.interactive:
                 tty.setraw(fd, when=termios.TCSANOW)
-                self._window_resize(signal.SIGWINCH, None)
+                # To force a redraw of the remote terminal, we first resize it
+                # to 0 before setting it to the actual size of our local
+                # terminal. After that, all terminal resizing is handled in our
+                # SIGWINCH handler.
+                self._window_resize(signal.SIGWINCH, dimensions=[0, 0])
+                self._window_resize(signal.SIGWINCH)
                 signal.signal(signal.SIGWINCH, self._window_resize)
 
             self._start_threads()
@@ -1643,7 +1648,7 @@ class TaskIO(object):
             self.input_queue.put(self.encoder.encode(message))
             time.sleep(interval)
 
-    def _window_resize(self, signum, frame):
+    def _window_resize(self, signum=None, frame=None, dimensions=None):
         """Signal handler for SIGWINCH.
 
         Generates a message with the current dimensions of the
@@ -1656,7 +1661,10 @@ class TaskIO(object):
         """
 
         # Determine the size of our terminal, and create the message to be sent
-        rows, columns = os.popen('stty size', 'r').read().split()
+        if dimensions:
+            rows, columns = dimensions
+        else:
+            rows, columns = os.popen('stty size', 'r').read().split()
 
         message = {
             'type': 'ATTACH_CONTAINER_INPUT',
