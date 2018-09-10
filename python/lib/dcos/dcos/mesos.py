@@ -114,7 +114,7 @@ class DCOSClient(object):
         :rtype: dict
         """
 
-        url = self.master_url('master/state.json')
+        url = self.master_url('master/state')
         return http.get(url, timeout=self._timeout).json()
 
     def get_slave_state(self, slave_id, private_url):
@@ -131,7 +131,7 @@ class DCOSClient(object):
 
         """
 
-        url = self.slave_url(slave_id, private_url, 'state.json')
+        url = self.slave_url(slave_id, private_url, 'state')
         return http.get(url, timeout=self._timeout).json()
 
     def get_state_summary(self):
@@ -355,7 +355,7 @@ class MesosDNSClient(object):
 class Master(object):
     """Mesos Master Model
 
-    :param state: Mesos master's state.json
+    :param state: Mesos master's state
     :type state: dict
     """
 
@@ -365,9 +365,9 @@ class Master(object):
         self._slaves = {}
 
     def state(self):
-        """Returns master's master/state.json.
+        """Returns master's master/state.
 
-        :returns: state.json
+        :returns: state
         :rtype: dict
         """
 
@@ -608,9 +608,9 @@ class Master(object):
 class Slave(object):
     """Mesos Slave Model
 
-    :param short_state: slave's entry from the master's state.json
+    :param short_state: slave's entry from the master's state
     :type short_state: dict
-    :param state: slave's state.json
+    :param state: slave's state
     :type state: dict | None
     :param master: slave's master
     :type master: Master
@@ -622,10 +622,10 @@ class Slave(object):
         self._master = master
 
     def state(self):
-        """Get the slave's state.json object.  Fetch it if it's not already
+        """Get the slave's state object.  Fetch it if it's not already
         an instance variable.
 
-        :returns: This slave's state.json object
+        :returns: This slave's state object
         :rtype: dict
         """
 
@@ -645,7 +645,7 @@ class Slave(object):
         return 'http://{}:{}'.format(parsed_pid[1], parsed_pid[2])
 
     def _framework_dicts(self):
-        """Returns the framework dictionaries from the state.json dict
+        """Returns the framework dictionaries from the state dict
 
         :returns: frameworks
         :rtype: [dict]
@@ -654,7 +654,7 @@ class Slave(object):
         return _merge(self.state(), ['frameworks', 'completed_frameworks'])
 
     def executor_dicts(self):
-        """Returns the executor dictionaries from the state.json
+        """Returns the executor dictionaries from the state
 
         :returns: executors
         :rtype: [dict]
@@ -667,7 +667,7 @@ class Slave(object):
     def fault_domain(self):
         """ Fault domain for a given task e.g.
 
-        :returns: fault domain structure from state.json
+        :returns: fault domain structure from state
         :rtype: dict | None
         """
         if 'domain' not in self._short_state:
