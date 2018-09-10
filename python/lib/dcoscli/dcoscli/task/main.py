@@ -123,6 +123,11 @@ def _cmds():
             function=_info),
 
         cmds.Command(
+            hierarchy=['task', 'attach'],
+            arg_keys=['<task>', '--no-stdin'],
+            function=_attach),
+
+        cmds.Command(
             hierarchy=['task', 'log'],
             arg_keys=['--all', '--follow', '--completed', '--lines', '<task>',
                       '<file>'],
@@ -193,6 +198,23 @@ def _task(task, all_, completed, json_):
         if output:
             emitter.publish(output)
 
+    return 0
+
+
+def _attach(task, no_stdin=False):
+    """ Attach the stdin/stdout/stderr of the CLI to the
+    STDIN/STDOUT/STDERR of a running task.
+
+    :param task: task ID pattern to match
+    :type task: str
+    :param no_stdin: True if we should *not* attach stdin,
+                     False if we should
+    :type no_stdin: bool
+    :rtype int
+    """
+
+    task_io = mesos.TaskIO(task)
+    task_io.attach(no_stdin)
     return 0
 
 

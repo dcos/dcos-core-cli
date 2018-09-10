@@ -1162,6 +1162,31 @@ class TaskIO(object):
         # exiting.
         self.exception = None
 
+    def attach(self, _no_stdin=False):
+        """ Attach the stdin/stdout/stderr of the CLI to the
+        STDIN/STDOUT/STDERR of a running task.
+
+        As of now, we can only attach to tasks launched with a remote TTY
+        already set up for them. If we try to attach to a task that was
+        launched without a remote TTY attached, this command will fail.
+
+        :param task: task ID pattern to match
+        :type task: str
+        :param no_stdin: True if we should *not* attach stdin,
+                         False if we should
+        :type no_stdin: bool
+        """
+
+        # Store relevant parameters of the call for later.
+        self.interactive = not _no_stdin
+        self.tty = True
+
+        # Set the entry point of the output thread to be a call to
+        # _attach_container_output.
+        self.output_thread_entry_point = self._attach_container_output
+
+        self._run()
+
     def exec(self, _cmd, _args=None, _interactive=False, _tty=False):
         """Execute a new process inside of a given task by redirecting
         STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
@@ -1313,6 +1338,30 @@ class TaskIO(object):
             args=(self._output_thread,))
         thread.daemon = True
         thread.start()
+
+    def _attach_container_output(self):
+        """Streams all output data (e.g. STDOUT/STDERR) to the
+        client from the agent. """
+
+        message = {
+            'type': 'ATTACH_CONTAINER_OUTPUT',
+            'attach_container_output': {
+                'container_id': self.container_id}}
+
+        req_extra_args = {
+            'stream': True,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Accept': 'application/recordio',
+                'Message-Accept': 'application/json'}}
+
+        response = http.post(
+            self.agent_url,
+            data=json.dumps(message),
+            timeout=None,
+            **req_extra_args)
+
+        self._process_output_stream(response)
 
     def _launch_nested_container_session(self):
         """Sends a request to the Mesos Agent to launch a new
