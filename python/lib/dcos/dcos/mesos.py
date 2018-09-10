@@ -1094,14 +1094,7 @@ class TaskIO(object):
     HEARTBEAT_INTERVAL = 30
     HEARTBEAT_INTERVAL_NANOSECONDS = HEARTBEAT_INTERVAL * 1000000000
 
-    def __init__(self, task_id, cmd=None, args=None,
-                 interactive=False, tty=False):
-        # Store relevant parameters of the call for later.
-        self.cmd = cmd
-        self.interactive = interactive
-        self.tty = tty
-        self.args = args
-
+    def __init__(self, task_id):
         # Create a client and grab a reference to the DC/OS master.
         client = DCOSClient()
         master = get_master(client)
@@ -1133,11 +1126,7 @@ class TaskIO(object):
                 path="api/v1")
 
         # Grab a reference to the container ID for the task.
-        self.parent_id = master.get_container_id(task_id)
-
-        # Generate a new UUID for the nested container
-        # used to run commands passed to `task exec`.
-        self.container_id = str(uuid.uuid4())
+        self.container_id = master.get_container_id(task_id)
 
         # Set up a recordio encoder and decoder
         # for any incoming and outgoing messages.
@@ -1173,7 +1162,45 @@ class TaskIO(object):
         # exiting.
         self.exception = None
 
-    def run(self):
+    def exec(self, _cmd, _args=None, _interactive=False, _tty=False):
+        """Execute a new process inside of a given task by redirecting
+        STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
+
+        If a tty is requested, we take over the current terminal and
+        put it into raw mode. We make sure to reset the terminal back
+        to its original settings before exiting.
+
+        :param cmd: The command to launch inside the task's container
+        :type args: cmd
+        :param args: Additional arguments for the command
+        :type args: list
+        :param interactive: attach stdin
+        :type interactive: bool
+        :param tty: attach a tty
+        :type tty: bool
+        """
+
+        # Store relevant parameters of the call for later.
+        self.cmd = _cmd
+        self.args = _args
+        self.interactive = _interactive
+        self.tty = _tty
+
+        # Override the container ID with the current container ID as the
+        # parent, and generate a new UUID for the nested container used to
+        # run commands passed to `task exec`.
+        self.container_id = {
+            'parent': self.container_id,
+            'value': str(uuid.uuid4())
+        }
+
+        # Set the entry point of the output thread to be a call to
+        # _launch_nested_container_session.
+        self.output_thread_entry_point = self._launch_nested_container_session
+
+        self._run()
+
+    def _run(self):
         """Run the helper threads in this class which enable streaming
         of STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
 
@@ -1275,7 +1302,7 @@ class TaskIO(object):
         # data messages from it and feeds them to an output_queue.
         thread = threading.Thread(
             target=self._thread_wrapper,
-            args=(self._launch_nested_container_session,))
+            args=(self.output_thread_entry_point,))
         thread.daemon = True
         thread.start()
 
@@ -1296,10 +1323,7 @@ class TaskIO(object):
         message = {
             'type': "LAUNCH_NESTED_CONTAINER_SESSION",
             'launch_nested_container_session': {
-                'container_id': {
-                    'parent': self.parent_id,
-                    'value': self.container_id
-                },
+                'container_id': self.container_id,
                 'command': {
                     'value': self.cmd,
                     'arguments': [self.cmd] + self.args,
@@ -1378,9 +1402,7 @@ class TaskIO(object):
                 'type': 'ATTACH_CONTAINER_INPUT',
                 'attach_container_input': {
                     'type': 'CONTAINER_ID',
-                    'container_id': {
-                        'parent': self.parent_id,
-                        'value': self.container_id}}}
+                    'container_id': self.container_id}}
 
             yield self.encoder.encode(message)
 

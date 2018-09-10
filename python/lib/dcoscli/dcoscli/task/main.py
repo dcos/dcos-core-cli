@@ -548,8 +548,8 @@ def _exec(task, cmd, args=None, interactive=False, tty=False):
     :rtype int
     """
 
-    task_io = mesos.TaskIO(task, cmd, args, interactive, tty)
-    task_io.run()
+    task_io = mesos.TaskIO(task)
+    task_io.exec(cmd, args, interactive, tty)
     return 0
 
 
