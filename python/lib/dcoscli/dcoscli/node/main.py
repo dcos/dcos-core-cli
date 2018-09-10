@@ -882,11 +882,9 @@ def _mesos_files(leader, slave_id):
 
 def _ssh(leader, slave, option, config_file, user, master_proxy, proxy_ip,
          private_ip, command):
-    """SSH into a DC/OS node using the IP addresses found in master's
-       state.json
+    """SSH into a DC/OS node using the IP addresses found in master's state
 
-    :param leader: True if the user has opted to SSH into the leading
-                   master
+    :param leader: True if the user has opted to SSH into the leading master
     :type leader: bool | None
     :param slave: The slave ID if the user has opted to SSH into a slave
     :type slave: str | None
