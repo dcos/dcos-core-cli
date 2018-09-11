@@ -116,6 +116,10 @@ def _node_summary_data(datapoints):
 
     cpu_used = _get_datapoint_value(datapoints, 'load.1min')
     cpu_used_pc = _get_datapoint_value(datapoints, 'cpu.total')
+    if cpu_used is None or cpu_used_pc is None:
+        cpu = "N/A"
+    else:
+        cpu = '{:0.2f} ({:0.2f}%)'.format(cpu_used, cpu_used_pc)
 
     mem_total = _get_datapoint_value(datapoints, 'memory.total')
     mem_free = _get_datapoint_value(datapoints, 'memory.free')
@@ -129,7 +133,7 @@ def _node_summary_data(datapoints):
     disk_used_pc = _percentage(disk_used, disk_total)
 
     return {
-        'cpu': '{:0.2f} ({:0.2f}%)'.format(cpu_used, cpu_used_pc),
+        'cpu': cpu,
         'mem': '{:0.2f}GiB ({:0.2f}%)'.format(_gib(mem_used), mem_used_pc),
         'disk': '{:0.2f}GiB ({:0.2f}%)'.format(_gib(disk_used), disk_used_pc)
     }
@@ -201,6 +205,8 @@ def _format_datapoints(datapoints):
         return ', '.join(pairs)
 
     def _format_value(v, u):
+        if v is None:
+            return "N/A"
         if u == 'bytes':
             return '{:0.2f}GiB'.format(_gib(v))
         if u == 'percent':
