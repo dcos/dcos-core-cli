@@ -672,25 +672,30 @@ def test_cli_global():
             stdout=helloworld_json)
 
 
-def test_uninstall_multiple_frameworknames(zk_znode):
+def test_uninstall_multiple_frameworknames():
     retcode, _, _ = exec_command([
-        'dcos', 'package', 'install',
-        'chronos', '--yes', '--options=tests/data/package/chronos-1.json'])
+        'dcos', 'package', 'install', 'helloworld', '--yes',
+        '--options=tests/data/package/helloworld-1.json'])
     assert retcode == 0
 
     retcode, _, _ = exec_command([
-        'dcos', 'package', 'install',
-        'chronos', '--yes', '--options=tests/data/package/chronos-2.json'])
+        'dcos', 'package', 'install', 'helloworld', '--yes',
+        '--options=tests/data/package/helloworld-2.json'])
     assert retcode == 0
 
     watch_all_deployments()
 
-    _uninstall_chronos(args=['--app-id=chronos-user-1'], returncode=1)
-    _uninstall_chronos(args=['--app-id=chronos-user-2'], returncode=1)
+    retcode, _, _ = exec_command([
+        'dcos', 'package', 'uninstall',
+        'helloworld', '--yes', '--app-id=hello-1'])
+    assert retcode == 0
 
-    for framework in get_services(args=['--inactive']):
-        if framework['name'] == 'chronos-user':
-            service_shutdown(framework['id'])
+    retcode, _, _ = exec_command([
+        'dcos', 'package', 'uninstall',
+        'helloworld', '--yes', '--app-id=hello-2'])
+    assert retcode == 0
+
+    watch_all_deployments()
 
 
 def test_search():
