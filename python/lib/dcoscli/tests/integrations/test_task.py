@@ -284,6 +284,8 @@ def test_ls_completed():
     assert re.match(ls_line, lines[0])
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task exec' not supported on Windows")
 def test_exec_non_interactive():
     with open('tests/data/tasks/lorem-ipsum.txt') as text:
         content = text.read()
@@ -296,6 +298,8 @@ def test_exec_non_interactive():
             stdout=bytes(content, 'UTF-8'))
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task exec' not supported on Windows")
 def test_exec_interactive():
     with open('tests/data/tasks/lorem-ipsum.txt') as text:
         content = bytes(text.read(), 'UTF-8')
@@ -308,6 +312,8 @@ def test_exec_interactive():
             stdout=content, stdin=text)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task exec' not supported on Windows")
 def test_exec_match_id_pattern():
     assert_command(['dcos', 'task', 'exec', 'app1', 'true'])
     assert_command(['dcos', 'task', 'exec', 'app2', 'true'])
