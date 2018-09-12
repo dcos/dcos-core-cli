@@ -290,7 +290,7 @@ def dcos_tempdir(copy=False):
             os.environ.pop(constants.DCOS_DIR_ENV)
 
 
-def popen_tty(cmd):
+def popen_tty(cmd, shell=True):
     """Open a process with stdin connected to a pseudo-tty.  Returns a
 
     :param cmd: command to run
@@ -311,7 +311,7 @@ def popen_tty(cmd):
                             stderr=subprocess.PIPE,
                             preexec_fn=os.setsid,
                             close_fds=True,
-                            shell=True)
+                            shell=shell)
     os.close(slave)
 
     return (proc, master)
