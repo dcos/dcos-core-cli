@@ -12,10 +12,15 @@ import dcos.util as util
 from dcos.util import create_schema
 
 from dcoscli.test.common import (assert_command, assert_lines,
-                                 assert_lines_range, exec_command)
+                                 assert_lines_range, exec_command,
+                                 popen_tty)
 from dcoscli.test.marathon import (add_app, app, remove_app,
                                    watch_all_deployments)
 from ..fixtures.task import task_fixture
+
+if not util.is_windows_platform():
+    import termios
+    import tty
 
 SLEEP_COMPLETED = 'tests/data/marathon/apps/sleep-completed.json'
 SLEEP_COMPLETED1 = 'tests/data/marathon/apps/sleep-completed1.json'
@@ -25,9 +30,11 @@ FOLLOW = 'tests/data/file/follow.json'
 TWO_TASKS = 'tests/data/file/two_tasks.json'
 TWO_TASKS_FOLLOW = 'tests/data/file/two_tasks_follow.json'
 LS = 'tests/data/tasks/ls-app.json'
+SH = 'tests/data/tasks/sh-app.json'
 HELLO_STDERR = 'tests/data/marathon/apps/hello-stderr.json'
 
 INIT_APPS = ((LS, 'ls-app'),
+             (SH, 'sh-app'),
              (SLEEP1, 'test-app1'),
              (SLEEP2, 'test-app2'))
 NUM_TASKS = len(INIT_APPS)
@@ -319,6 +326,28 @@ def test_exec_match_id_pattern():
     assert_command(['dcos', 'task', 'exec', 'app2', 'true'])
     returncode, _, _ = exec_command(['dcos', 'task', 'exec', 'app', 'true'])
     assert returncode != 0
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task attach' not supported on Windows")
+def test_attach():
+    task_id = _get_task_id('sh-app')
+
+    proc, master = popen_tty('dcos task attach ' + task_id)
+    master = os.fdopen(master, 'w')
+    tty.setraw(master, when=termios.TCSANOW)
+
+    master.write("echo 'Hello World!'\r\n")
+    master.flush()
+
+    echo = proc.stdout.read(33).decode("utf-8")
+    assert echo == "echo 'Hello World!'\r\nHello World!"
+
+    master.buffer.write(b'\x10\x11')
+    master.flush()
+
+    assert proc.wait() == 0
+    master.close()
 
 
 def _mark_non_blocking(file_):
