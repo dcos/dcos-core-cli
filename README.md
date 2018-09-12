@@ -55,11 +55,11 @@ Please follow your platform's instructions on how to do that.
     [packages](https://packaging.python.org/en/latest/installing.html#installing-requirements)
 2.  Clone git repo for the dcos cli:
 
-        git clone git@github.com:dcos/dcos-cli.git
+        git clone git@github.com:dcos/dcos-core-cli.git
 
 3.  Change directory to the repo directory:
 
-        cd dcos-cli
+        cd dcos-core-cli
 
 ###  Setup virtualenv for the dcos project
 
@@ -150,7 +150,7 @@ Once you have your cluster up and running you need to modify your
 environment in order to run the tests. A simple script you can use to
 modify your environment can be seen below.
 
-*NOTE*: Make sure you run this script from your Python dcos-cli directory.
+*NOTE*: Make sure you run this script from your Python dcos-core-cli directory.
 
 *NOTE*: You will need to customize the first few lines in the script
 appropriate for your setup. A description of the variables you need to
