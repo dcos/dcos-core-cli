@@ -1511,7 +1511,7 @@ class TaskIO(object):
     def _window_resize(self, signum, frame):
         """Signal handler for SIGWINCH.
 
-        Generates a message with the current demensions of the
+        Generates a message with the current dimensions of the
         terminal and puts it in the input_queue.
 
         :param signum: the signal number being handled
