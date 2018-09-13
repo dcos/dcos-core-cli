@@ -47,7 +47,7 @@ Commands:
     job show runs
         Shows the successful and failure runs of a job.
     job queue
-        Print a list of currently jobruns that a queued to launch
+        Provides list of job runs that have been triggered but have not started yet.
     job history
         Provides a job run history.
 
