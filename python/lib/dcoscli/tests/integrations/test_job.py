@@ -116,7 +116,7 @@ def test_show_schedule_blank_jobname():
 def test_show_job_queue_blank():
     assert_command(
         ['dcos', 'job', 'queue'],
-        stdout=b"There are no deployments in the queue\n",
+        stdout=b"",
         stderr=b"",
         returncode=0)
 

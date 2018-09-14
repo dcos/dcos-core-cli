@@ -249,6 +249,10 @@ def _queue(job_id, json_flag=False, quiet=False):
     deployment_list = client.get_queued_job_runs(job_id)
 
     if not deployment_list and not json_flag:
+        if job_id:
+            msg = "There are no deployments in the queue for "
+            msg += "'{}'".format(job_id)
+            emitter.publish(msg)
         return 0
 
     if quiet:
