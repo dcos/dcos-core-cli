@@ -2,6 +2,7 @@
 github.com/dcos/dcos-cli/api
 github.com/dcos/dcos-cli/pkg/cli
 github.com/dcos/dcos-cli/pkg/httpclient
+github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/config
 github.com/dcos/dcos-cli/pkg/login
 github.com/dcos/dcos-cli/pkg/open
@@ -10,7 +11,6 @@ github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
 github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/cli/version
-github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/fsutil
 github.com/dcos/dcos-cli/pkg/cosmos
 github.com/dcos/dcos-cli/pkg/mesos

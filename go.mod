@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cast v1.2.0 // indirect
 	github.com/spf13/cobra v0.0.2
 	github.com/spf13/pflag v1.0.1 // indirect
-	golang.org/x/crypto v0.0.0-20180830192347-182538f80094 // indirect
+	golang.org/x/crypto v0.0.0-20180830192347-182538f80094
 	golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789 // indirect
 	golang.org/x/text v0.3.0 // indirect
 )

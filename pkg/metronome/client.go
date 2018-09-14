@@ -1,8 +1,10 @@
 package metronome
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/dcos/dcos-cli/pkg/dcos"
@@ -14,7 +16,7 @@ type Client struct {
 	http *httpclient.Client
 }
 
-// JobsOption is a fucntional Option to set the `embed` query parameters
+// JobsOption is a functional Option to set the `embed` query parameters
 type JobsOption func(query url.Values)
 
 // EmbedActiveRun sets the `embed`option to activeRuns
@@ -79,6 +81,57 @@ func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 	return jobs, err
 }
 
+func (c *Client) addOrUpdateJob(job *Job, add bool) (*Job, error) {
+	jsonBytes, err := json.Marshal(job)
+	if err != nil {
+		return nil, err
+	}
+
+	var req *http.Request
+	buf := bytes.NewBuffer(jsonBytes)
+	if add {
+		req, err = c.http.NewRequest("POST", "/v1/jobs", buf)
+	} else {
+		req, err = c.http.NewRequest("PUT", "/v1/jobs/"+job.ID, buf)
+	}
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 201:
+		var j Job
+		if err = json.NewDecoder(resp.Body).Decode(&j); err != nil {
+			return nil, err
+		}
+		return &j, nil
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		apiError.Code = resp.StatusCode
+		return nil, apiError
+	}
+}
+
+// AddJob creates a job.
+func (c *Client) AddJob(job *Job) (*Job, error) {
+	return c.addOrUpdateJob(job, true)
+}
+
+// UpdateJob updates an existing job.
+func (c *Client) UpdateJob(job *Job) (*Job, error) {
+	return c.addOrUpdateJob(job, false)
+}
+
 // RunJob triggers a run of the job with a given runID right now.
 func (c *Client) RunJob(runID string) (*Run, error) {
 	resp, err := c.http.Post("/v1/jobs/"+runID+"/runs", "application/json", nil)
@@ -125,5 +178,44 @@ func (c *Client) RemoveJob(jobID string) error {
 			return err
 		}
 		return apiError
+	}
+}
+
+// AddSchedule adds a schedule to the job with the given jobID.
+func (c *Client) AddSchedule(jobID string, schedule Schedule) (*Schedule, error) {
+	jsonBytes, err := json.Marshal(schedule)
+	if err != nil {
+		return nil, err
+	}
+
+	var req *http.Request
+	buf := bytes.NewBuffer(jsonBytes)
+
+	req, err = c.http.NewRequest("POST", "/v1/jobs/"+jobID+"/schedules", buf)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 201:
+		var s Schedule
+		if err = json.NewDecoder(resp.Body).Decode(&s); err != nil {
+			return nil, err
+		}
+		return &s, nil
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		apiError.Code = resp.StatusCode
+		return nil, apiError
 	}
 }

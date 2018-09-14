@@ -10,22 +10,22 @@ const apiTimeFormat = "2006-01-02T15:04:05.000-0700"
 type Job struct {
 	ID          string            `json:"id"`
 	Description string            `json:"description"`
-	Labels      map[string]string `json:"labels"`
+	Labels      map[string]string `json:"labels,omitempty"`
 	// The run property of a Job represents the run configuration for that Job
-	Run         struct {
-		Args           []string          `json:"args"`
-		Artifacts      []artifact        `json:"artifacts"`
+	Run struct {
+		Args           []string          `json:"args,omitempty"`
+		Artifacts      []artifact        `json:"artifacts,omitempty"`
 		Cmd            string            `json:"cmd"`
 		Cpus           float32           `json:"cpus"`
 		Disk           int               `json:"disk"`
-		Docker         docker            `json:"docker"`
-		Env            map[string]string `json:"env"`
-		MaxLaunchDelay int               `json:"maxLaunchDelay"`
+		Docker         *docker           `json:"docker,omitempty"`
+		Env            map[string]string `json:"env,omitempty"`
+		MaxLaunchDelay int               `json:"maxLaunchDelay,omitempty"`
 		Mem            int               `json:"mem"`
-		Placement      placement         `json:"placement"`
+		Placement      *placement        `json:"placement,omitempty"`
 		User           string            `json:"user,omitempty"`
-		Restart        restart           `json:"restart"`
-		Volumes        []volume          `json:"volumes"`
+		Restart        *restart          `json:"restart,omitempty"`
+		Volumes        []volume          `json:"volumes,omitempty"`
 	} `json:"run"`
 
 	// These properties depend on the embed parameters when querying the /v1/jobs endpoints.
@@ -43,11 +43,11 @@ type artifact struct {
 }
 
 type docker struct {
-	Image string `json:"image"`
+	Image string `json:"image,omitempty"`
 }
 
 type placement struct {
-	Constraints []constraint `json:"constraints"`
+	Constraints []constraint `json:"constraints,omitempty"`
 }
 
 type constraint struct {
@@ -57,8 +57,8 @@ type constraint struct {
 }
 
 type restart struct {
-	Policy                string `json:"policy"`
-	ActiveDeadlineSeconds int    `json:"activeDeadlineSeconds"`
+	Policy                string `json:"policy,omitempty"`
+	ActiveDeadlineSeconds int    `json:"activeDeadlineSeconds,omitempty"`
 }
 
 type volume struct {
@@ -112,8 +112,8 @@ type JobHistorySummary struct {
 type Schedule struct {
 	ID                      string `json:"id"`
 	Cron                    string `json:"cron"`
-	TimeZone                string `json:"timeZone"`
-	StartingDeadlineSeconds int    `json:"startingDeadlineSeconds"`
+	TimeZone                string `json:"timeZone,omitempty"`
+	StartingDeadlineSeconds int    `json:"startingDeadlineSeconds,omitempty"`
 	ConcurrencyPolicy       string `json:"concurrencyPolicy"`
 	Enabled                 bool   `json:"enabled"`
 	NextRunAt               string `json:"nextRunAt"`
