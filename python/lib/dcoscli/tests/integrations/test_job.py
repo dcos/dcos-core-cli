@@ -113,6 +113,22 @@ def test_show_schedule_blank_jobname():
     assert stdout.decode('utf-8').startswith('Invalid subcommand usage')
 
 
+def test_show_job_queue_blank():
+    assert_command(
+        ['dcos', 'job', 'queue'],
+        stdout=b"",
+        stderr=b"",
+        returncode=0)
+
+
+def test_show_job_queue_blank_for_job():
+    assert_command(
+        ['dcos', 'job', 'queue', 'magikarp'],
+        stdout=b"There are no deployments in the queue for 'magikarp'\n",
+        stderr=b"",
+        returncode=0)
+
+
 def test_show_schedule_invalid_jobname():
     assert_command(
         ['dcos', 'job', 'schedule', 'show', 'invalid'],
@@ -188,6 +204,18 @@ def _run_job(job_id):
     assert 'Run ID:' in stdout.decode('utf-8')
 
 
+def test_show_queue():
+    with _no_schedule_instance_large_job():
+        _run_job('gyarados')
+
+        returncode, stdout, stderr = exec_command(
+            ['dcos', 'job', 'queue'])
+
+        assert returncode == 0
+        assert 'JOB RUN ID' in stdout.decode('utf-8')
+        assert 'gyarados' in stdout.decode('utf-8')
+
+
 @contextlib.contextmanager
 def _no_schedule_instance_job():
     with job('tests/data/metronome/jobs/pikachu.json',
@@ -204,6 +232,13 @@ def _schedule_instance_job():
 
 def _update_job(app_id, file_path):
     assert_command(['dcos', 'job', 'update', file_path])
+
+
+@contextlib.contextmanager
+def _no_schedule_instance_large_job():
+    with job('tests/data/metronome/jobs/gyarados.json',
+             'gyarados'):
+        yield
 
 
 def _list_jobs(app_id=None):
