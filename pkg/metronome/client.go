@@ -158,6 +158,54 @@ func (c *Client) RunJob(runID string) (*Run, error) {
 	}
 }
 
+// Runs returns the run objects for a given jobID
+func (c *Client) Runs(jobID string) ([]Run, error) {
+	resp, err := c.http.Get("/v1/jobs/" + jobID + "/runs")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var runs []Run
+		if err := json.NewDecoder(resp.Body).Decode(&runs); err != nil {
+			return nil, err
+		}
+		return runs, nil
+	case 404:
+		return nil, fmt.Errorf("job %s does not exist", jobID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		return nil, apiError
+	}
+}
+
+// Kill stops a run of a given jobID and runID
+func (c *Client) Kill(jobID, runID string) error {
+	resp, err := c.http.Post("/v1/jobs/"+jobID+"/runs/"+runID+"/actions/stop", "application/json", nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
+		return fmt.Errorf("job %s or run %s does not exist", jobID, runID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return err
+		}
+		return apiError
+	}
+}
+
 // RemoveJob removes a job.
 func (c *Client) RemoveJob(jobID string) error {
 	resp, err := c.http.Delete("/v1/jobs/" + jobID)
