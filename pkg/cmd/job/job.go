@@ -26,9 +26,10 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		newCmdJobAdd(ctx),
 		newCmdJobKill(ctx),
 		newCmdJobList(ctx),
-		newCmdJobUpdate(ctx),
 		newCmdJobRemove(ctx),
 		newCmdJobRun(ctx),
+		newCmdJobSchedule(ctx),
+		newCmdJobUpdate(ctx),
 	)
 
 	return cmd

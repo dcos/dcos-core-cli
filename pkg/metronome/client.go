@@ -233,8 +233,34 @@ func (c *Client) RemoveJob(jobID string) error {
 	}
 }
 
-// AddSchedule adds a schedule to the job with the given jobID.
-func (c *Client) AddSchedule(jobID string, schedule Schedule) (*Schedule, error) {
+// Schedules returns the schedules for a given jobID
+func (c *Client) Schedules(jobID string) ([]Schedule, error) {
+	resp, err := c.http.Get("/v1/jobs/" + jobID + "/schedules")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var schedules []Schedule
+		err = json.NewDecoder(resp.Body).Decode(&schedules)
+		if err != nil {
+			return nil, err
+		}
+		return schedules, nil
+	case 404:
+		return nil, fmt.Errorf("job '%s' does not exist", jobID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		return nil, apiError
+	}
+}
+
+func (c *Client) addOrUpdateSchedule(jobID string, schedule *Schedule, add bool) (*Schedule, error) {
 	jsonBytes, err := json.Marshal(schedule)
 	if err != nil {
 		return nil, err
@@ -243,7 +269,11 @@ func (c *Client) AddSchedule(jobID string, schedule Schedule) (*Schedule, error)
 	var req *http.Request
 	buf := bytes.NewBuffer(jsonBytes)
 
-	req, err = c.http.NewRequest("POST", "/v1/jobs/"+jobID+"/schedules", buf)
+	if add {
+		req, err = c.http.NewRequest("POST", "/v1/jobs/"+jobID+"/schedules", buf)
+	} else {
+		req, err = c.http.NewRequest("PUT", "/v1/jobs/"+jobID+"/schedules/"+schedule.ID, buf)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +286,7 @@ func (c *Client) AddSchedule(jobID string, schedule Schedule) (*Schedule, error)
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
-	case 201:
+	case 200, 201:
 		var s Schedule
 		if err = json.NewDecoder(resp.Body).Decode(&s); err != nil {
 			return nil, err
@@ -269,5 +299,37 @@ func (c *Client) AddSchedule(jobID string, schedule Schedule) (*Schedule, error)
 		}
 		apiError.Code = resp.StatusCode
 		return nil, apiError
+	}
+}
+
+// AddSchedule adds a schedule to the job with the given jobID.
+func (c *Client) AddSchedule(jobID string, schedule *Schedule) (*Schedule, error) {
+	return c.addOrUpdateSchedule(jobID, schedule, true)
+}
+
+// UpdateSchedule updates a schedule of a job with the given jobID.
+func (c *Client) UpdateSchedule(jobID string, schedule *Schedule) (*Schedule, error) {
+	return c.addOrUpdateSchedule(jobID, schedule, false)
+}
+
+// RemoveSchedule removes a schedule from a job with the given jobID and scheduleID
+func (c *Client) RemoveSchedule(jobID, scheduleID string) error {
+	resp, err := c.http.Delete("/v1/jobs/" + jobID + "/schedules/" + scheduleID)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
+		return fmt.Errorf("job '%s' or schedule '%s' does not exist", jobID, scheduleID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return err
+		}
+		return apiError
 	}
 }
