@@ -48,7 +48,7 @@ func newCmdJobAdd(ctx api.Context) *cobra.Command {
 			}
 
 			if len(schedules) != 0 {
-				_, err = client.AddSchedule(job.ID, schedules[0])
+				_, err = client.AddSchedule(job.ID, &schedules[0])
 			}
 			return err
 		},
