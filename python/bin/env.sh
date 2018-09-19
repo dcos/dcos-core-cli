@@ -14,7 +14,7 @@ if [ ! -d "${BUILDDIR}/${VENV}" ]; then
     PYTHON_MAJOR=$(${PYTHON} -c 'import sys; print(sys.version_info[0])')
     PYTHON_MINOR=$(${PYTHON} -c 'import sys; print(sys.version_info[1])')
 
-    if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" -lt "5" ]; then
+    if ([ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "5" ]) && ! [ -v DCOS_EXPERIMENTAL ]; then
         echo "Cannot find supported python version 3.5+. Exiting..."
         exit 1
     fi
