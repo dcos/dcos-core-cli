@@ -9,11 +9,13 @@ import (
 
 	"github.com/dcos/dcos-cli/pkg/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/sirupsen/logrus"
 )
 
 // Client is a client for Cosmos.
 type Client struct {
-	http *httpclient.Client
+	http   *httpclient.Client
+	logger *logrus.Logger
 }
 
 // JobsOption is a functional Option to set the `embed` query parameters
@@ -48,9 +50,10 @@ func EmbedHistorySummary() JobsOption {
 }
 
 // NewClient creates a new Metronome client.
-func NewClient(baseClient *httpclient.Client) *Client {
+func NewClient(baseClient *httpclient.Client, logger *logrus.Logger) *Client {
 	return &Client{
-		http: baseClient,
+		http:   baseClient,
+		logger: logger,
 	}
 }
 
@@ -194,6 +197,7 @@ func (c *Client) Kill(jobID, runID string) error {
 
 	switch resp.StatusCode {
 	case 200:
+		c.logger.Infof("Run '%s' of job '%s' killed.", runID, jobID)
 		return nil
 	case 404:
 		return fmt.Errorf("job %s or run %s does not exist", jobID, runID)

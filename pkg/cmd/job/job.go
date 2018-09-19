@@ -45,16 +45,19 @@ func metronomeClient(ctx api.Context) (*metronome.Client, error) {
 		baseURL = cluster.URL() + "/service/metronome"
 	}
 
-	return metronome.NewClient(httpclient.New(
-		baseURL,
-		httpclient.Logger(ctx.Logger()),
-		httpclient.ACSToken(cluster.ACSToken()),
-		httpclient.Timeout(cluster.Timeout()),
-		httpclient.TLS(&tls.Config{
-			InsecureSkipVerify: cluster.TLS().Insecure,
-			RootCAs:            cluster.TLS().RootCAs,
-		}),
-	)), nil
+	return metronome.NewClient(
+		httpclient.New(
+			baseURL,
+			httpclient.Logger(ctx.Logger()),
+			httpclient.ACSToken(cluster.ACSToken()),
+			httpclient.Timeout(cluster.Timeout()),
+			httpclient.TLS(&tls.Config{
+				InsecureSkipVerify: cluster.TLS().Insecure,
+				RootCAs:            cluster.TLS().RootCAs,
+			}),
+		),
+		ctx.Logger(),
+	), nil
 
 }
 

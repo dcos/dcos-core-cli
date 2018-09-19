@@ -29,25 +29,19 @@ func newCmdJobKill(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			var deadpool []string
-			if len(args) == 1 && all == true {
-				runs, err := client.Runs(args[0])
-				if err != nil {
-					return err
-				}
-				for _, run := range runs {
-					deadpool = append(deadpool, run.ID)
-				}
-			} else if len(args) == 2 {
-				deadpool = append(deadpool, args[1])
+			if len(args) == 2 {
+				return client.Kill(args[0], args[1])
 			}
 
-			for _, dead := range deadpool {
-				err = client.Kill(args[0], dead)
+			runs, err := client.Runs(args[0])
+			if err != nil {
+				return err
+			}
+			for _, run := range runs {
+				err = client.Kill(args[0], run.ID)
 				if err != nil {
 					return err
 				}
-				ctx.Logger().Infof("Run '%s' of job '%s' killed.", dead, args[0])
 			}
 
 			return nil
