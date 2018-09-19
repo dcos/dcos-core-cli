@@ -9,11 +9,13 @@ import (
 
 	"github.com/dcos/dcos-cli/pkg/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/sirupsen/logrus"
 )
 
 // Client is a client for Cosmos.
 type Client struct {
-	http *httpclient.Client
+	http   *httpclient.Client
+	logger *logrus.Logger
 }
 
 // JobsOption is a functional Option to set the `embed` query parameters
@@ -48,9 +50,10 @@ func EmbedHistorySummary() JobsOption {
 }
 
 // NewClient creates a new Metronome client.
-func NewClient(baseClient *httpclient.Client) *Client {
+func NewClient(baseClient *httpclient.Client, logger *logrus.Logger) *Client {
 	return &Client{
-		http: baseClient,
+		http:   baseClient,
+		logger: logger,
 	}
 }
 
@@ -155,6 +158,55 @@ func (c *Client) RunJob(runID string) (*Run, error) {
 			return nil, err
 		}
 		return nil, apiError
+	}
+}
+
+// Runs returns the run objects for a given jobID
+func (c *Client) Runs(jobID string) ([]Run, error) {
+	resp, err := c.http.Get("/v1/jobs/" + jobID + "/runs")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var runs []Run
+		if err := json.NewDecoder(resp.Body).Decode(&runs); err != nil {
+			return nil, err
+		}
+		return runs, nil
+	case 404:
+		return nil, fmt.Errorf("job %s does not exist", jobID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		return nil, apiError
+	}
+}
+
+// Kill stops a run of a given jobID and runID
+func (c *Client) Kill(jobID, runID string) error {
+	resp, err := c.http.Post("/v1/jobs/"+jobID+"/runs/"+runID+"/actions/stop", "application/json", nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		c.logger.Infof("Run '%s' of job '%s' killed.", runID, jobID)
+		return nil
+	case 404:
+		return fmt.Errorf("job %s or run %s does not exist", jobID, runID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return err
+		}
+		return apiError
 	}
 }
 
