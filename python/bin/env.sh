@@ -15,9 +15,11 @@ if [ ! -d "${BUILDDIR}/${VENV}" ]; then
     PYTHON_MINOR=$(${PYTHON} -c 'import sys; print(sys.version_info[1])')
 
     : "${DCOS_EXPERIMENTAL:=""}"
-    if [ "${PYTHON_MAJOR}" != "3" ] || ([ "${PYTHON_MINOR}" != "5" ] && [ "${DCOS_EXPERIMENTAL}" = "" ]) ; then
-        echo "Cannot find supported python version 3.5. Exiting..."
-        exit 1
+    if [ "${DCOS_EXPERIMENTAL}" = "" ]; then
+      if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "5" ]; then
+          echo "Cannot find supported python version 3.5. Exiting..."
+          exit 1
+      fi
     fi
     if [ "$(uname)" = "Windows_NT" ]; then
       if [ ! "$(command -v ${VIRTUALENV})" ]; then
