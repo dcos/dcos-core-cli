@@ -200,7 +200,7 @@ def test_ls_no_params():
     assert returncode == 0
     assert stderr == b''
 
-    ls_line = '\.ssl.*stderr.*stdout.*'
+    ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').split('\n')
     assert len(lines) == 7
     assert re.match('===>.*<===', lines[0])
@@ -218,7 +218,7 @@ def test_ls():
     assert returncode == 0
     assert stderr == b''
 
-    ls_line = '\.ssl.*stderr.*stdout.*'
+    ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').split('\n')
     assert len(lines) == 2
     assert re.match(ls_line, lines[0])
@@ -231,7 +231,7 @@ def test_ls_multiple_tasks():
     assert returncode == 0
     assert stderr == b''
 
-    ls_line = '\.ssl.*stderr.*stdout.*'
+    ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').split('\n')
     assert len(lines) == 5
     assert re.match('===>.*<===', lines[0])
@@ -275,7 +275,7 @@ def test_ls_completed():
     assert returncode == 0
     assert stderr == b''
 
-    ls_line = '\.ssl.*stderr.*stdout.*'
+    ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').split('\n')
     assert len(lines) == 2
     assert re.match(ls_line, lines[0])
