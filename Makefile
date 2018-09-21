@@ -15,6 +15,14 @@ darwin linux windows: docker-image
 		-tags '$(GO_BUILD_TAGS)' \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
 
+.PHONY: plugin
+plugin: default python
+	@python3 scripts/plugin/package_plugin.py
+
+.PHONY: python
+python:
+	@cd python/lib/dcoscli; \
+		make binary
 
 .PHONY: test
 test: vet
