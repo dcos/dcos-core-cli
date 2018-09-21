@@ -201,8 +201,8 @@ def test_ls_no_params():
     assert stderr == b''
 
     ls_line = '.*stderr.*stdout.*'
-    lines = stdout.decode('utf-8').split('\n')
-    assert len(lines) == 7
+    lines = stdout.decode('utf-8').rstrip().split('\n')
+    assert len(lines) == 6
     assert re.match('===>.*<===', lines[0])
     assert re.match(ls_line, lines[1])
     assert re.match('===>.*<===', lines[2])
@@ -219,8 +219,8 @@ def test_ls():
     assert stderr == b''
 
     ls_line = '.*stderr.*stdout.*'
-    lines = stdout.decode('utf-8').split('\n')
-    assert len(lines) == 2
+    lines = stdout.decode('utf-8').rstrip().split('\n')
+    assert len(lines) == 1
     assert re.match(ls_line, lines[0])
 
 
@@ -232,8 +232,8 @@ def test_ls_multiple_tasks():
     assert stderr == b''
 
     ls_line = '.*stderr.*stdout.*'
-    lines = stdout.decode('utf-8').split('\n')
-    assert len(lines) == 5
+    lines = stdout.decode('utf-8').rstrip().split('\n')
+    assert len(lines) == 4
     assert re.match('===>.*<===', lines[0])
     assert re.match(ls_line, lines[1])
     assert re.match('===>.*<===', lines[2])
@@ -276,8 +276,8 @@ def test_ls_completed():
     assert stderr == b''
 
     ls_line = '.*stderr.*stdout.*'
-    lines = stdout.decode('utf-8').split('\n')
-    assert len(lines) == 2
+    lines = stdout.decode('utf-8').rstrip().split('\n')
+    assert len(lines) == 1
     assert re.match(ls_line, lines[0])
 
 
