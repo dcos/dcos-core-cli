@@ -202,13 +202,12 @@ def test_ls_no_params():
 
     ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').rstrip().split('\n')
-    assert len(lines) == 6
-    assert re.match('===>.*<===', lines[0])
-    assert re.match(ls_line, lines[1])
-    assert re.match('===>.*<===', lines[2])
-    assert re.match(ls_line, lines[3])
-    assert re.match('===>.*<===', lines[4])
-    assert re.match(ls_line, lines[5])
+    num_expected_lines = NUM_TASKS * 2
+
+    assert len(lines) == num_expected_lines
+    for i in range(0, num_expected_lines, 2):
+        assert re.match('===>.*<===', lines[i])
+        assert re.match(ls_line, lines[i + 1])
 
 
 def test_ls():
@@ -220,7 +219,9 @@ def test_ls():
 
     ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').rstrip().split('\n')
-    assert len(lines) == 1
+    num_expected_lines = 1
+
+    assert len(lines) == num_expected_lines
     assert re.match(ls_line, lines[0])
 
 
@@ -233,11 +234,11 @@ def test_ls_multiple_tasks():
 
     ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').rstrip().split('\n')
-    assert len(lines) == 4
-    assert re.match('===>.*<===', lines[0])
-    assert re.match(ls_line, lines[1])
-    assert re.match('===>.*<===', lines[2])
-    assert re.match(ls_line, lines[3])
+    num_expected_lines = 4
+
+    for i in range(0, num_expected_lines, 2):
+        assert re.match('===>.*<===', lines[i])
+        assert re.match(ls_line, lines[i + 1])
 
 
 def test_ls_long():
@@ -277,7 +278,9 @@ def test_ls_completed():
 
     ls_line = '.*stderr.*stdout.*'
     lines = stdout.decode('utf-8').rstrip().split('\n')
-    assert len(lines) == 1
+    num_expected_lines = 1
+
+    assert len(lines) == num_expected_lines
     assert re.match(ls_line, lines[0])
 
 
