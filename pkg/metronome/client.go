@@ -57,6 +57,44 @@ func NewClient(baseClient *httpclient.Client, logger *logrus.Logger) *Client {
 	}
 }
 
+// Job returns a Job for the given jobID.
+func (c *Client) Job(jobID string, opts ...JobsOption) (*Job, error) {
+
+	req, err := c.http.NewRequest("GET", "/v1/jobs/"+jobID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add embed query parameters to the request URL.
+	q := req.URL.Query()
+	for _, opt := range opts {
+		opt(q)
+	}
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var job Job
+		if err = json.NewDecoder(resp.Body).Decode(&job); err != nil {
+			return nil, err
+		}
+		return &job, nil
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		apiError.Code = resp.StatusCode
+		return nil, apiError
+	}
+}
+
 // Jobs returns a list of all job definitions.
 func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 
