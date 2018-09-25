@@ -128,9 +128,19 @@ def test_node_metrics_agent_summary_json():
         ['dcos', 'node', 'metrics', 'summary', first_node_id, '--json']
     )
 
-    names = [d['name'] for d in node_json]
-    assert names == ['cpu.total', 'memory.total', 'memory.free',
-                     'filesystem.capacity.total', 'filesystem.capacity.used']
+    assert len(node_json) > 0
+
+    metrics = [
+        'cpu.total',
+        'memory.total',
+        'memory.free',
+        'filesystem.capacity.total',
+        'filesystem.capacity.used',
+    ]
+
+    for d in node_json:
+        assert 'name' in d
+        assert d['name'] in metrics
 
 
 def test_node_metrics_agent_details():
@@ -149,8 +159,46 @@ def test_node_metrics_agent_details_json():
         ['dcos', 'node', 'metrics', 'details', first_node_id, '--json']
     )
 
-    names = [d['name'] for d in node_json]
-    assert 'system.uptime' in names
+    assert len(node_json) > 100
+
+    metrics = [
+        'cpu.idle',
+        'cpu.system',
+        'cpu.total',
+        'cpu.user',
+        'cpu.wait',
+        'filesystem.capacity.free',
+        'filesystem.capacity.total',
+        'filesystem.capacity.used',
+        'filesystem.inode.free',
+        'filesystem.inode.total',
+        'filesystem.inode.used',
+        'load.15min',
+        'load.1min',
+        'load.5min',
+        'memory.buffers',
+        'memory.cached',
+        'memory.free',
+        'memory.total',
+        'network.in',
+        'network.in.dropped',
+        'network.in.errors',
+        'network.in.packets',
+        'network.out',
+        'network.out.dropped',
+        'network.out.errors',
+        'network.out.errors',
+        'network.out.packets',
+        'process.count',
+        'swap.free',
+        'swap.total',
+        'swap.used',
+        'system.uptime',
+    ]
+
+    for d in node_json:
+        assert 'name' in d
+        assert d['name'] in metrics
 
 
 def test_node_dns():

@@ -95,13 +95,21 @@ def _node_summary_json(datapoints):
     :return: JSON data
     :rtype: str
     """
-    summary_datapoints = [
-        _get_datapoint(datapoints, 'cpu.total'),
-        _get_datapoint(datapoints, 'memory.total'),
-        _get_datapoint(datapoints, 'memory.free'),
-        _get_datapoint(datapoints, 'filesystem.capacity.total', {'path': '/'}),
-        _get_datapoint(datapoints, 'filesystem.capacity.used', {'path': '/'})
+
+    metrics = [
+        ['cpu.total'],
+        ['memory.total'],
+        ['memory.free'],
+        ['filesystem.capacity.total', {'path': '/'}],
+        ['filesystem.capacity.used', {'path': '/'}],
     ]
+
+    summary_datapoints = []
+    for m in metrics:
+        datapoint = _get_datapoint(datapoints, *m)
+        if datapoint is not None:
+            summary_datapoints.append(datapoint)
+
     return json.dumps(summary_datapoints)
 
 
