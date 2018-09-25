@@ -110,8 +110,13 @@ def _shutdown(service_id):
     :rtype: int
     """
 
-    mesos.DCOSClient().shutdown_framework(service_id)
-    return 0
+    services = mesos.get_master().frameworks(inactive=False, completed=False)
+    for service in services:
+        if service.dict().get('id') == service_id:
+            # Existing service, we shutdown the framework.
+            mesos.DCOSClient().shutdown_framework(service_id)
+            return 0
+    raise DCOSException('Service ID `{}` does not exist.'.format(service_id))
 
 
 def _log(follow, lines, ssh_config_file, service, file_):
