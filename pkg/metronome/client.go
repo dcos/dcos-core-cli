@@ -199,6 +199,32 @@ func (c *Client) RunJob(runID string) (*Run, error) {
 	}
 }
 
+// Run returns the run object for a given jobID and runID.
+func (c *Client) Run(jobID, runID string) (*Run, error) {
+	resp, err := c.http.Get("/v1/jobs/" + jobID + "/runs/"+ runID)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var run Run
+		if err := json.NewDecoder(resp.Body).Decode(&run); err != nil {
+			return nil, err
+		}
+		return &run, nil
+	case 404:
+		return nil, fmt.Errorf("job %s does not exist", jobID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		return nil, apiError
+	}
+}
+
 // Runs returns the run objects for a given jobID
 func (c *Client) Runs(jobID string) ([]Run, error) {
 	resp, err := c.http.Get("/v1/jobs/" + jobID + "/runs")
