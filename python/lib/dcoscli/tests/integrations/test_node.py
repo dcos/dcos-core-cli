@@ -3,6 +3,7 @@ import os
 import sys
 
 import pytest
+import retrying
 import six
 
 import dcos.util as util
@@ -115,20 +116,28 @@ def test_node_log_invalid_lines():
 
 def test_node_metrics_agent_summary():
     first_node_id = _node()[0]['id']
-    assert_lines(
-        ['dcos', 'node', 'metrics', 'summary', first_node_id],
-        2
-    )
+
+    @retrying.retry(stop_max_delay=30 * 1000)
+    def _test_node_metrics_agent_summary():
+        assert_lines(
+            ['dcos', 'node', 'metrics', 'summary', first_node_id],
+            2
+        )
+    _test_node_metrics_agent_summary()
 
 
 def test_node_metrics_agent_summary_json():
     first_node_id = _node()[0]['id']
 
-    node_json = fetch_valid_json(
-        ['dcos', 'node', 'metrics', 'summary', first_node_id, '--json']
-    )
+    @retrying.retry(stop_max_delay=30 * 1000)
+    def _fetch_valid_json():
+        node_json = fetch_valid_json(
+            ['dcos', 'node', 'metrics', 'summary', first_node_id, '--json']
+        )
+        assert len(node_json) > 0
+        return node_json
 
-    assert len(node_json) > 0
+    node_json = _fetch_valid_json()
 
     metrics = [
         'cpu.total',
@@ -145,21 +154,29 @@ def test_node_metrics_agent_summary_json():
 
 def test_node_metrics_agent_details():
     first_node_id = _node()[0]['id']
-    assert_lines(
-        ['dcos', 'node', 'metrics', 'details', first_node_id],
-        100,
-        greater_than=True
-    )
+
+    @retrying.retry(stop_max_delay=30 * 1000)
+    def _test_node_metrics_agent_details():
+        assert_lines(
+            ['dcos', 'node', 'metrics', 'details', first_node_id],
+            100,
+            greater_than=True
+        )
+    _test_node_metrics_agent_details()
 
 
 def test_node_metrics_agent_details_json():
     first_node_id = _node()[0]['id']
 
-    node_json = fetch_valid_json(
-        ['dcos', 'node', 'metrics', 'details', first_node_id, '--json']
-    )
+    @retrying.retry(stop_max_delay=30 * 1000)
+    def _fetch_valid_json():
+        node_json = fetch_valid_json(
+            ['dcos', 'node', 'metrics', 'details', first_node_id, '--json']
+        )
+        assert len(node_json) > 100
+        return node_json
 
-    assert len(node_json) > 100
+    node_json = _fetch_valid_json()
 
     metrics = [
         'cpu.idle',
