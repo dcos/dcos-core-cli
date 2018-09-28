@@ -371,3 +371,35 @@ func (c *Client) RemoveSchedule(jobID, scheduleID string) error {
 		return apiError
 	}
 }
+
+// Queued returns all queued runs for the existing jobs.
+func (c *Client) Queued(jobID string) ([]Queue, error) {
+	resp, err := c.http.Get("/v1/queue")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var queued []Queue
+		if err = json.NewDecoder(resp.Body).Decode(&queued); err != nil {
+			return nil, err
+		}
+		if jobID == "" {
+			return queued, nil
+		}
+		for _, queue := range queued {
+			if queue.JobID == jobID {
+				return []Queue{queue}, nil
+			}
+		}
+		return nil, fmt.Errorf("job '%s' does not exist", jobID)
+	default:
+		var apiError *Error
+		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+			return nil, err
+		}
+		return nil, apiError
+	}
+}

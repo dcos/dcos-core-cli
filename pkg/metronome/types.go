@@ -119,6 +119,16 @@ type Schedule struct {
 	NextRunAt               string `json:"nextRunAt"`
 }
 
+// Queue contains all queued runs of a Job.
+type Queue struct {
+	JobID string `json:"jobId"`
+	Runs  []queuedRun `json:"runs"`
+}
+
+type queuedRun struct {
+	ID string `json:"runId"`
+}
+
 // Status returns the status of the job depending on its active runs and its schedule.
 func (j *Job) Status() string {
 	switch {
