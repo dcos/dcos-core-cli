@@ -506,7 +506,7 @@ class Master(object):
             candidates = []
             for framework in self.state().get('frameworks', []):
                 for task in framework.get('tasks', []):
-                    if task.get('id', '').startswith(task_id):
+                    if task_id in task.get('id', ''):
                         candidates.append(task)
 
             if len(candidates) == 1:
