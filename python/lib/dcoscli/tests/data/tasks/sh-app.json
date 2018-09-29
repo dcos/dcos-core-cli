@@ -1,0 +1,14 @@
+{
+    "id": "sh-app",
+    "cmd": "sh",
+    "cpus": 0.1,
+    "mem": 32,
+    "instances": 1,
+    "tty": true,
+    "container": {
+      "type": "MESOS",
+      "docker": {
+        "image": "library/alpine"
+      }
+    }
+}

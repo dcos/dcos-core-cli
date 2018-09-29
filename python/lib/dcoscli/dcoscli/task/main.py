@@ -123,6 +123,11 @@ def _cmds():
             function=_info),
 
         cmds.Command(
+            hierarchy=['task', 'attach'],
+            arg_keys=['<task>', '--no-stdin'],
+            function=_attach),
+
+        cmds.Command(
             hierarchy=['task', 'log'],
             arg_keys=['--all', '--follow', '--completed', '--lines', '<task>',
                       '<file>'],
@@ -193,6 +198,23 @@ def _task(task, all_, completed, json_):
         if output:
             emitter.publish(output)
 
+    return 0
+
+
+def _attach(task, no_stdin=False):
+    """ Attach the stdin/stdout/stderr of the CLI to the
+    STDIN/STDOUT/STDERR of a running task.
+
+    :param task: task ID pattern to match
+    :type task: str
+    :param no_stdin: True if we should *not* attach stdin,
+                     False if we should
+    :type no_stdin: bool
+    :rtype int
+    """
+
+    task_io = mesos.TaskIO(task)
+    task_io.attach(no_stdin)
     return 0
 
 
@@ -548,8 +570,8 @@ def _exec(task, cmd, args=None, interactive=False, tty=False):
     :rtype int
     """
 
-    task_io = mesos.TaskIO(task, cmd, args, interactive, tty)
-    task_io.run()
+    task_io = mesos.TaskIO(task)
+    task_io.exec(cmd, args, interactive, tty)
     return 0
 
 
@@ -628,7 +650,7 @@ def _metrics(summary, task_id, json_):
             'Error finding agent associated with task: {}'.format(task_id))
 
     slave_id = task['slave_id']
-    container_id = master.get_container_id(task)["value"]
+    container_id = master.get_container_id(task_id)["value"]
 
     endpoint = '/system/v1/agent/{}/metrics/v0/containers/{}'.format(
         slave_id, container_id
