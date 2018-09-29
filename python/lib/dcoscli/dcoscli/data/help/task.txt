@@ -5,6 +5,7 @@ Usage:
     dcos task --help
     dcos task --info
     dcos task --version
+    dcos task attach [--no-stdin] <task>
     dcos task exec [--interactive --tty] <task> <cmd> [<args>...]
     dcos task log [--all | --completed] [--follow --lines=N] [<task>] [<file>]
     dcos task ls [--all | --completed] [--long] [<task>] [<path>]
@@ -13,9 +14,10 @@ Usage:
     dcos task [--all | --completed] [--json <task>]
 
 Command:
+    attach
+        Attach the CLI to the stdio of an already running task (<task>).
     exec
         Launch a process (<cmd>) inside of a container for a task (<task>).
-
     log
         Print the task log. By default, the 10 most recent task logs from stdout
         are printed.
@@ -47,6 +49,8 @@ Options:
         Print the last N lines. The default is 10 lines.
     --long
         Print full Mesos sandbox file attributes.
+    --no-stdin
+        Don't attach the stdin of the CLI to the task.
     --version
         Print version information.
 

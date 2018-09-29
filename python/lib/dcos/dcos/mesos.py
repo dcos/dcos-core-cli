@@ -493,17 +493,30 @@ class Master(object):
 
         return tasks
 
-    def get_container_id(self, task_obj):
-        """Returns the container ID for a task.
+    def get_container_id(self, task_id):
+        """Returns the container ID for a task ID matching `task_id`
 
-        :param task__obj: The task which will be mapped to container ID
-        :type task_obj: Task()
-        :returns: The container ID associated with 'task_obj'
+        :param task_id: The task ID which will be mapped to container ID
+        :type task_id: str
+        :returns: The container ID associated with 'task_id'
         :rtype: str
         """
 
-        def _get_container_status(task_obj):
-            task = task_obj.dict()
+        def _get_task(task_id):
+            candidates = []
+            for framework in self.state().get('frameworks', []):
+                for task in framework.get('tasks', []):
+                    if task_id in task.get('id', ''):
+                        candidates.append(task)
+
+            if len(candidates) == 1:
+                return candidates[0]
+
+            raise DCOSException(
+                "Unexpected number of tasks matching '{}' found: {}"
+                .format(task_id, candidates))
+
+        def _get_container_status(task):
             if 'statuses' in task:
                 if len(task['statuses']) > 0:
                     if 'container_status' in task['statuses'][0]:
@@ -523,7 +536,11 @@ class Master(object):
                 " It might still be spinning up."
                 " Please try again.")
 
-        container_status = _get_container_status(task_obj)
+        if not task_id:
+            raise DCOSException("Invalid task ID")
+
+        task = _get_task(task_id)
+        container_status = _get_container_status(task)
         return _get_container_id(container_status)
 
     def frameworks(self, inactive=False, completed=False):
@@ -1077,14 +1094,7 @@ class TaskIO(object):
     HEARTBEAT_INTERVAL = 30
     HEARTBEAT_INTERVAL_NANOSECONDS = HEARTBEAT_INTERVAL * 1000000000
 
-    def __init__(self, task_id, cmd=None, args=None,
-                 interactive=False, tty=False):
-        # Store relevant parameters of the call for later.
-        self.cmd = cmd
-        self.interactive = interactive
-        self.tty = tty
-        self.args = args
-
+    def __init__(self, task_id):
         # Create a client and grab a reference to the DC/OS master.
         client = DCOSClient()
         master = get_master(client)
@@ -1116,11 +1126,7 @@ class TaskIO(object):
                 path="api/v1")
 
         # Grab a reference to the container ID for the task.
-        self.parent_id = master.get_container_id(task_obj)
-
-        # Generate a new UUID for the nested container
-        # used to run commands passed to `task exec`.
-        self.container_id = str(uuid.uuid4())
+        self.container_id = master.get_container_id(task_id)
 
         # Set up a recordio encoder and decoder
         # for any incoming and outgoing messages.
@@ -1156,7 +1162,77 @@ class TaskIO(object):
         # exiting.
         self.exception = None
 
-    def run(self):
+        # Allow an exit sequence to be used to break the CLIs attachment to
+        # the remote task. Depending on the call, this may be disabled, or
+        # the exit sequence to be used may be overwritten.
+        self.supports_exit_sequence = True
+        self.exit_sequence = b'\x10\x11'  # Ctrl-p, Ctrl-q
+        self.exit_sequence_detected = False
+
+    def attach(self, _no_stdin=False):
+        """ Attach the stdin/stdout/stderr of the CLI to the
+        STDIN/STDOUT/STDERR of a running task.
+
+        As of now, we can only attach to tasks launched with a remote TTY
+        already set up for them. If we try to attach to a task that was
+        launched without a remote TTY attached, this command will fail.
+
+        :param task: task ID pattern to match
+        :type task: str
+        :param no_stdin: True if we should *not* attach stdin,
+                         False if we should
+        :type no_stdin: bool
+        """
+
+        # Store relevant parameters of the call for later.
+        self.interactive = not _no_stdin
+        self.tty = True
+
+        # Set the entry point of the output thread to be a call to
+        # _attach_container_output.
+        self.output_thread_entry_point = self._attach_container_output
+
+        self._run()
+
+    def exec(self, _cmd, _args=None, _interactive=False, _tty=False):
+        """Execute a new process inside of a given task by redirecting
+        STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
+
+        If a tty is requested, we take over the current terminal and
+        put it into raw mode. We make sure to reset the terminal back
+        to its original settings before exiting.
+
+        :param cmd: The command to launch inside the task's container
+        :type args: cmd
+        :param args: Additional arguments for the command
+        :type args: list
+        :param interactive: attach stdin
+        :type interactive: bool
+        :param tty: attach a tty
+        :type tty: bool
+        """
+
+        # Store relevant parameters of the call for later.
+        self.cmd = _cmd
+        self.args = _args
+        self.interactive = _interactive
+        self.tty = _tty
+
+        # Override the container ID with the current container ID as the
+        # parent, and generate a new UUID for the nested container used to
+        # run commands passed to `task exec`.
+        self.container_id = {
+            'parent': self.container_id,
+            'value': str(uuid.uuid4())
+        }
+
+        # Set the entry point of the output thread to be a call to
+        # _launch_nested_container_session.
+        self.output_thread_entry_point = self._launch_nested_container_session
+
+        self._run()
+
+    def _run(self):
         """Run the helper threads in this class which enable streaming
         of STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
 
@@ -1192,7 +1268,12 @@ class TaskIO(object):
         try:
             if self.interactive:
                 tty.setraw(fd, when=termios.TCSANOW)
-                self._window_resize(signal.SIGWINCH, None)
+                # To force a redraw of the remote terminal, we first resize it
+                # to 0 before setting it to the actual size of our local
+                # terminal. After that, all terminal resizing is handled in our
+                # SIGWINCH handler.
+                self._window_resize(signal.SIGWINCH, dimensions=[0, 0])
+                self._window_resize(signal.SIGWINCH)
                 signal.signal(signal.SIGWINCH, self._window_resize)
 
             self._start_threads()
@@ -1258,7 +1339,7 @@ class TaskIO(object):
         # data messages from it and feeds them to an output_queue.
         thread = threading.Thread(
             target=self._thread_wrapper,
-            args=(self._launch_nested_container_session,))
+            args=(self.output_thread_entry_point,))
         thread.daemon = True
         thread.start()
 
@@ -1270,6 +1351,30 @@ class TaskIO(object):
         thread.daemon = True
         thread.start()
 
+    def _attach_container_output(self):
+        """Streams all output data (e.g. STDOUT/STDERR) to the
+        client from the agent. """
+
+        message = {
+            'type': 'ATTACH_CONTAINER_OUTPUT',
+            'attach_container_output': {
+                'container_id': self.container_id}}
+
+        req_extra_args = {
+            'stream': True,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Accept': 'application/recordio',
+                'Message-Accept': 'application/json'}}
+
+        response = http.post(
+            self.agent_url,
+            data=json.dumps(message),
+            timeout=None,
+            **req_extra_args)
+
+        self._process_output_stream(response)
+
     def _launch_nested_container_session(self):
         """Sends a request to the Mesos Agent to launch a new
         nested container and attach to its output stream.
@@ -1279,10 +1384,7 @@ class TaskIO(object):
         message = {
             'type': "LAUNCH_NESTED_CONTAINER_SESSION",
             'launch_nested_container_session': {
-                'container_id': {
-                    'parent': self.parent_id,
-                    'value': self.container_id
-                },
+                'container_id': self.container_id,
                 'command': {
                     'value': self.cmd,
                     'arguments': [self.cmd] + self.args,
@@ -1361,9 +1463,7 @@ class TaskIO(object):
                 'type': 'ATTACH_CONTAINER_INPUT',
                 'attach_container_input': {
                     'type': 'CONTAINER_ID',
-                    'container_id': {
-                        'parent': self.parent_id,
-                        'value': self.container_id}}}
+                    'container_id': self.container_id}}
 
             yield self.encoder.encode(message)
 
@@ -1381,6 +1481,10 @@ class TaskIO(object):
             while True:
                 record = self.input_queue.get()
                 if not record:
+                    if self.exit_sequence_detected:
+                        sys.stdout.write("\r\n")
+                        sys.stdout.flush()
+                        self.exit_event.set()
                     break
                 yield record
 
@@ -1427,6 +1531,38 @@ class TaskIO(object):
             timeout=None,
             **req_extra_args)
 
+    def _detect_exit_sequence(self, chunk):
+        """Detects if 'self.exit_sequence' is present in 'chunk'.
+
+        If a partial exit sequence is detected at the end of 'chunk', then
+        more characters are read from 'stdin' and appended to 'chunk' in
+        search of the full sequence. Since python cannot pass variables by
+        reference, we return a modified 'chunk' with the extra characters
+        read if necessary.
+
+        If the exit sequence is found, the class variable
+        'exit_sequence_detected' is set to True.
+
+        :param chunk: a byte array to search for the exit sequence in
+        :type chunk: byte array
+        :returns: a modified byte array containing the original 'chunk' plus
+                  any extra characters read in search of the exit sequence
+        :rtype: byte array
+        """
+        if not self.supports_exit_sequence:
+            return chunk
+
+        if chunk.find(self.exit_sequence) != -1:
+            self.exit_sequence_detected = True
+            return chunk
+
+        for i in reversed(range(1, len(self.exit_sequence))):
+            if self.exit_sequence[:-i] == chunk[len(chunk)-i:]:
+                chunk += os.read(sys.stdin.fileno(), 1)
+                return self._detect_exit_sequence(chunk)
+
+        return chunk
+
     def _input_thread(self):
         """Reads from STDIN and places a message
         with that data onto the input_queue.
@@ -1443,6 +1579,10 @@ class TaskIO(object):
                         'data': ''}}}}
 
         for chunk in iter(partial(os.read, sys.stdin.fileno(), 1024), b''):
+            chunk = self._detect_exit_sequence(chunk)
+            if self.exit_sequence_detected:
+                break
+
             message[
                 'attach_container_input'][
                     'process_io'][
@@ -1508,10 +1648,10 @@ class TaskIO(object):
             self.input_queue.put(self.encoder.encode(message))
             time.sleep(interval)
 
-    def _window_resize(self, signum, frame):
+    def _window_resize(self, signum=None, frame=None, dimensions=None):
         """Signal handler for SIGWINCH.
 
-        Generates a message with the current demensions of the
+        Generates a message with the current dimensions of the
         terminal and puts it in the input_queue.
 
         :param signum: the signal number being handled
@@ -1521,7 +1661,10 @@ class TaskIO(object):
         """
 
         # Determine the size of our terminal, and create the message to be sent
-        rows, columns = os.popen('stty size', 'r').read().split()
+        if dimensions:
+            rows, columns = dimensions
+        else:
+            rows, columns = os.popen('stty size', 'r').read().split()
 
         message = {
             'type': 'ATTACH_CONTAINER_INPUT',
