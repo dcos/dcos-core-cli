@@ -322,10 +322,10 @@ def test_exec_interactive():
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task exec' not supported on Windows")
 def test_exec_match_id_pattern():
-    assert_command(['dcos', 'task', 'exec', 'app1', 'true'])
-    assert_command(['dcos', 'task', 'exec', 'app2', 'true'])
-    returncode, _, _ = exec_command(['dcos', 'task', 'exec', 'app', 'true'])
-    assert returncode != 0
+    assert_command(['dcos', 'task', 'exec', 'test-app1', 'true'])
+    assert_command(['dcos', 'task', 'exec', 'test-app2', 'true'])
+    code, _, _ = exec_command(['dcos', 'task', 'exec', 'test-app', 'true'])
+    assert code != 0
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
