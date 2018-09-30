@@ -353,6 +353,22 @@ def test_attach():
     master.close()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task attach' not supported on Windows")
+def test_attach_no_tty():
+    task_id = _get_task_id('ls-app')
+
+    proc, master = popen_tty('dcos task attach ' + task_id)
+    master = os.fdopen(master, 'w')
+    tty.setraw(master, when=termios.TCSANOW)
+
+    stdout, stderr = proc.communicate()
+    assert stderr == b'Unable to attach to a task launched without a TTY.\n'
+
+    assert proc.wait() != 0
+    master.close()
+
+
 def _mark_non_blocking(file_):
     import fcntl
     fcntl.fcntl(file_.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
