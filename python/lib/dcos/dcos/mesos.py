@@ -1367,11 +1367,18 @@ class TaskIO(object):
                 'Accept': 'application/recordio',
                 'Message-Accept': 'application/json'}}
 
-        response = http.post(
-            self.agent_url,
-            data=json.dumps(message),
-            timeout=None,
-            **req_extra_args)
+        try:
+            response = http.post(
+                self.agent_url,
+                data=json.dumps(message),
+                timeout=None,
+                **req_extra_args)
+        except DCOSHTTPException as e:
+            text = "I/O switchboard server was disabled for this container"
+            if e.response.status_code == 500 and e.response.text == text:
+                raise DCOSException("Unable to attach to a task"
+                                    " launched without a TTY.")
+            raise e
 
         self._process_output_stream(response)
 
