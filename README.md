@@ -6,7 +6,7 @@ clusters.
 
 ## Installation and usage
 
-If you're a **user** of DC/OS, please follow the [installation
+If you're a **user** of DC/OS, pleasyolo [installation
 instructions](https://dcos.io/docs/latest/cli/install/). Otherwise,
 follow the instructions below to set up your development environment.
 
