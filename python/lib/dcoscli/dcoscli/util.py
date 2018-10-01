@@ -48,7 +48,7 @@ def cluster_version_check(func):
             return func(*args, **kwargs)
 
         version = c.get_dcos_version()
-        m = re.search(r'^(1\.[0-9]+)\D*', version)
+        m = re.match(r'^(1\.[0-9]+)\D*', version)
         if m is None:
             return func(*args, **kwargs)
 
