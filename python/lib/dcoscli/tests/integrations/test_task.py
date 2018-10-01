@@ -177,24 +177,27 @@ def test_log_follow():
 
 def test_log_completed():
     """ Test `dcos task log --completed` """
+    with app(SLEEP_COMPLETED1, 'test-app-completed1'):
+        task_id_completed = _get_task_id('test-app-completed1')
+
     # create a completed task
     # ensure that tail lists nothing
     # ensure that tail --completed lists a completed task
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'log', 'test-app-completed'])
+        ['dcos', 'task', 'log', task_id_completed])
 
     assert returncode == 1
     assert stdout == b''
-    assert stderr.startswith(b'No running tasks match ID [test-app-completed]')
+    assert stderr.startswith(b'No running tasks match ID [test-app-completed')
 
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'log', '--completed', 'test-app-completed', 'stderr'])
+        ['dcos', 'task', 'log', '--completed', task_id_completed, 'stderr'])
     assert returncode == 0
     assert stderr == b''
     assert len(stdout.decode('utf-8').split('\n')) >= 3
 
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'log', '--all', 'test-app-completed', 'stderr'])
+        ['dcos', 'task', 'log', '--all', task_id_completed, 'stderr'])
     assert returncode == 0
     assert stderr == b''
     assert len(stdout.decode('utf-8').split('\n')) >= 3
