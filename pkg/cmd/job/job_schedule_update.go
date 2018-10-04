@@ -30,7 +30,7 @@ func newCmdJobScheduleUpdate(ctx api.Context) *cobra.Command {
 			}
 
 			if schedule.ID == "" {
-				return fmt.Errorf("field 'id' needs to be set in schedule JSON")
+				return fmt.Errorf(`field "id" needs to be set in schedule JSON`)
 			}
 
 			_, err = client.UpdateSchedule(args[0], schedule)

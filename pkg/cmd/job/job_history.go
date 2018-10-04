@@ -81,13 +81,13 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 func historyMessage(job *metronome.Job, failures bool) string {
 	if failures {
 		return fmt.Sprintf(
-			"'%s'  Failure runs: %d Last Failure: %s",
+			`"%s"  Failure runs: %d Last Failure: %s`,
 			job.ID, job.History.FailureCount, job.History.LastFailureAt,
 		)
 	}
 
 	return fmt.Sprintf(
-		"'%s'  Successful runs: %d Last Success: %s",
+		`"%s"  Successful runs: %d Last Success: %s`,
 		job.ID, job.History.SuccessCount, job.History.LastSuccessAt,
 	)
 }
