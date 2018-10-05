@@ -16,6 +16,7 @@ Usage:
 Command:
     attach
         Attach the CLI to the stdio of an already running task (<task>).
+        To detach type the sequence CTRL-p CTRL-q.
     exec
         Launch a process (<cmd>) inside of a container for a task (<task>).
     log
