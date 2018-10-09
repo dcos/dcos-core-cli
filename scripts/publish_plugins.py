@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+
 import boto3
 
 from plugin import package_plugin
