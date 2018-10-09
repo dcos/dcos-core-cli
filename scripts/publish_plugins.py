@@ -3,6 +3,7 @@
 import boto3
 
 from plugin import package_plugin
+import os
 
 version = os.environ.get("TAG_NAME", '1.12')
 
