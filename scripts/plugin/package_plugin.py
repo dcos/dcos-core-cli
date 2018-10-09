@@ -64,16 +64,18 @@ def package_completions(plugin_path: str):
         dir_util.copy_tree(completions_path, dest_path)
 
 
-def package_binaries(plugin_path: str):
-    go_bin = path.join(plugin_path, "..", "dcos")
-    python_bin = path.join(root_path, "python", "lib", "dcoscli", "dist", "dcos")
+def package_binaries(plugin_path: str, platform: str):
+    bin_extension = ".exe" if platform == "windows" else ""
+
+    go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
+    python_bin = path.join(root_path, "python", "lib", "dcoscli", "dist", "dcos{}".format(bin_extension))
 
     dest = path.join(plugin_path, "bin")
     dir_util.mkpath(dest)
 
     # As we aren't using the Go CLI piece yet, this shouldn't be moved into the folder
     # file_util.copy_file(go_bin, path.join(dest, "dcos"))
-    file_util.copy_file(python_bin, path.join(dest, "dcos_py"))
+    file_util.copy_file(python_bin, path.join(dest, "dcos_py{}".format(bin_extension)))
 
 
 def package_plugin(plugin_path: str, platform: str):
@@ -85,7 +87,7 @@ def package_plugin(plugin_path: str, platform: str):
 
     package_completions(plugin_path)
 
-    package_binaries(plugin_path)
+    package_binaries(plugin_path, platform)
 
     target_filepath = path.join(build_path, platform, "dcos-core-cli")
     shutil.make_archive(
@@ -98,12 +100,16 @@ def package_plugin(plugin_path: str, platform: str):
 if __name__ == '__main__':
     build_path = path.join(root_path, "build")
 
-    platforms = ['linux', 'darwin', 'windows']
-    for platform in platforms:
-        platform_build_path = path.join(build_path, platform)
-        plugin_path = path.join(platform_build_path, "plugin")
+    # Because pyinstaller does not allow cross compilation, when running this
+    # as __main__, it only packages a plugin for the current platform. It
+    # assumes that pyinstaller has already created the binary prior to this
+    # being run.
+    platform = os.uname().sysname.lower()
+    platform_build_path = path.join(build_path, platform)
+    plugin_path = path.join(platform_build_path, "plugin")
 
-        # This check makes it easier to run locally when you probably
-        # wouldn't have all three OS builds 
-        if path.exists(platform_build_path):
-            package_plugin(plugin_path, platform)
+    if not path.exists(platform_build_path):
+        os.mkdir(platform_build_path)
+
+    package_plugin(plugin_path, platform)
+
