@@ -4,7 +4,7 @@ import os
 
 import boto3
 
-from plugin import package_plugin
+from plugin.package_plugin import package_plugin
 
 version = os.environ.get("TAG_NAME", '1.12')
 
@@ -15,7 +15,7 @@ platforms = ['linux', 'darwin', 'windows']
 for platform in platforms:
     plugin_path = build_path + '/' + platform + '/plugin'
 
-    package_plugin(plugin_path, platform)
+    package_plugin(build_path, platform)
 
 
 s3_client = boto3.resource('s3', region_name='us-west-2').meta.client
