@@ -46,10 +46,12 @@ root_path = path.join(
 )
 
 
-def create_plugin_toml(filepath: str, platform: str):
+def create_plugin_toml(plugin_path: str, platform: str):
+    toml_path = path.join(plugin_path, "plugin.toml")
+
     bin_extension = '.exe' if platform == 'windows' else ''
 
-    with open(filepath, encoding='utf-8', mode='w') as file:
+    with open(toml_path, encoding='utf-8', mode='w') as file:
         file.write(plugin_toml_template.format(bin_extension))
 
 
@@ -64,35 +66,33 @@ def package_completions(plugin_path: str):
         dir_util.copy_tree(completions_path, dest_path)
 
 
-def package_binaries(plugin_path: str, platform: str):
+def package_binaries(plugin_path: str, platform: str, python_bin_dir: str):
     bin_extension = ".exe" if platform == "windows" else ""
 
     # go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
-    python_bin = path.join(root_path, "python", "lib",
-                           "dcoscli", "dist", "dcos{}".format(bin_extension))
+    python_bin = path.join(python_bin_dir, "dcos{}".format(bin_extension))
 
     dest = path.join(plugin_path, "bin")
     dir_util.mkpath(dest)
 
     # As we aren't using the Go CLI piece yet, this shouldn't be moved into the
-    # folder file_util.copy_file(go_bin, path.join(dest, "dcos"))
+    # folder
+    # file_util.copy_file(go_bin, path.join(dest, "dcos"))
     file_util.copy_file(python_bin, path.join(
         dest, "dcos_py{}".format(bin_extension)))
 
 
-def package_plugin(build_path: str, platform: str):
-    plugin_path = path.join(build_path, platform, 'plugin')
+def package_plugin(build_path: str, platform: str, python_bin_dir: str):
+    plugin_path = path.join(build_path, platform, "plugin")
 
     if not path.exists(plugin_path):
         os.makedirs(plugin_path)
 
-    toml_path = path.join(plugin_path, "plugin.toml")
-
-    create_plugin_toml(toml_path, platform)
+    create_plugin_toml(plugin_path, platform)
 
     package_completions(plugin_path)
 
-    package_binaries(plugin_path, platform)
+    package_binaries(plugin_path, platform, python_bin_dir)
 
     target_filepath = path.join(build_path, platform, "dcos-core-cli")
     shutil.make_archive(
@@ -112,10 +112,12 @@ def main():
     platform = os.uname().sysname.lower()
     platform_build_path = path.join(build_path, platform)
 
+    python_bin_dir = path.join(root_path, "python", "lib", "dcoscli", "dist")
+
     if not path.exists(platform_build_path):
         os.mkdir(platform_build_path)
 
-    package_plugin(build_path, platform)
+    package_plugin(build_path, platform, python_bin_dir)
 
 
 if __name__ == '__main__':
