@@ -12,7 +12,7 @@ func newCmdJobKill(ctx api.Context) *cobra.Command {
 	var all bool
 	cmd := &cobra.Command{
 		Use:   "kill <job-id> [<run-id>]",
-		Short: "kill a job",
+		Short: "Kill a job",
 		Args:  cobra.RangeArgs(1, 2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 2 && all == true {
@@ -47,6 +47,6 @@ func newCmdJobKill(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&all, "all", false, "kill all the active runs of this job")
+	cmd.Flags().BoolVar(&all, "all", false, "Kill all the active runs of this job")
 	return cmd
 }

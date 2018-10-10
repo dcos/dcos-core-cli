@@ -19,7 +19,7 @@ import (
 func NewCommand(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "job",
-		Short: "Deploying and managing jobs in DC/OS",
+		Short: "Deploy and manage jobs in DC/OS",
 	}
 
 	cmd.AddCommand(

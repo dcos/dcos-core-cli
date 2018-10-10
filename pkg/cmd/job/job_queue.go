@@ -60,7 +60,7 @@ func newCmdJobQueue(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns queued job runs in json format")
-	cmd.Flags().BoolVar(&quietOutput, "quiet", false, "returns only IDs of queued job runs")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of queued job runs")
 	return cmd
 }

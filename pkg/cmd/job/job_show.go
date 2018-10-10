@@ -11,7 +11,7 @@ import (
 func newCmdJobShow(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show <job-id>",
-		Short: "Displays a job definition",
+		Short: "Show a job",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

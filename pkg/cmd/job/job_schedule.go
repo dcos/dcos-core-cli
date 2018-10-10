@@ -14,7 +14,7 @@ import (
 func newCmdJobSchedule(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "schedule",
-		Short: "Managing schedules of jobs",
+		Short: "Manage schedules of jobs",
 	}
 
 	cmd.AddCommand(
