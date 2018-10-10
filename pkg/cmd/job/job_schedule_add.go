@@ -9,7 +9,7 @@ import (
 func newCmdJobScheduleAdd(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <job-id> <schedule-file>",
-		Short: "add a schedule to a job",
+		Short: "Add a schedule to a job",
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

@@ -11,7 +11,7 @@ import (
 func newCmdJobScheduleUpdate(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <job-id> <schedule-file>",
-		Short: "update a schedule of a job",
+		Short: "Update a schedule of a job",
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

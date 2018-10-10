@@ -9,7 +9,7 @@ import (
 func newCmdJobScheduleRemove(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove <job-id> <schedule-id>",
-		Short: "remove a schedule of a job",
+		Short: "Remove a schedule of a job",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

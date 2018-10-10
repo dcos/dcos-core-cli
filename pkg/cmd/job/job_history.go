@@ -18,7 +18,7 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 	var failures bool
 	cmd := &cobra.Command{
 		Use:   "history",
-		Short: "View your job run history",
+		Short: "Provides a job run history",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)
@@ -71,10 +71,10 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns history in json format")
-	cmd.Flags().BoolVar(&quietOutput, "quiet", false, "returns only IDs of listed jobs")
-	cmd.Flags().BoolVar(&last, "last", false, "returns history for last run")
-	cmd.Flags().BoolVar(&failures, "show-failures", false, "show failed runs of this job")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed jobs")
+	cmd.Flags().BoolVar(&last, "last", false, "Print only history for last run")
+	cmd.Flags().BoolVar(&failures, "show-failures", false, "Print failed runs of this job")
 	return cmd
 }
 

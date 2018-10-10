@@ -13,7 +13,7 @@ func newCmdJobScheduleShow(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	cmd := &cobra.Command{
 		Use:   "show <job-id>",
-		Short: "show the schedule of a job",
+		Short: "Show the schedule of a job",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)
@@ -44,6 +44,6 @@ func newCmdJobScheduleShow(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns schedules in json format")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	return cmd
 }

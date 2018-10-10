@@ -16,7 +16,7 @@ func newCmdJobList(ctx api.Context) *cobra.Command {
 	var quietOutput bool
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all job definitions",
+		Short: "Show all job definitions",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)
@@ -55,7 +55,7 @@ func newCmdJobList(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns jobs in json format")
-	cmd.Flags().BoolVar(&quietOutput, "quiet", false, "returns only IDs of listed jobs")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed jobs")
 	return cmd
 }

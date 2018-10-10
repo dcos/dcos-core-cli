@@ -9,7 +9,7 @@ import (
 func newCmdJobRun(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
-		Short: "run a job now",
+		Short: "Run a job now",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

@@ -9,7 +9,7 @@ import (
 func newCmdJobUpdate(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <file>",
-		Short: "update a job",
+		Short: "Update a job",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)

@@ -17,7 +17,7 @@ func newCmdJobShowRuns(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	cmd := &cobra.Command{
 		Use:   "runs <job-id>",
-		Short: "Displays the current job runs",
+		Short: "Show the successful and failure runs of a job",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := metronomeClient(ctx)
@@ -62,8 +62,8 @@ func newCmdJobShowRuns(ctx api.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&runID, "run-id", "", "show run for a given <run-id>")
-	cmd.Flags().BoolVar(&quietOutput, "quiet", false, "returns only IDs of listed runs")
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "returns history in json format")
+	cmd.Flags().StringVar(&runID, "run-id", "", "Show run for a given <run-id>")
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed runs")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	return cmd
 }
