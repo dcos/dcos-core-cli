@@ -45,8 +45,8 @@ root_path = path.join(
     path.dirname(path.realpath(__file__)), "..", ".."
 )
 
+
 def create_plugin_toml(filepath: str, platform: str):
-    plugin_path = path.join(build_path, platform, "plugin")
     bin_extension = '.exe' if platform == 'windows' else ''
 
     with open(filepath, encoding='utf-8', mode='w') as file:
@@ -67,22 +67,27 @@ def package_completions(plugin_path: str):
 def package_binaries(plugin_path: str, platform: str):
     bin_extension = ".exe" if platform == "windows" else ""
 
-    go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
-    python_bin = path.join(root_path, "python", "lib", "dcoscli", "dist", "dcos{}".format(bin_extension))
+    # go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
+    python_bin = path.join(root_path, "python", "lib",
+                           "dcoscli", "dist", "dcos{}".format(bin_extension))
 
     dest = path.join(plugin_path, "bin")
     dir_util.mkpath(dest)
 
-    # As we aren't using the Go CLI piece yet, this shouldn't be moved into the folder
-    # file_util.copy_file(go_bin, path.join(dest, "dcos"))
-    file_util.copy_file(python_bin, path.join(dest, "dcos_py{}".format(bin_extension)))
+    # As we aren't using the Go CLI piece yet, this shouldn't be moved into the
+    # folder file_util.copy_file(go_bin, path.join(dest, "dcos"))
+    file_util.copy_file(python_bin, path.join(
+        dest, "dcos_py{}".format(bin_extension)))
 
 
-def package_plugin(plugin_path: str, platform: str):
+def package_plugin(build_path: str, platform: str):
+    plugin_path = path.join(build_path, platform, 'plugin')
+
     if not path.exists(plugin_path):
         os.makedirs(plugin_path)
 
     toml_path = path.join(plugin_path, "plugin.toml")
+
     create_plugin_toml(toml_path, platform)
 
     package_completions(plugin_path)
@@ -97,7 +102,7 @@ def package_plugin(plugin_path: str, platform: str):
     )
 
 
-if __name__ == '__main__':
+def main():
     build_path = path.join(root_path, "build")
 
     # Because pyinstaller does not allow cross compilation, when running this
@@ -106,10 +111,13 @@ if __name__ == '__main__':
     # being run.
     platform = os.uname().sysname.lower()
     platform_build_path = path.join(build_path, platform)
-    plugin_path = path.join(platform_build_path, "plugin")
 
     if not path.exists(platform_build_path):
         os.mkdir(platform_build_path)
 
-    package_plugin(plugin_path, platform)
+    package_plugin(build_path, platform)
+
+
+if __name__ == '__main__':
+    main()
 
