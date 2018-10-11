@@ -13,9 +13,7 @@ build_path = os.path.dirname(os.path.realpath(__file__)) + "/../build"
 platforms = ['linux', 'darwin', 'windows']
 
 for platform in platforms:
-    plugin_path = build_path + '/' + platform + '/plugin'
-
-    python_bin_dir = os.path.join(plugin_path, "bin")
+    python_bin_dir = build_path + '/' + platform + '/python'
     package_plugin(build_path, platform, python_bin_dir)
 
 

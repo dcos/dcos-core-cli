@@ -39,8 +39,8 @@ pipeline {
 
             sh '''
               bash -exc "
-                mkdir -p build/linux/plugin/bin; \
-                cp python/lib/dcoscli/dist/dcos build/linux/plugin/bin/"
+                mkdir -p build/linux/python; \
+                cp python/lib/dcoscli/dist/dcos build/linux/python/"
             '''
 
             stash includes: "build/**", name: "dcos-linux"
@@ -59,8 +59,8 @@ pipeline {
 
             sh '''
               bash -exc " \
-                mkdir -p build/darwin/plugin/bin; \
-                cp python/lib/dcoscli/dist/dcos build/darwin/plugin/bin/"
+                mkdir -p build/darwin/python; \
+                cp python/lib/dcoscli/dist/dcos build/darwin/python/"
             '''
 
             stash includes: "build/**", name: "dcos-darwin"
@@ -84,8 +84,8 @@ pipeline {
 
             bat '''
               bash -exc " \
-                mkdir -p build/windows/plugin/bin; \
-                cp python/lib/dcoscli/dist/dcos.exe build/windows/plugin/bin/"
+                mkdir -p build/windows/python; \
+                cp python/lib/dcoscli/dist/dcos.exe build/windows/python/"
             '''
 
             stash includes: "build/**", name: "dcos-windows"
