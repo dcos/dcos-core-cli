@@ -179,7 +179,7 @@ pipeline {
     stage("Publish binaries and plugins to S3") {
       when {
         anyOf {
-          branch 'master'
+          expression { env.BRANCH_NAME != null }
           expression { env.TAG_NAME != null }
         }
       }
