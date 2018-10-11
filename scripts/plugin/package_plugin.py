@@ -82,7 +82,11 @@ def package_binaries(plugin_path: str, platform: str, python_bin_dir: str):
         dest, "dcos_py{}".format(bin_extension)))
 
 
-def package_plugin(build_path: str, platform: str, python_bin_dir: str):
+def package_plugin(build_path: str,
+                   platform: str,
+                   python_bin_dir: str,
+                   include_completions: bool = False
+                   ):
     plugin_path = path.join(build_path, platform, "plugin")
 
     if not path.exists(plugin_path):
@@ -90,7 +94,8 @@ def package_plugin(build_path: str, platform: str, python_bin_dir: str):
 
     create_plugin_toml(plugin_path, platform)
 
-    package_completions(plugin_path)
+    if include_completions:
+        package_completions(plugin_path)
 
     package_binaries(plugin_path, platform, python_bin_dir)
 
@@ -117,9 +122,9 @@ def main():
     if not path.exists(platform_build_path):
         os.mkdir(platform_build_path)
 
-    package_plugin(build_path, platform, python_bin_dir)
+    package_plugin(build_path, platform, python_bin_dir,
+                   include_completions=True)
 
 
 if __name__ == '__main__':
     main()
-
