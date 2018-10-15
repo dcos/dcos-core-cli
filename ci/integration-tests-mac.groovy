@@ -33,7 +33,8 @@ pipeline {
         ]) {
           sh '''
             bash -exc " \
-              env; \
+              mkdir -p build/linux; \
+              make plugin; \
               cd scripts; \
               python3 -m venv env; \
               source env/bin/activate; \
@@ -41,6 +42,7 @@ pipeline {
               export PYTHONIOENCODING=utf-8; \
               pip install --upgrade pip; \
               pip install -r requirements.txt; \
+              wget -O env/bin/dcos https://downloads.dcos.io/binaries/cli/darwin/x86-64/latest/dcos; \
               dcos cluster remove --all; \
               ./run_integration_tests.py --e2e-backend=dcos_launch"
           '''

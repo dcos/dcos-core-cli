@@ -16,7 +16,7 @@ darwin linux windows: docker-image
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
 
 .PHONY: plugin
-plugin: default python
+plugin: python
 	@python3 scripts/plugin/package_plugin.py
 
 .PHONY: python

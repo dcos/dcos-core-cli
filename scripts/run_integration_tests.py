@@ -18,7 +18,8 @@ from dcos_e2e.backends import AWS, Docker
 from dcos_e2e.cluster import Cluster
 from dcos_e2e.node import Node
 from dcoscli.cluster.main import setup
-from dcoscli.test.common import dcos_tempdir
+
+from dcoscli.test.common import dcos_tempdir, exec_command
 from passlib.hash import sha512_crypt
 
 
@@ -89,7 +90,7 @@ def run_tests(e2e_backend, installer_url, dcos_license, dcos_url, admin_username
             public_ip_address=dcos_ip,
             private_ip_address=dcos_ip,
             ssh_key_path=Path(ssh_key_path),
-            default_ssh_user=ssh_user,
+            default_user=ssh_user,
         )])
 
         cluster = Cluster.from_nodes(
@@ -112,12 +113,10 @@ def _run_tests(cluster, admin_username, admin_password):
 
     with dcos_tempdir():
         print(master_ip)
-        setup(
-            master_ip,
-            no_check=True,
-            username=admin_username,
-            password_str=admin_password
-        )
+        exec_command(['dcos', 'cluster', 'setup', '--no-check', '--username',
+                      admin_username, '--password', admin_password, master_ip])
+
+        exec_command(['dcos', 'plugin', 'add', '../build/' + sys.platform + '/dcos-core-cli.zip'])
 
         os.chdir("../python/lib/dcoscli")
 

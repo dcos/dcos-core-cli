@@ -16,8 +16,8 @@ def credentials = [
    variable: 'DCOS_TEST_LICENSE'],
   [$class: 'UsernamePasswordMultiBinding',
    credentialsId: '323df884-742b-4099-b8b7-d764e5eb9674',
-   usernameVariable: 'DCOS_TEST_ADMIN_USERNAME',
-   passwordVariable: 'DCOS_TEST_ADMIN_PASSWORD']
+   usernameVariable: 'DCOS_USERNAME',
+   passwordVariable: 'DCOS_PASSWORD']
 ]
 
 node('py36') {
@@ -61,21 +61,25 @@ node('py36') {
                         // `ImportError: No module named 'termios'` on Windows.
                         // There were a workaround for this issue in the licensing
                         // CLI tests, but it is not addressed in dcos e2e.
-                        dir('dcos-core-cli/python/lib/dcoscli') {
+                        dir('dcos-core-cli') {
                             bat '''
                                 bash -exc " \
                                 export PYTHONIOENCODING=utf-8; \
-                                make binary; \
                                 export CLI_TEST_SSH_USER=centos; \
                                 export CLI_TEST_SSH_KEY_PATH=${DCOS_TEST_SSH_KEY_PATH}; \
                                 export CLI_TEST_MASTER_PROXY=true; \
+                                mkdir -p build/windows; \
+                                make python; \
+                                python scripts/plugin/package_plugin.py; \
+                                cd python/lib/dcoscli; \
+                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/binaries/cli/windows/x86-64/latest/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
                                 dist/dcos cluster remove --all; \
-                                dist/dcos cluster setup ${DCOS_TEST_URL} \
-                                    --insecure --username=${DCOS_TEST_ADMIN_USERNAME} \
-                                    --password-env=DCOS_TEST_ADMIN_PASSWORD; \
-                                dist/dcos config set core.reporting false; \
-                                dist/dcos config set core.timeout 30; \
-                                make test-binary"'''
+                                dist/dcos cluster setup ${DCOS_TEST_URL} --insecure; \
+                                dist/dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
+                                PATH=$PWD/dist:$PATH; \
+                                make env; \
+                                ./env/Scripts/tox -e py35-integration"
+                            '''
                         }
                     }
                 }
