@@ -33,11 +33,15 @@ pipeline {
         ]) {
           sh '''
             bash -exc " \
-              env; \
+              export DCOS_EXPERIMENTAL=1; \
+              mkdir -p build/linux; \
+              make plugin; \
               cd scripts; \
               python3 -m venv env; \
               source env/bin/activate; \
+              pip install --upgrade pip setuptools; \
               pip install -r requirements.txt; \
+              wget -O env/bin/dcos https://downloads.dcos.io/binaries/cli/linux/x86-64/latest/dcos; \
               dcos cluster remove --all; \
               ./run_integration_tests.py --e2e-backend=dcos_launch"
           '''

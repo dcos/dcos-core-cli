@@ -12,8 +12,8 @@ from dcos_launch import config, get_launcher
 assert 'DCOS_TEST_INSTALLER_URL' in os.environ
 assert 'DCOS_TEST_LICENSE' in os.environ
 assert 'DCOS_TEST_SSH_KEY_PATH' in os.environ
-assert 'DCOS_TEST_ADMIN_USERNAME' in os.environ
-assert 'DCOS_TEST_ADMIN_PASSWORD' in os.environ
+assert 'DCOS_USERNAME' in os.environ
+assert 'DCOS_PASSWORD' in os.environ
 
 dcos_launch_config = {
     'launch_config_version': 1,
@@ -35,8 +35,8 @@ dcos_launch_config = {
         'dns_search': 'us-west-2.compute.internal',
         'master_discovery': 'static',
         'exhibitor_storage_backend': 'static',
-        'superuser_username': os.environ['DCOS_TEST_ADMIN_USERNAME'],
-        'superuser_password_hash': sha512_crypt.hash(os.environ['DCOS_TEST_ADMIN_PASSWORD']),
+        'superuser_username': os.environ['DCOS_USERNAME'],
+        'superuser_password_hash': sha512_crypt.hash(os.environ['DCOS_PASSWORD']),
         'fault_domain_enabled': False,
         'license_key_contents': os.environ['DCOS_TEST_LICENSE'],
     },
