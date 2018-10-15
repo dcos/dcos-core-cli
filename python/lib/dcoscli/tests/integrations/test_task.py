@@ -31,10 +31,12 @@ TWO_TASKS = 'tests/data/file/two_tasks.json'
 TWO_TASKS_FOLLOW = 'tests/data/file/two_tasks_follow.json'
 LS = 'tests/data/tasks/ls-app.json'
 SH = 'tests/data/tasks/sh-app.json'
+CAT = 'tests/data/tasks/cat-app.json'
 HELLO_STDERR = 'tests/data/marathon/apps/hello-stderr.json'
 
 INIT_APPS = ((LS, 'ls-app'),
              (SH, 'sh-app'),
+             (CAT, 'cat-app'),
              (SLEEP1, 'test-app1'),
              (SLEEP2, 'test-app2'))
 NUM_TASKS = len(INIT_APPS)
@@ -334,17 +336,18 @@ def test_exec_match_id_pattern():
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task attach' not supported on Windows")
 def test_attach():
-    task_id = _get_task_id('sh-app')
+    task_id = _get_task_id('cat-app')
 
     proc, master = popen_tty('dcos task attach ' + task_id)
     master = os.fdopen(master, 'w')
     tty.setraw(master, when=termios.TCSANOW)
 
-    master.write("echo 'Hello World!'\r\n")
+    msg = "Hello World!\n"
+    expected_output = "Hello World!\r\nHello World!\r\n"
+    master.write(msg)
     master.flush()
 
-    echo = proc.stdout.read(33).decode("utf-8")
-    assert echo == "echo 'Hello World!'\r\nHello World!"
+    assert proc.stdout.read(len(expected_output)).decode() == expected_output
 
     master.buffer.write(b'\x10\x11')
     master.flush()
