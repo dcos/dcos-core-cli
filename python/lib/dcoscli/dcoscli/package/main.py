@@ -10,7 +10,8 @@ from dcos.errors import DCOSException, DefaultError
 from dcos.package import get_package_manager
 from dcoscli import tables
 from dcoscli.subcommand import default_command_info, default_doc
-from dcoscli.util import cluster_version_check, confirm, confirm_text, decorate_docopt_usage
+from dcoscli.util import (cluster_version_check,
+                          confirm, confirm_text, decorate_docopt_usage)
 
 logger = util.get_logger(__name__)
 
