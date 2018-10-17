@@ -32,7 +32,7 @@ def decorate_docopt_usage(func):
 
 def cluster_version_check(func):
     """ Checks that the version of the currently attached cluster is correct
-    for this version of the CLI. If not, it prints a warning.
+    for this version of the CLI. If not, prints a warning.
 
     :param func: function
     :type func: function
