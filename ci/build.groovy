@@ -178,10 +178,7 @@ pipeline {
 
     stage("Publish binaries and plugins to S3") {
       when {
-        anyOf {
-          expression { env.BRANCH_NAME != null }
-          expression { env.TAG_NAME != null }
-        }
+        expression { env.CHANGE_ID == null }
       }
 
       agent { label 'py36' }
