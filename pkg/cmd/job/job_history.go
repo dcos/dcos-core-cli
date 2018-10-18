@@ -74,7 +74,7 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed jobs")
 	cmd.Flags().BoolVar(&last, "last", false, "Print only history for last run")
-	cmd.Flags().BoolVar(&failures, "show-failures", false, "Print failed runs of this job")
+	cmd.Flags().BoolVar(&failures, "failures", false, "Print failed runs of this job")
 	return cmd
 }
 
