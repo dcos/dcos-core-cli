@@ -157,7 +157,7 @@ func (c *Client) addOrUpdateJob(job *Job, add bool) (*Job, error) {
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
-	case 201:
+	case 200, 201:
 		var j Job
 		if err = json.NewDecoder(resp.Body).Decode(&j); err != nil {
 			return nil, err
