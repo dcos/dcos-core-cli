@@ -13,7 +13,7 @@ name = "dcos-core-cli"
 
 [[commands]]
 name = "job"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "Deploy and manage jobs in DC/OS"
 
 [[commands]]
@@ -71,15 +71,13 @@ def package_completions(plugin_path: str):
 def package_binaries(plugin_path: str, platform: str, python_bin_dir: str):
     bin_extension = ".exe" if platform == "windows" else ""
 
-    # go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
+    go_bin = path.join(plugin_path, "..", "dcos{}".format(bin_extension))
     python_bin = path.join(python_bin_dir, "dcos{}".format(bin_extension))
 
     dest = path.join(plugin_path, "bin")
     dir_util.mkpath(dest)
 
-    # As we aren't using the Go CLI piece yet, this shouldn't be moved into the
-    # folder
-    # file_util.copy_file(go_bin, path.join(dest, "dcos"))
+    file_util.copy_file(go_bin, path.join(dest, "dcos{}".format(bin_extension)))
     file_util.copy_file(python_bin, path.join(
         dest, "dcos_py{}".format(bin_extension)))
 
