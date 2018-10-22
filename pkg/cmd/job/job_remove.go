@@ -7,6 +7,7 @@ import (
 
 // newCmdJobRemove removes a given job.
 func newCmdJobRemove(ctx api.Context) *cobra.Command {
+	var force bool
 	cmd := &cobra.Command{
 		Use:   "remove",
 		Short: "Remove a job",
@@ -17,8 +18,9 @@ func newCmdJobRemove(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			return client.RemoveJob(args[0])
+			return client.RemoveJob(args[0], force)
 		},
 	}
+	cmd.Flags().BoolVar(&force, "stop-current-job-runs", false, "Force to stopp all current runs")
 	return cmd
 }
