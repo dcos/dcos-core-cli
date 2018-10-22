@@ -289,12 +289,23 @@ func (c *Client) Kill(jobID, runID string) error {
 }
 
 // RemoveJob removes a job.
-func (c *Client) RemoveJob(jobID string) error {
-	resp, err := c.http.Delete("/v1/jobs/" + jobID)
+func (c *Client) RemoveJob(jobID string, force bool) error {
+	req, err := c.http.NewRequest("DELETE", "/v1/jobs/"+jobID, nil)
 	if err != nil {
 		return err
 	}
 
+	// Add embed query parameters to the request URL.
+	q := req.URL.Query()
+	if force {
+		q.Add("stopCurrentJobRuns", "true")
+	}
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
