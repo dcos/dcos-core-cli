@@ -1,8 +1,8 @@
 import contextlib
 import json
 import os
-
 import pytest
+import retrying
 
 from dcos import constants
 
@@ -14,23 +14,6 @@ def test_help():
     with open('dcoscli/data/help/job.txt') as content:
         assert_command(['dcos', 'job', '--help'],
                        stdout=content.read().encode('utf-8'))
-
-
-def test_version():
-    assert_command(['dcos', 'job', '--version'],
-                   stdout=b'dcos-job version SNAPSHOT\n')
-
-
-def test_schema_config():
-    with open('tests/data/metronome/jobs/schema-config.json') as f:
-        returncode_, stdout_, stderr_ = exec_command(
-            ['dcos', 'job', '--config-schema'], env=None, stdin=None)
-        assert str(stdout_.decode("utf-8")) == f.read()
-
-
-def test_info():
-    assert_command(['dcos', 'job', '--info'],
-                   stdout=b'Deploy and manage jobs in DC/OS\n')
 
 
 @pytest.fixture
@@ -61,11 +44,11 @@ def test_show_job_schedule():
 
 
 def test_add_job_bad_resource():
-    stderr = (b'Can\'t read from resource: bad_resource.\n'
-              b'Please check that it exists.\n')
-    assert_command(['dcos', 'job', 'add', 'bad_resource'],
-                   returncode=1,
-                   stderr=stderr)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'job', 'add', 'bad_resource'])
+
+    assert returncode == 1
+    assert "Error: open bad_resource:" in stderr.decode('utf-8')
 
 
 def test_add_bad_json_job():
@@ -73,7 +56,8 @@ def test_add_bad_json_job():
         ['dcos', 'job', 'add', 'tests/data/metronome/jobs/bad.json'])
 
     assert returncode == 1
-    assert stderr.decode('utf-8').startswith('Error loading JSON: ')
+    assert stderr.decode('utf-8').startswith(
+        'Error: unexpected end of JSON input')
 
 
 def test_show_job():
@@ -86,23 +70,23 @@ def test_show_job_with_blank_jobname():
         ['dcos', 'job', 'show'])
 
     assert returncode == 1
-    assert "Invalid subcommand usage" in stdout.decode('utf-8')
+    assert "Error: accepts 1 arg(s)" in stderr.decode('utf-8')
 
 
 def test_show_job_with_invalid_jobname():
     assert_command(
         ['dcos', 'job', 'show', 'invalid'],
         stdout=b'',
-        stderr=b"Error: Job not found\n",
+        stderr=b'Error: job "invalid" does not exist\n',
         returncode=1)
 
 
 def test_show_job_runs_blank_jobname():
-    assert_command(
-        ['dcos', 'job', 'show', 'runs'],
-        stdout=b'',
-        stderr=b"Error: Job not found\n",
-        returncode=1)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'job', 'show', 'runs'])
+
+    assert returncode == 1
+    assert "Error: accepts 1 arg(s)" in stderr.decode('utf-8')
 
 
 def test_show_schedule_blank_jobname():
@@ -110,30 +94,31 @@ def test_show_schedule_blank_jobname():
         ['dcos', 'job', 'schedule', 'show'])
 
     assert returncode == 1
-    assert stdout.decode('utf-8').startswith('Invalid subcommand usage')
+    assert stderr.decode('utf-8').startswith('Error: accepts 1 arg(s)')
 
 
 def test_show_job_queue_blank():
-    assert_command(
-        ['dcos', 'job', 'queue'],
-        stdout=b"",
-        stderr=b"",
-        returncode=0)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'job', 'queue', '--json'])
+
+    result = json.loads(stdout.decode('utf-8'))
+
+    assert len(result) == 0
 
 
 def test_show_job_queue_blank_for_job():
     assert_command(
         ['dcos', 'job', 'queue', 'magikarp'],
-        stdout=b"There are no deployments in the queue for 'magikarp'\n",
-        stderr=b"",
-        returncode=0)
+        stdout=b"",
+        stderr=b'Error: job "magikarp" does not exist\n',
+        returncode=1)
 
 
 def test_show_schedule_invalid_jobname():
     assert_command(
         ['dcos', 'job', 'schedule', 'show', 'invalid'],
         stdout=b'',
-        stderr=b"Error: Job not found\n",
+        stderr=b'Error: job "invalid" does not exist\n',
         returncode=1)
 
 
@@ -172,17 +157,6 @@ def test_no_history_with_job():
         assert returncode == 0
 
 
-def test_history_deprecated_show_failures():
-
-    with _no_schedule_instance_job():
-        returncode, stdout, stderr = exec_command(
-            ['dcos', 'job', 'history', 'pikachu', '--show-failures'])
-
-        assert returncode == 0
-        assert stderr.decode('utf-8').startswith(
-                "'--show-failures' is deprecated")
-
-
 def test_show_runs():
     with _no_schedule_instance_job():
 
@@ -201,19 +175,23 @@ def _run_job(job_id):
         ['dcos', 'job', 'run', job_id])
 
     assert returncode == 0
-    assert 'Run ID:' in stdout.decode('utf-8')
 
 
 def test_show_queue():
     with _no_schedule_instance_large_job():
         _run_job('gyarados')
 
-        returncode, stdout, stderr = exec_command(
-            ['dcos', 'job', 'queue'])
+        @retrying.retry(stop_max_attempt_number=5, wait_fixed=2000)
+        def dcos_job_queue_check():
+            returncode, stdout, stderr = exec_command(
+                ['dcos', 'job', 'queue'])
 
-        assert returncode == 0
-        assert 'JOB RUN ID' in stdout.decode('utf-8')
-        assert 'gyarados' in stdout.decode('utf-8')
+            assert returncode == 0
+            assert 'JOB ID' in stdout.decode('utf-8')
+            assert 'RUN ID' in stdout.decode('utf-8')
+            assert 'gyarados' in stdout.decode('utf-8')
+
+        dcos_job_queue_check()
 
 
 @contextlib.contextmanager
