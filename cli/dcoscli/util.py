@@ -57,7 +57,7 @@ def cluster_version_check(func):
         if m is None:
             return func(*args, **kwargs)
 
-        supported_version = "1.11"
+        supported_version = "1.10"
         major_version = m.group(1)
 
         if major_version != supported_version:
