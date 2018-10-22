@@ -43,11 +43,16 @@ def cluster_version_check(func):
     def wrapper(*args, **kwargs):
         import re
 
-        c = cluster.get_attached_cluster()
-        if c is None:
+        attached = None
+        for c in cluster.get_clusters():
+            if c.is_attached():
+                attached = c
+                break
+
+        if attached is None:
             return func(*args, **kwargs)
 
-        version = c.get_dcos_version()
+        version = attached.get_dcos_version()
         m = re.match(r'^(1\.[0-9]+)\D*', version)
         if m is None:
             return func(*args, **kwargs)
