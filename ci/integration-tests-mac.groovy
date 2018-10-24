@@ -8,6 +8,15 @@ pipeline {
   }
 
   stages {
+    stage("Build Go binary") {
+      agent { label 'mesos-ubuntu' }
+
+      steps {
+          sh 'make darwin'
+          stash includes: 'build/darwin/**', name: 'dcos-darwin'
+      }
+    }
+
     stage("Run macOS integration tests") {
       agent { label 'mac-hh-yosemite' }
 
@@ -31,9 +40,11 @@ pipeline {
           usernameVariable: 'DCOS_TEST_ADMIN_USERNAME',
           passwordVariable: 'DCOS_TEST_ADMIN_PASSWORD']
         ]) {
+          unstash 'dcos-darwin'
+
           sh '''
             bash -exc " \
-              mkdir -p build/linux; \
+              mkdir -p build/darwin; \
               make plugin; \
               cd scripts; \
               python3 -m venv env; \
