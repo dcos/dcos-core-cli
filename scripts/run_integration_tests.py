@@ -17,7 +17,6 @@ import pytest
 from dcos_e2e.backends import AWS, Docker
 from dcos_e2e.cluster import Cluster
 from dcos_e2e.node import Node
-from dcoscli.cluster.main import setup
 
 from dcoscli.test.common import dcos_tempdir, exec_command
 from passlib.hash import sha512_crypt
