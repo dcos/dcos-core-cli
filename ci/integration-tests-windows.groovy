@@ -20,6 +20,17 @@ def credentials = [
    passwordVariable: 'DCOS_PASSWORD']
 ]
 
+node('mesos-ubuntu') {
+    ws('/jenkins/workspace') {
+
+        dir("dcos-core-cli") {
+            checkout scm
+            sh 'make windows'
+            stash includes: 'build/windows/**', name: 'dcos-windows'
+        }
+    }
+}
+
 node('py36') {
     ws('/jenkins/workspace') {
 
@@ -62,6 +73,8 @@ node('py36') {
                         // There were a workaround for this issue in the licensing
                         // CLI tests, but it is not addressed in dcos e2e.
                         dir('dcos-core-cli') {
+                            unstash 'dcos-windows'
+
                             bat '''
                                 bash -exc " \
                                 export PYTHONIOENCODING=utf-8; \

@@ -8,6 +8,15 @@ pipeline {
   }
 
   stages {
+    stage("Build Go binary") {
+      agent { label 'mesos-ubuntu' }
+
+      steps {
+          sh 'make linux'
+          stash includes: 'build/linux/**', name: 'dcos-linux'
+      }
+    }
+
     stage("Run Linux integration tests") {
       agent { label 'py36' }
 
@@ -31,6 +40,8 @@ pipeline {
           usernameVariable: 'DCOS_TEST_ADMIN_USERNAME',
           passwordVariable: 'DCOS_TEST_ADMIN_PASSWORD']
         ]) {
+          unstash 'dcos-linux'
+
           sh '''
             bash -exc " \
               export DCOS_EXPERIMENTAL=1; \
