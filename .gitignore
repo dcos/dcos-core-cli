@@ -18,3 +18,5 @@ bundle.zip
 Vagrantfile
 .vagrant
 .idea
+
+# useless change to make a commit to test appveyor
