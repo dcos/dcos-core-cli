@@ -1165,7 +1165,7 @@ class TaskIO(object):
         # Allow an exit sequence to be used to break the CLIs attachment to
         # the remote task. Depending on the call, this may be disabled, or
         # the exit sequence to be used may be overwritten.
-        self.supports_exit_sequence = True
+        self.supports_exit_sequence = False
         self.exit_sequence = b'\x10\x11'  # Ctrl-p, Ctrl-q
         self.exit_sequence_detected = False
 
@@ -1267,6 +1267,7 @@ class TaskIO(object):
 
         try:
             if self.interactive:
+                self.supports_exit_sequence = True
                 tty.setraw(fd, when=termios.TCSANOW)
                 # To force a redraw of the remote terminal, we first resize it
                 # to 0 before setting it to the actual size of our local
