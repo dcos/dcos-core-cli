@@ -334,6 +334,17 @@ def test_exec_match_id_pattern():
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task exec' not supported on Windows")
+def test_exec_exit_status():
+    assert_command(
+        ['dcos', 'task', 'exec', 'app1', 'true'],
+        returncode=0)
+    assert_command(
+        ['dcos', 'task', 'exec', 'app1', 'bash', '-c', 'exit 10'],
+        returncode=10)
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task attach' not supported on Windows")
 def test_attach():
     task_id = _get_task_id('cat-app')
