@@ -1194,6 +1194,18 @@ class TaskIO(object):
 
         self._run()
 
+        if not self.exit_sequence_detected:
+            # We are only able to get the 'exit_status' of tasks launched via
+            # the default executor (i.e. as pods rather than via the command
+            # executor). In the future, mesos will deprecate the command
+            # executor in favor of the default executor, so this check will
+            # be able to go away. In the meantime, we will always return '0'
+            # for tasks launched via the command executor.
+            if "parent" in self.container_id:
+                return self._wait()
+
+        return 0
+
     def exec(self, _cmd, _args=None, _interactive=False, _tty=False):
         """Execute a new process inside of a given task by redirecting
         STDIN/STDOUT/STDERR between the CLI and the Mesos Agent API.
@@ -1231,6 +1243,8 @@ class TaskIO(object):
         self.output_thread_entry_point = self._launch_nested_container_session
 
         self._run()
+
+        return self._wait()
 
     def _run(self):
         """Run the helper threads in this class which enable streaming
@@ -1289,6 +1303,39 @@ class TaskIO(object):
 
         if self.exception:
             raise self.exception
+
+    def _wait(self):
+        """Wait for the container associated with this class (through
+           'container_id') to exit and return its exit status.
+        """
+
+        message = {
+            'type': 'WAIT_CONTAINER',
+            'wait_container': {
+                'container_id': self.container_id}}
+
+        req_extra_args = {
+            'headers': {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'}}
+
+        try:
+            response = http.post(
+                self.agent_url,
+                data=json.dumps(message),
+                timeout=None,
+                **req_extra_args)
+        except Exception as e:
+            raise DCOSException(
+                "Error waiting for command to complete: {error}"
+                .format(error=e))
+
+        exit_status = response.json()["wait_container"]["exit_status"]
+
+        if os.WIFSIGNALED(exit_status):
+            return os.WTERMSIG(exit_status) + 128
+        else:
+            return os.WEXITSTATUS(exit_status)
 
     def _thread_wrapper(self, func):
         """A wrapper around all threads used in this class
