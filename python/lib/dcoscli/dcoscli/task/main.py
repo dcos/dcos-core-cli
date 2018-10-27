@@ -215,8 +215,7 @@ def _attach(task, no_stdin=False):
     """
 
     task_io = mesos.TaskIO(task)
-    task_io.attach(no_stdin)
-    return 0
+    return task_io.attach(no_stdin)
 
 
 def _log(all_, follow, completed, lines, task, file_):
@@ -572,8 +571,7 @@ def _exec(task, cmd, args=None, interactive=False, tty=False):
     """
 
     task_io = mesos.TaskIO(task)
-    task_io.exec(cmd, args, interactive, tty)
-    return 0
+    return task_io.exec(cmd, args, interactive, tty)
 
 
 def _mesos_files(tasks, file_, client):
