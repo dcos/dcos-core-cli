@@ -21,7 +21,7 @@ pipeline {
           credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
           variable: 'DCOS_TEST_SSH_KEY_PATH'],
           [$class: 'StringBinding',
-          credentialsId: 'cee4eba4-5ac3-4b89-8d34-b0440b8b97d1',
+          credentialsId: '0b513aad-e0e0-4a82-95f4-309a80a02ff9',
           variable: 'DCOS_TEST_INSTALLER_URL'],
           [$class: 'StringBinding',
           credentialsId: 'ca159ad3-7323-4564-818c-46a8f03e1389',
