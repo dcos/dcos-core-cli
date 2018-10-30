@@ -41,7 +41,7 @@ pipeline {
               source env/bin/activate; \
               pip install --upgrade pip setuptools; \
               pip install -r requirements.txt; \
-              wget -O env/bin/dcos https://downloads.dcos.io/binaries/cli/linux/x86-64/latest/dcos; \
+              wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/0.7.x/dcos; \
               dcos cluster remove --all; \
               ./run_integration_tests.py --e2e-backend=dcos_launch"
           '''
