@@ -1,8 +1,11 @@
-# github.com/dcos/dcos-cli v0.0.0-20180830165634-cda6e9cfe410
+# github.com/VividCortex/ewma v1.1.1
+github.com/VividCortex/ewma
+# github.com/davecgh/go-spew v1.1.0
+github.com/davecgh/go-spew/spew
+# github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee
 github.com/dcos/dcos-cli/api
 github.com/dcos/dcos-cli/pkg/cli
 github.com/dcos/dcos-cli/pkg/httpclient
-github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/config
 github.com/dcos/dcos-cli/pkg/login
 github.com/dcos/dcos-cli/pkg/open
@@ -11,13 +14,17 @@ github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
 github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/cli/version
+github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/fsutil
-github.com/dcos/dcos-cli/pkg/cosmos
+github.com/dcos/dcos-cli/pkg/internal/corecli
+github.com/dcos/dcos-cli/pkg/internal/cosmos
 github.com/dcos/dcos-cli/pkg/mesos
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/mattn/go-isatty v0.0.4
+github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
 # github.com/mitchellh/go-homedir v1.0.0
@@ -26,6 +33,8 @@ github.com/mitchellh/go-homedir
 github.com/olekukonko/tablewriter
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.0.6
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.1
@@ -37,6 +46,14 @@ github.com/spf13/cast
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.1
 github.com/spf13/pflag
+# github.com/stretchr/testify v1.2.1
+github.com/stretchr/testify/require
+github.com/stretchr/testify/assert
+# github.com/vbauerster/mpb v3.3.3+incompatible
+github.com/vbauerster/mpb
+github.com/vbauerster/mpb/decor
+github.com/vbauerster/mpb/cwriter
+github.com/vbauerster/mpb/internal
 # golang.org/x/crypto v0.0.0-20180830192347-182538f80094
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789

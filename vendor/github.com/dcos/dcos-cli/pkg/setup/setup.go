@@ -17,49 +17,58 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/cosmos"
 	"github.com/dcos/dcos-cli/pkg/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/dcos/dcos-cli/pkg/internal/corecli"
+	"github.com/dcos/dcos-cli/pkg/internal/cosmos"
 	"github.com/dcos/dcos-cli/pkg/login"
 	"github.com/dcos/dcos-cli/pkg/mesos"
 	"github.com/dcos/dcos-cli/pkg/plugin"
 	"github.com/dcos/dcos-cli/pkg/prompt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/vbauerster/mpb"
 )
 
 // Opts are options for a setup.
 type Opts struct {
+	Fs            afero.Fs
 	Errout        io.Writer
 	Prompt        *prompt.Prompt
 	Logger        *logrus.Logger
 	LoginFlow     *login.Flow
 	ConfigManager *config.Manager
 	PluginManager *plugin.Manager
+	EnvLookup     func(key string) (string, bool)
 }
 
 // Setup represents a cluster setup.
 type Setup struct {
+	fs            afero.Fs
 	errout        io.Writer
 	prompt        *prompt.Prompt
 	logger        *logrus.Logger
 	loginFlow     *login.Flow
 	configManager *config.Manager
 	pluginManager *plugin.Manager
+	envLookup     func(key string) (string, bool)
 }
 
 // New creates a new setup.
 func New(opts Opts) *Setup {
 	return &Setup{
+		fs:            opts.Fs,
 		errout:        opts.Errout,
 		prompt:        opts.Prompt,
 		logger:        opts.Logger,
 		loginFlow:     opts.LoginFlow,
 		configManager: opts.ConfigManager,
 		pluginManager: opts.PluginManager,
+		envLookup:     opts.EnvLookup,
 	}
 }
 
@@ -74,31 +83,58 @@ func (s *Setup) Configure(flags *Flags, clusterURL string, attach bool) (*config
 	// Create a Cluster and an HTTP client with the few information already available.
 	cluster := config.NewCluster(nil)
 	cluster.SetURL(clusterURL)
-	cluster.SetTLS(config.TLS{Insecure: flags.insecure})
 
 	httpOpts := []httpclient.Option{
 		httpclient.Timeout(5 * time.Second),
 		httpclient.Logger(s.logger),
-		httpclient.NoFollow(),
 	}
 
-	// Create the TLS configuration if it's an HTTPS URL.
-	if strings.HasPrefix(cluster.URL(), "https://") {
-		tlsConfig, err := s.configureTLS(cluster.URL(), httpOpts, flags)
-		if err != nil {
-			return nil, err
+	for i := 0; i < 2; i++ {
+		// When using an HTTPS URL, configure TLS for the HTTP client accordingly.
+		if strings.HasPrefix(clusterURL, "https://") {
+			tlsConfig, err := s.configureTLS(httpOpts, flags)
+			if err != nil {
+				return nil, err
+			}
+			cluster.SetTLS(config.TLS{Insecure: tlsConfig.InsecureSkipVerify})
+			httpOpts = append(httpOpts, httpclient.TLS(tlsConfig))
 		}
-		httpOpts = append(httpOpts, httpclient.TLS(tlsConfig))
-	}
 
-	// Login to get the ACS token.
-	httpClient := httpclient.New(cluster.URL(), httpOpts...)
-	acsToken, err := s.loginFlow.Start(flags.loginFlags, httpClient)
-	if err != nil {
+		// Make sure we continue the setup flow with the canonical cluster URL.
+		canonicalClusterURL, err := detectCanonicalClusterURL(cluster.URL(), httpOpts)
+		if err == nil {
+			if canonicalClusterURL != cluster.URL() {
+				s.logger.Warnf("Continuing cluster setup with: %s", canonicalClusterURL)
+				cluster.SetURL(canonicalClusterURL)
+			}
+			break
+		}
+
+		// Download the DC/OS CA bundle when getting an unknown authority error.
+		if s.isX509UnknownAuthorityError(err) && len(flags.caBundle) == 0 {
+			flags.caBundle, err = s.downloadDCOSCABundle(clusterURL, httpOpts)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
 		return nil, err
 	}
+
+	// Login to get the ACS token, unless it is already present as an env var.
+	acsToken, _ := s.envLookup("DCOS_CLUSTER_SETUP_ACS_TOKEN")
+	if acsToken == "" {
+		httpClient := httpclient.New(cluster.URL(), httpOpts...)
+		var err error
+		acsToken, err = s.loginFlow.Start(flags.loginFlags, httpClient)
+		if err == login.ErrAuthDisabled {
+			s.logger.Warn("This cluster does not require authenticated requests. Skipping login.")
+		} else if err != nil {
+			return nil, err
+		}
+	}
 	cluster.SetACSToken(acsToken)
-	httpClient = httpclient.New(cluster.URL(), append(httpOpts, httpclient.ACSToken(acsToken))...)
+	httpClient := httpclient.New(cluster.URL(), append(httpOpts, httpclient.ACSToken(cluster.ACSToken()))...)
 
 	// Read cluster ID from cluster metadata.
 	metadata, err := dcos.NewClient(httpClient).Metadata()
@@ -128,43 +164,50 @@ func (s *Setup) Configure(flags *Flags, clusterURL string, attach bool) (*config
 		if err != nil {
 			return nil, err
 		}
+		s.logger.Infof("You are now attached to cluster %s", cluster.ID())
 	}
 
 	// Install default plugins (dcos-core-cli and dcos-enterprise-cli).
-	if !flags.noPlugin {
-		s.pluginManager.SetCluster(cluster)
-		if err = s.installDefaultPlugins(httpClient); err != nil {
-			return nil, err
-		}
+	s.pluginManager.SetCluster(cluster)
+	if err = s.installDefaultPlugins(httpClient); err != nil {
+		return nil, err
 	}
 
 	s.logger.Infof("%s is now setup", clusterURL)
 	return cluster, nil
 }
 
-// configureTLS creates the TLS configuration for a given cluster URL and set of flags.
-func (s *Setup) configureTLS(clusterURL string, httpOpts []httpclient.Option, flags *Flags) (*tls.Config, error) {
+// detectCanonicalClusterURL returns the URL with the response of the HEAD request.
+func detectCanonicalClusterURL(clusterURL string, httpOpts []httpclient.Option) (string, error) {
+	httpClient := httpclient.New(clusterURL, httpOpts...)
+	req, err := httpClient.NewRequest("HEAD", "/", nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode == 200 {
+		resp.Request.URL.Host = strings.ToLower(resp.Request.URL.Host)
+
+		return strings.TrimRight(resp.Request.URL.String(), "/"), nil
+	}
+	return "", fmt.Errorf("couldn't detect a canonical cluster URL")
+}
+
+// configureTLS creates the TLS configuration for a given set of flags.
+func (s *Setup) configureTLS(httpOpts []httpclient.Option, flags *Flags) (*tls.Config, error) {
 	// Return early with an insecure TLS config when `--insecure` is passed.
 	if flags.insecure {
 		return &tls.Config{InsecureSkipVerify: true}, nil
 	}
 
-	// If no custom CA bundle is explicitly provided, download the cluster's CA bundle.
-	if len(flags.caBundle) == 0 {
-		needsDCOSCABundle, err := s.needsDCOSCABundle(clusterURL, httpOpts)
-		if err != nil {
-			return nil, err
-		}
-		if needsDCOSCABundle {
-			flags.caBundle, err = s.downloadDCOSCABundle(clusterURL, httpOpts, !flags.noCheck)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	// Create a cert pool from the CA bundle PEM. The user is prompted for manual
-	// verification of the certificate authority, unless `--no-check` is passed.
+	// verification of the certificate authority, unless `--no-check` or `--ca-bundle`
+	// were explicitly passed.
 	var certPool *x509.CertPool
 	if len(flags.caBundle) > 0 {
 		var err error
@@ -176,36 +219,18 @@ func (s *Setup) configureTLS(clusterURL string, httpOpts []httpclient.Option, fl
 	return &tls.Config{RootCAs: certPool}, nil
 }
 
-// needsDCOSCABundle checks whether or not the cluster certificate is already trusted
-// by the sytem. This is done by making an HTTPS request to the cluster. This check
-// is needed for setups where there is a load balancer serving proper certificates
-// in front of the cluster. In such cases the CLI shouldn't download the DC/OS CA
-// bundle and use it, as this would break the TLS setup.
-func (s *Setup) needsDCOSCABundle(clusterURL string, httpOpts []httpclient.Option) (bool, error) {
-	httpClient := httpclient.New(clusterURL, httpOpts...)
-	req, err := httpClient.NewRequest("HEAD", "/", nil)
-	if err != nil {
-		return false, err
+// isX509UnknownAuthorityError checks whether an error is of type x509.UnknownAuthorityError.
+func (s *Setup) isX509UnknownAuthorityError(err error) bool {
+	urlErr, ok := err.(*url.Error)
+	if !ok {
+		return false
 	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		urlErr, ok := err.(*url.Error)
-		if !ok {
-			return false, err
-		}
-		if _, ok := urlErr.Err.(x509.UnknownAuthorityError); !ok {
-			return false, urlErr
-		}
-		return true, nil
-	}
-
-	resp.Body.Close()
-	return false, nil
+	_, ok = urlErr.Err.(x509.UnknownAuthorityError)
+	return ok
 }
 
 // downloadDCOSCABundle downloads the cluster certificate authority at "/ca/dcos-ca.crt".
-func (s *Setup) downloadDCOSCABundle(clusterURL string, httpOpts []httpclient.Option, prompt bool) ([]byte, error) {
+func (s *Setup) downloadDCOSCABundle(clusterURL string, httpOpts []httpclient.Option) ([]byte, error) {
 	insecureHTTPClient := httpclient.New(clusterURL, append(httpOpts, httpclient.TLS(&tls.Config{
 		InsecureSkipVerify: true,
 	}))...)
@@ -268,37 +293,95 @@ func (s *Setup) installDefaultPlugins(httpClient *httpclient.Client) error {
 		return errors.New("DC/OS version of the cluster < 1.10, installation of the plugins aborted")
 	}
 
+	var wg sync.WaitGroup
+	pbar := mpb.New(mpb.WithOutput(s.errout), mpb.WithWaitGroup(&wg))
+	wg.Add(2)
+
 	// Install dcos-enterprise-cli.
-	enterpriseInstallErr := make(chan error)
 	go func() {
 		// Install dcos-enterprise-cli if the DC/OS variant metadata is "enterprise".
 		if version.DCOSVariant == "enterprise" {
-			enterpriseInstallErr <- s.installPlugin("dcos-enterprise-cli", httpClient)
-		}
-		if version.DCOSVariant == "" {
+			if err := s.installPlugin("dcos-enterprise-cli", httpClient, version, pbar); err != nil {
+				s.logger.Debug(err)
+			}
+		} else if version.DCOSVariant == "" {
 			// We add this message if the DC/OS variant is "" (DC/OS < 1.12)
 			// or if there was an error while installing the EE plugin.
 			s.logger.Error("Please run “dcos package install dcos-enterprise-cli” if you use a DC/OS Enterprise cluster")
 		}
-		close(enterpriseInstallErr)
+		wg.Done()
 	}()
 
 	// Install dcos-core-cli.
-	errCore := s.installPlugin("dcos-core-cli", httpClient)
-	// The installation of the core and EE plugins happen in parallel.
-	// We wait for the installation of the enterprise plugin before returning.
-	errEnterprise := <-enterpriseInstallErr
-
+	errCore := s.installPlugin("dcos-core-cli", httpClient, version, pbar)
+	wg.Done()
+	pbar.Wait()
 	if errCore != nil {
-		return errCore
+		// Extract the dcos-core-cli bundle if it coudln't be downloaded.
+		errCore = corecli.InstallPlugin(s.fs, s.pluginManager)
 	}
-	return errEnterprise
+	return errCore
 }
 
-// installPlugin installs a plugin by its name. It gets the plugin's download URL through Cosmos.
-func (s *Setup) installPlugin(name string, httpClient *httpclient.Client) error {
+// installPlugin installs a plugin by its name.
+func (s *Setup) installPlugin(name string, httpClient *httpclient.Client, version *dcos.Version, pbar *mpb.Progress) error {
 	s.logger.Infof("Installing %s...", name)
 
+	if skip, _ := s.envLookup("DCOS_CLUSTER_SETUP_SKIP_CANONICAL_URL_INSTALL"); skip != "1" {
+		err := s.installPluginFromCanonicalURL(name, version, pbar)
+		if err == nil {
+			return nil
+		}
+		s.logger.Debug(err)
+	}
+	if skip, _ := s.envLookup("DCOS_CLUSTER_SETUP_SKIP_COSMOS_INSTALL"); skip != "1" {
+		return s.installPluginFromCosmos(name, httpClient, pbar)
+	}
+	return errors.New("skipping plugin installation from Cosmos (DCOS_CLUSTER_SETUP_SKIP_COSMOS_INSTALL=1)")
+}
+
+// installPluginFromCanonicalURL installs a plugin using its canonical URL.
+func (s *Setup) installPluginFromCanonicalURL(name string, version *dcos.Version, pbar *mpb.Progress) error {
+	domain := "downloads.dcos.io"
+	if name == "dcos-enterprise-cli" {
+		domain = "downloads.mesosphere.io"
+	}
+	platform := runtime.GOOS
+
+	matches := regexp.MustCompile(`^(\d+)\.(\d+)\D*`).FindStringSubmatch(version.Version)
+	if matches == nil {
+		return fmt.Errorf("unable to parse DC/OS version %s", version.Version)
+	}
+	dcosVersion := matches[1] + "." + matches[2]
+
+	url := fmt.Sprintf(
+		"https://%s/cli/releases/plugins/%s/%s/x86-64/%s-%s-patch.latest.zip",
+		domain, name, platform, name, dcosVersion,
+	)
+	httpClient := httpclient.New("")
+	req, err := httpClient.NewRequest("HEAD", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+		url = fmt.Sprintf(
+			"https://%s/cli/testing/plugins/%s/%s/x86-64/%s-%s-patch.x.zip",
+			domain, name, platform, name, dcosVersion,
+		)
+	}
+	return s.pluginManager.Install(url, &plugin.InstallOpts{
+		Name:        name,
+		Update:      true,
+		ProgressBar: pbar,
+	})
+}
+
+// installPluginFromCosmos installs a plugin through Cosmos.
+func (s *Setup) installPluginFromCosmos(name string, httpClient *httpclient.Client, pbar *mpb.Progress) error {
 	// Get package information from Cosmos.
 	pkgInfo, err := cosmos.NewClient(httpClient).DescribePackage(name)
 	if err != nil {
@@ -310,9 +393,20 @@ func (s *Setup) installPlugin(name string, httpClient *httpclient.Client) error 
 	if !ok {
 		return fmt.Errorf("'%s' isn't available for '%s')", name, runtime.GOOS)
 	}
+
+	var checksum plugin.Checksum
+	for _, contentHash := range p.ContentHash {
+		switch contentHash.Algo {
+		case "sha256":
+			checksum.Hasher = sha256.New()
+			checksum.Value = contentHash.Value
+		}
+	}
 	return s.pluginManager.Install(p.URL, &plugin.InstallOpts{
-		Name:   pkgInfo.Package.Name,
-		Update: true,
+		Name:        pkgInfo.Package.Name,
+		Update:      true,
+		Checksum:    checksum,
+		ProgressBar: pbar,
 		PostInstall: func(fs afero.Fs, pluginDir string) error {
 			pkgInfoFilepath := filepath.Join(pluginDir, "package.json")
 			pkgInfoFile, err := fs.OpenFile(pkgInfoFilepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -348,7 +442,7 @@ func (s *Setup) promptCA(cert *x509.Certificate) error {
 
   SHA256 fingerprint: %s
 
-Do you trust it?`
+Do you trust it? [y/n] `
 
 	return s.prompt.Confirm(fmt.Sprintf(
 		msg,
@@ -356,5 +450,5 @@ Do you trust it?`
 		cert.NotBefore,
 		cert.NotAfter,
 		fingerprintBuf.String(),
-	))
+	), "")
 }
