@@ -4,7 +4,10 @@ package plugin
 
 import (
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
+	"hash"
+	"io"
 	"mime"
 	"net/http"
 	"os"
@@ -21,6 +24,8 @@ import (
 	"github.com/pelletier/go-toml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
 )
 
 // Manager retrieves the plugins available for the current cluster
@@ -47,6 +52,11 @@ type InstallOpts struct {
 	// Update allows to potentially overwrite an already existing plugin of the same name.
 	Update bool
 
+	// Checksum represents a CLI plugin resource content hash.
+	Checksum Checksum
+
+	ProgressBar *mpb.Progress
+
 	// PostInstall is a hook which can be invoked after plugin installation.
 	// It is invoked right before the plugin is moved to its final location.
 	PostInstall func(fs afero.Fs, pluginDir string) error
@@ -55,15 +65,23 @@ type InstallOpts struct {
 	stagingDir string
 }
 
+// Checksum contains the hash function and the checksum we expect from a plugin.
+type Checksum struct {
+	Hasher hash.Hash
+	Value  string
+}
+
 // Install installs a plugin from a resource.
 func (m *Manager) Install(resource string, installOpts *InstallOpts) (err error) {
 	// If it's a remote resource, download it first.
 	m.logger.Infof("Installing plugin from %s...", resource)
 	if strings.HasPrefix(resource, "https://") || strings.HasPrefix(resource, "http://") {
-		installOpts.path, err = m.downloadPlugin(resource)
+		installOpts.path, err = m.downloadPlugin(resource, installOpts)
 		if err != nil {
 			return err
 		}
+		// Remove the downloaded resource from the temp dir at the end of installation.
+		defer m.fs.RemoveAll(filepath.Dir(installOpts.path))
 	} else {
 		installOpts.path = resource
 	}
@@ -130,6 +148,20 @@ func (m *Manager) Plugins() (plugins []*Plugin) {
 	return plugins
 }
 
+// Plugin finds a plugin identified by a given name.
+func (m *Manager) Plugin(name string) (*Plugin, error) {
+	pluginDirs, err := afero.ReadDir(m.fs, m.pluginsDir())
+	if err != nil {
+		return nil, err
+	}
+	for _, pluginDir := range pluginDirs {
+		if pluginDir.IsDir() && pluginDir.Name() == name {
+			return m.loadPlugin(pluginDir.Name())
+		}
+	}
+	return nil, fmt.Errorf("unknown plugin %s", name)
+}
+
 // loadPlugin loads a plugin based on its name.
 func (m *Manager) loadPlugin(name string) (*Plugin, error) {
 	m.logger.Infof("Loading plugin '%s'...", name)
@@ -145,6 +177,7 @@ func (m *Manager) loadPlugin(name string) (*Plugin, error) {
 	// Save a deep copy of the plugin once it's loaded from the plugin.toml file.
 	persistedPlugin := &Plugin{}
 	deriveDeepCopy(persistedPlugin, plugin)
+	plugin.dir = pluginPath
 
 	if len(plugin.Commands) == 0 {
 		plugin.Commands = m.findCommands(pluginPath)
@@ -244,7 +277,7 @@ func (m *Manager) pluginsDir() string {
 }
 
 // downloadPlugin downloads a plugin and returns the path to the temporary file it stored it to.
-func (m *Manager) downloadPlugin(url string) (string, error) {
+func (m *Manager) downloadPlugin(url string, installOpts *InstallOpts) (string, error) {
 	tmpDir, err := afero.TempDir(m.fs, os.TempDir(), "dcos-cli")
 	if err != nil {
 		return "", err
@@ -258,8 +291,32 @@ func (m *Manager) downloadPlugin(url string) (string, error) {
 
 	downloadedFilePath := filepath.Join(tmpDir, m.downloadFilename(resp))
 
-	if err := fsutil.CopyReader(m.fs, resp.Body, downloadedFilePath, 0644); err != nil {
+	var respReader io.Reader
+	if installOpts.Checksum.Hasher != nil {
+		respReader = io.TeeReader(resp.Body, installOpts.Checksum.Hasher)
+	} else {
+		respReader = resp.Body
+	}
+
+	if installOpts.ProgressBar != nil && resp.ContentLength > 0 {
+		bar := installOpts.ProgressBar.AddBar(
+			resp.ContentLength,
+			mpb.PrependDecorators(decor.Name(installOpts.Name)),
+			mpb.AppendDecorators(decor.CountersKibiByte("% 6.1f / % 6.1f")),
+		)
+		respReader = bar.ProxyReader(respReader)
+	}
+
+	if err := fsutil.CopyReader(m.fs, respReader, downloadedFilePath, 0644); err != nil {
 		return "", err
+	}
+
+	if installOpts.Checksum.Hasher != nil {
+		m.logger.Debugf("Verifying checksum for %s...", url)
+		computedChecksum := hex.EncodeToString(installOpts.Checksum.Hasher.Sum(nil))
+		if computedChecksum != installOpts.Checksum.Value {
+			return "", fmt.Errorf("computed checksum %s for %s, expected %s", computedChecksum, url, installOpts.Checksum.Value)
+		}
 	}
 	return downloadedFilePath, nil
 }
@@ -356,6 +413,7 @@ func (m *Manager) installPlugin(installOpts *InstallOpts) error {
 	// Copy the plugin folder to its final location. We don't move it as this causes
 	// issues when the system's temp dir and the DC/OS dir are on different devices.
 	// See https://groups.google.com/forum/m/#!topic/golang-dev/5w7Jmg_iCJQ.
+	defer m.fs.RemoveAll(installOpts.stagingDir)
 	return fsutil.CopyDir(m.fs, installOpts.stagingDir, dest)
 }
 
