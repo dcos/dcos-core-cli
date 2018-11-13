@@ -72,13 +72,14 @@ node('py36') {
                                 make python; \
                                 python scripts/plugin/package_plugin.py; \
                                 cd python/lib/dcoscli; \
-                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/binaries/cli/windows/x86-64/latest/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
-                                dist/dcos cluster remove --all; \
-                                dist/dcos cluster setup ${DCOS_TEST_URL} --insecure; \
-                                dist/dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
-                                PATH=$PWD/dist:$PATH; \
                                 make env; \
-                                ./env/Scripts/tox -e py35-integration"
+                                rm -f ./env/Scripts/dcos.exe; \
+                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/master/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
+                                PATH=$PWD/dist:$PATH; \
+                                dcos cluster remove --all; \
+                                dcos cluster setup ${DCOS_TEST_URL} --insecure; \
+                                dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
+                                ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations"
                             '''
                         }
                     }
