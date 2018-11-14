@@ -47,6 +47,7 @@ def package(package_name, deploy=False, args=[]):
 
 
 UNIVERSE_REPO = "https://universe.mesosphere.com/repo"
+BOOTSTRAP_REGISTRY_REPO = "https://registry.component.thisdcos.directory/repo"
 UNIVERSE_TEST_REPOS = collections.OrderedDict(
     [
         (
