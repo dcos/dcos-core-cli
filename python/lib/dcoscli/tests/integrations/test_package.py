@@ -15,10 +15,10 @@ from dcoscli.test.common import (assert_command, assert_lines, base64_to_dict,
                                  delete_zk_nodes, exec_command,
                                  file_json, update_config)
 from dcoscli.test.marathon import watch_all_deployments
-from dcoscli.test.package import (package_install, package_uninstall,
-                                  setup_universe_server,
-                                  teardown_universe_server,
-                                  UNIVERSE_REPO, UNIVERSE_TEST_REPOS)
+from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO, package_install,
+                                  package_uninstall, setup_universe_server,
+                                  teardown_universe_server, UNIVERSE_REPO,
+                                  UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
 from ..common import file_bytes
 
@@ -71,8 +71,10 @@ def test_repo_list():
     repo_list = bytes(
         (
             "Universe: {0}\n"
+            "Bootstrap Registry: {1}\n"
             "helloworld-universe: {helloworld-universe}\n"
-        ).format(UNIVERSE_REPO, **UNIVERSE_TEST_REPOS),
+        ).format(UNIVERSE_REPO, BOOTSTRAP_REGISTRY_REPO,
+                 **UNIVERSE_TEST_REPOS),
         'utf-8'
     )
 
@@ -90,8 +92,10 @@ def test_repo_add_and_remove():
         (
             "Universe: {1}\n"
             "1.7-universe: {0}\n"
+            "Bootstrap Registry: {2}\n"
             "helloworld-universe: {helloworld-universe}\n"
-        ).format(repo17,  UNIVERSE_REPO, **UNIVERSE_TEST_REPOS),
+        ).format(repo17,  UNIVERSE_REPO, BOOTSTRAP_REGISTRY_REPO,
+                 **UNIVERSE_TEST_REPOS),
         'utf-8'
     )
 
@@ -101,15 +105,17 @@ def test_repo_add_and_remove():
     repo_list = bytes(
         (
             "Universe: {0}\n"
+            "Bootstrap Registry: {1}\n"
             "helloworld-universe: {helloworld-universe}\n"
-        ).format(UNIVERSE_REPO, **UNIVERSE_TEST_REPOS),
+        ).format(UNIVERSE_REPO, BOOTSTRAP_REGISTRY_REPO,
+                 **UNIVERSE_TEST_REPOS),
         'utf-8'
     )
     _repo_remove(['1.7-universe'], repo_list)
 
 
 def test_repo_remove_multi_and_empty():
-    repos = ['Universe']
+    repos = ['Universe', 'Bootstrap Registry']
     repos.extend(UNIVERSE_TEST_REPOS.keys())
 
     repos_remove_cmd = ['dcos', 'package', 'repo', 'remove']
@@ -130,6 +136,9 @@ def test_repo_remove_multi_and_empty():
 
     assert_command(
         ['dcos', 'package', 'repo', 'add', 'Universe', UNIVERSE_REPO])
+
+    assert_command(['dcos', 'package', 'repo', 'add', 'Bootstrap Registry',
+                    BOOTSTRAP_REGISTRY_REPO])
 
 
 def test_describe_nonexistent():
@@ -759,6 +768,8 @@ def test_search_ends_with_wildcard():
 
 def test_search_start_with_wildcard():
     assert_command(['dcos', 'package', 'repo', 'remove', 'Universe'])
+    assert_command(['dcos', 'package', 'repo', 'remove',
+                    'Bootstrap Registry'])
 
     returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'search', '*world', '--json'])
@@ -772,10 +783,14 @@ def test_search_start_with_wildcard():
 
     assert_command(
         ['dcos', 'package', 'repo', 'add', 'Universe', UNIVERSE_REPO])
+    assert_command(['dcos', 'package', 'repo', 'add', 'Bootstrap Registry',
+                    BOOTSTRAP_REGISTRY_REPO])
 
 
 def test_search_middle_with_wildcard():
     assert_command(['dcos', 'package', 'repo', 'remove', 'Universe'])
+    assert_command(['dcos', 'package', 'repo', 'remove',
+                    'Bootstrap Registry'])
 
     returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'search', 'hellow*d', '--json'])
@@ -789,6 +804,8 @@ def test_search_middle_with_wildcard():
 
     assert_command(
         ['dcos', 'package', 'repo', 'add', 'Universe', UNIVERSE_REPO])
+    assert_command(['dcos', 'package', 'repo', 'add', 'Bootstrap Registry',
+                    BOOTSTRAP_REGISTRY_REPO])
 
 
 def _get_app_labels(app_id):
