@@ -42,7 +42,7 @@ pipeline {
               export PYTHONIOENCODING=utf-8; \
               pip install --upgrade pip; \
               pip install -r requirements.txt; \
-              wget -O env/bin/dcos https://downloads.dcos.io/binaries/cli/darwin/x86-64/latest/dcos; \
+              wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/darwin/x86-64/master/dcos; \
               dcos cluster remove --all; \
               ./run_integration_tests.py --e2e-backend=dcos_launch"
           '''
