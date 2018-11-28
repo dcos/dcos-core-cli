@@ -22,50 +22,6 @@ pipeline {
 
     stage('Build binaries') {
       parallel {
-        stage('Build Linux binary') {
-          agent {
-            node {
-              label 'py35'
-              customWorkspace '/workspace'
-            }
-          }
-
-          steps {
-            sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make binary"
-            '''
-
-            sh '''
-              bash -exc "
-                mkdir -p build/linux/python; \
-                cp python/lib/dcoscli/dist/dcos build/linux/python/"
-            '''
-
-            stash includes: "build/**", name: "dcos-linux"
-          }
-        }
-
-        stage('Build macOS binary') {
-          agent { label 'mac-hh-yosemite' }
-
-          steps {
-            sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make binary"
-            '''
-
-            sh '''
-              bash -exc " \
-                mkdir -p build/darwin/python; \
-                cp python/lib/dcoscli/dist/dcos build/darwin/python/"
-            '''
-
-            stash includes: "build/**", name: "dcos-darwin"
-          }
-        }
 
         stage('Build Windows binary') {
           agent {
