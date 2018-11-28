@@ -55,57 +55,11 @@ pipeline {
         expression { env.TAG_NAME == null }
       }
       parallel {
-        stage('Run Linux tests') {
-          agent {
-            node {
-              label 'py35'
-              customWorkspace '/workspace'
-            }
-          }
-
-          steps {
-            sh '''
-              bash -exc " \
-                cd python/lib/dcos; \
-                make env; \
-                ./env/bin/tox -e py35-syntax; \
-                ./env/bin/tox -e py35-unit"
-            '''
-
-            sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make env; \
-                ./env/bin/tox -e py35-syntax"
-            '''
-          }
-        }
-
-        stage('Run macOS tests') {
-          agent { label 'mac-hh-yosemite' }
-
-          steps {
-            sh '''
-              bash -exc " \
-                cd python/lib/dcos; \
-                make env; \
-                ./env/bin/tox -e py35-syntax; \
-                ./env/bin/tox -e py35-unit"
-            '''
-
-            sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make env; \
-                ./env/bin/tox -e py35-syntax"
-            '''
-          }
-        }
 
         stage('Run Windows tests') {
           agent {
             node {
-              label 'windows'
+              label 'winpy354'
               customWorkspace 'C:\\windows\\workspace'
             }
           }
