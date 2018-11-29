@@ -1,4 +1,3 @@
-import base64
 import contextlib
 import json
 import os
@@ -11,12 +10,11 @@ import six
 from dcos import config, constants, errors, http, subcommand, util
 
 from dcoscli.test.common import (assert_command, assert_lines, base64_to_dict,
-                                 delete_zk_node,
                                  delete_zk_nodes, exec_command,
                                  file_json, update_config)
 from dcoscli.test.marathon import watch_all_deployments
-from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO, package_install,
-                                  package_uninstall, setup_universe_server,
+from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO,
+                                  setup_universe_server,
                                   teardown_universe_server, UNIVERSE_REPO,
                                   UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
@@ -402,20 +400,6 @@ def test_package_metadata():
     _install_helloworld()
 
     # test marathon labels
-    expected_metadata = {
-        'maintainer': 'support@mesosphere.io',
-        'framework': False,
-        'name': 'helloworld',
-        'version': '0.1.0',
-        'packagingVersion': '3.0',
-        'preInstallNotes': 'A sample pre-installation message',
-        'selected': False,
-        'website': 'https://github.com/mesosphere/dcos-helloworld',
-        'description': 'Example DCOS application package',
-        'tags': ['mesosphere', 'example', 'subcommand'],
-        'postInstallNotes': 'A sample post-installation message'
-    }
-
     expected_source = bytes(
         UNIVERSE_TEST_REPOS['helloworld-universe'],
         'utf-8'
