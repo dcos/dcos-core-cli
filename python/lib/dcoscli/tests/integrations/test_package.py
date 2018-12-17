@@ -1,4 +1,3 @@
-import base64
 import contextlib
 import json
 import os
@@ -11,12 +10,11 @@ import six
 from dcos import config, constants, errors, http, subcommand, util
 
 from dcoscli.test.common import (assert_command, assert_lines, base64_to_dict,
-                                 delete_zk_node,
                                  delete_zk_nodes, exec_command,
                                  file_json, update_config)
 from dcoscli.test.marathon import watch_all_deployments
-from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO, package_install,
-                                  package_uninstall, setup_universe_server,
+from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO,
+                                  setup_universe_server,
                                   teardown_universe_server, UNIVERSE_REPO,
                                   UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
@@ -189,13 +187,7 @@ def test_describe_render():
     actual_labels = stdout_.pop("labels", None)
 
     for label, value in expected_labels.items():
-        if label == "DCOS_PACKAGE_METADATA":
-            # We covert the metadata into a dictionary
-            # so that failures in equality are more descriptive
-            assert base64_to_dict(value) == \
-                base64_to_dict(actual_labels.get(label))
-        else:
-            assert value == actual_labels.get(label)
+        assert value == actual_labels.get(label)
 
     assert stdout == stdout_
     assert stderr == b''
@@ -239,7 +231,7 @@ def test_describe_options():
     actual_labels = stdout_.pop("labels", None)
 
     for label, value in expected_labels.items():
-        if label in ["DCOS_PACKAGE_METADATA", "DCOS_PACKAGE_OPTIONS"]:
+        if label in ["DCOS_PACKAGE_OPTIONS"]:
             # We covert the metadata into a dictionary
             # so that failures in equality are more descriptive
             assert base64_to_dict(value) == \
@@ -408,20 +400,6 @@ def test_package_metadata():
     _install_helloworld()
 
     # test marathon labels
-    expected_metadata = {
-        'maintainer': 'support@mesosphere.io',
-        'framework': False,
-        'name': 'helloworld',
-        'version': '0.1.0',
-        'packagingVersion': '3.0',
-        'preInstallNotes': 'A sample pre-installation message',
-        'selected': False,
-        'website': 'https://github.com/mesosphere/dcos-helloworld',
-        'description': 'Example DCOS application package',
-        'tags': ['mesosphere', 'example', 'subcommand'],
-        'postInstallNotes': 'A sample post-installation message'
-    }
-
     expected_source = bytes(
         UNIVERSE_TEST_REPOS['helloworld-universe'],
         'utf-8'
@@ -437,9 +415,6 @@ def test_package_metadata():
     for label, value in expected_labels.items():
         assert value == six.b(app_labels.get(label))
 
-    assert expected_metadata == base64_to_dict(six.b(
-        app_labels.get('DCOS_PACKAGE_METADATA')))
-
     # test local package.json
     package = file_json(
         'tests/data/package/json/test_package_metadata.json')
@@ -452,22 +427,6 @@ def test_package_metadata():
 
     # uninstall helloworld
     _uninstall_helloworld()
-
-
-def test_images_in_metadata():
-    package_install('cassandra')
-
-    labels = _get_app_labels('/cassandra')
-    dcos_package_metadata = labels.get("DCOS_PACKAGE_METADATA")
-    images = json.loads(
-        base64.b64decode(dcos_package_metadata).decode('utf-8'))["images"]
-    assert images.get("icon-small") is not None
-    assert images.get("icon-medium") is not None
-    assert images.get("icon-large") is not None
-
-    package_uninstall('cassandra')
-    delete_zk_node('dcos-service-cassandra')
-    watch_all_deployments()
 
 
 def test_install_missing_package():
