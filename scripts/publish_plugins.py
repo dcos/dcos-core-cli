@@ -19,7 +19,7 @@ platforms = ['linux', 'darwin', 'windows']
 
 for platform in platforms:
     python_bin_dir = build_path + '/' + platform + '/python'
-    package_plugin(build_path, platform, python_bin_dir)
+    package_plugin(build_path, platform, python_bin_dir, include_completions=True)
 
 
 s3_client = boto3.resource('s3', region_name='us-west-2').meta.client
