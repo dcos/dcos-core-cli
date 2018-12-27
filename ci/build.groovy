@@ -22,6 +22,14 @@ pipeline {
 
     stage('Build binaries') {
       parallel {
+        stage("Build Go binaries") {
+        agent { label 'mesos-ubuntu' }
+
+        steps {
+          sh 'make darwin linux windows'
+          stash includes: 'build/**', name: 'dcos-core-go'
+        }
+        }
         stage('Build Linux binary') {
           agent {
             node {
@@ -193,6 +201,7 @@ pipeline {
             unstash "dcos-linux"
             unstash "dcos-darwin"
             unstash "dcos-windows"
+            unstash "dcos-core-go"
 
             sh '''
               bash -exc " \
