@@ -156,9 +156,9 @@ def _task_summary_json(datapoints):
     :rtype: str
     """
     summary_datapoints = [
-        _get_datapoint(datapoints, 'cpus.user.time'),
-        _get_datapoint(datapoints, 'mem.total'),
-        _get_datapoint(datapoints, 'disk.used')
+        _get_datapoint(datapoints, 'cpus.user_time_secs'),
+        _get_datapoint(datapoints, 'mem.total_bytes'),
+        _get_datapoint(datapoints, 'disk.used_bytes')
     ]
     return json.dumps(summary_datapoints)
 
@@ -172,19 +172,20 @@ def _task_summary_data(datapoints):
     :rtype: dict
     """
 
-    cpu_user = _get_datapoint_value(datapoints, 'cpus.user.time')
-    cpu_system = _get_datapoint_value(datapoints, 'cpus.system.time')
-    cpu_throttled = _get_datapoint_value(datapoints, 'cpus.throttled.time')
+    cpu_user = _get_datapoint_value(datapoints, 'cpus.user_time_secs')
+    cpu_system = _get_datapoint_value(datapoints, 'cpus.system_time_secs')
+    cpu_throttled = _get_datapoint_value(
+        datapoints, 'cpus.throttled_time_secs')
     cpu_used = cpu_user + cpu_system
     cpu_total = cpu_used + cpu_throttled
     cpu_used_pc = _percentage(cpu_used, cpu_total)
 
-    mem_total = _get_datapoint_value(datapoints, 'mem.limit')
-    mem_used = _get_datapoint_value(datapoints, 'mem.total')
+    mem_total = _get_datapoint_value(datapoints, 'mem.limit_bytes')
+    mem_used = _get_datapoint_value(datapoints, 'mem.total_bytes')
     mem_used_pc = _percentage(mem_used, mem_total)
 
-    disk_total = _get_datapoint_value(datapoints, 'disk.used')
-    disk_used = _get_datapoint_value(datapoints, 'disk.limit')
+    disk_total = _get_datapoint_value(datapoints, 'disk.used_bytes')
+    disk_used = _get_datapoint_value(datapoints, 'disk.limit_bytes')
     disk_used_pc = _percentage(disk_used, disk_total)
 
     return {
