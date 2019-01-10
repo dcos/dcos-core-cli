@@ -1,6 +1,8 @@
 package job
 
 import (
+	"fmt"
+
 	"github.com/dcos/dcos-cli/api"
 	"github.com/spf13/cobra"
 )
@@ -17,8 +19,12 @@ func newCmdJobRun(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			_, err = client.RunJob(args[0])
-			return err
+			run, err := client.RunJob(args[0])
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(ctx.Out(), run.ID)
+			return nil
 		},
 	}
 	return cmd
