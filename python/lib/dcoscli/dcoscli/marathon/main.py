@@ -229,6 +229,11 @@ def _cmds():
             function=subcommand.debug_details),
 
         cmds.Command(
+            hierarchy=['marathon', 'delay', 'reset'],
+            arg_keys=['<app-id>', '<pod-id>'],
+            function=subcommand.delay_reset),
+
+        cmds.Command(
             hierarchy=['marathon', 'about'],
             arg_keys=[],
             function=subcommand.about),
@@ -242,6 +247,7 @@ def _cmds():
             hierarchy=['marathon'],
             arg_keys=['--config-schema', '--info'],
             function=_marathon)
+
     ]
 
 
@@ -854,6 +860,19 @@ class MarathonSubcommand(object):
         versions = client.get_app_versions(app_id, max_count)
 
         emitter.publish(versions)
+        return 0
+
+    def delay_reset(self, app_id, pod_id):
+        """
+        :param app_id: the id of the application to reset delay
+        :type app_id: str
+        :param pod_id: the Marathon ID of the pod to reset delay
+        :type pod_id: str
+        :return: process return code
+        :rtype: int
+        """
+        result = self._create_marathon_client().delay_reset(app_id or pod_id)
+        emitter.publish(result)
         return 0
 
     def deployment_list(self, app_id, json_, quiet_=False):

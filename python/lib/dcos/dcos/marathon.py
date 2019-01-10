@@ -446,6 +446,21 @@ class Client(object):
         response = self._rpc.http_req(http.post, path, params=params)
         return response.json()
 
+    def delay_reset(self, app_id):
+        """
+        :param app_id: The app_id which is used to delete the delay
+        :return: The result of reset delay call
+        :rtype: dict | str
+        """
+        app_id = util.normalize_marathon_id_path(app_id)
+        response = self._rpc.http_req(
+            http.delete,
+            'v2/queue{}/delay'.format(app_id)
+        )
+        if response.status_code == 204:
+            return 'Delay on [{}] has been reset'.format(app_id)
+        raise DCOSHTTPException(response)
+
     def get_deployment(self, deployment_id):
         """Returns a deployment.
 
