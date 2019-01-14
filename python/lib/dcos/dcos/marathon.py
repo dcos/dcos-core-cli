@@ -450,7 +450,7 @@ class Client(object):
         """
         :param app_id: The app_id which is used to delete the delay
         :return: The result of reset delay call
-        :rtype: dict | str
+        :rtype: str
         """
         app_id = util.normalize_marathon_id_path(app_id)
         response = self._rpc.http_req(
