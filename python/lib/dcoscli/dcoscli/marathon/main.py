@@ -230,7 +230,7 @@ def _cmds():
 
         cmds.Command(
             hierarchy=['marathon', 'delay', 'reset'],
-            arg_keys=['<app-id>', '<pod-id>'],
+            arg_keys=['<app-id>'],
             function=subcommand.delay_reset),
 
         cmds.Command(
@@ -862,16 +862,13 @@ class MarathonSubcommand(object):
         emitter.publish(versions)
         return 0
 
-    def delay_reset(self, app_id, pod_id):
+    def delay_reset(self, app_id):
         """
         :param app_id: the id of the application to reset delay
         :type app_id: str
-        :param pod_id: the Marathon ID of the pod to reset delay
-        :type pod_id: str
-        :return: process return code
         :rtype: int
         """
-        result = self._create_marathon_client().delay_reset(app_id or pod_id)
+        result = self._create_marathon_client().delay_reset(app_id)
         emitter.publish(result)
         return 0
 
