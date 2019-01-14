@@ -864,9 +864,17 @@ class MarathonSubcommand(object):
 
     def delay_reset(self, app_id):
         """
-        :param app_id: the id of the application to reset delay
+        :param app_id: the id of the application to reset delay.
+                       This can be a pod_id as well.
         :type app_id: str
         :rtype: int
+
+        NOTE: This method takes ONLY one parameter `app_id` but the help menu says that
+        the delay subcommand can accept one of `app_id|pod_id`. Since this expression
+        always means that there is only one parameter, this method has only one parameter
+        too. Also because the name of the parameter is sensitive to how it was named in
+        the help menu, the argument MUST be named as `app_id` even though it actually
+        maps to `app_id|pod_id` in help menu.
         """
         result = self._create_marathon_client().delay_reset(app_id)
         emitter.publish(result)
