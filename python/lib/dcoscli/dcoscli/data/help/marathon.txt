@@ -17,6 +17,7 @@ Usage:
     dcos marathon app kill [--scale] [--host=<host>] <app-id>
     dcos marathon app update [--force] <app-id> [<properties>...]
     dcos marathon app version list [--max-count=<max-count>] <app-id>
+    dcos marathon delay reset <app-id>|<pod-id>
     dcos marathon deployment list [--json|--quiet] [<app-id>]
     dcos marathon deployment rollback <deployment-id>
     dcos marathon deployment stop <deployment-id>
@@ -69,6 +70,8 @@ Commands:
         Update an application.
     app version list
         List the version history of an application.
+    delay reset
+        Reset the current delay (if any) of the application.
     deployment list
         Print a list of currently deployed applications.
     deployment rollback

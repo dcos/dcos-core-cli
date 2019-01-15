@@ -229,6 +229,11 @@ def _cmds():
             function=subcommand.debug_details),
 
         cmds.Command(
+            hierarchy=['marathon', 'delay', 'reset'],
+            arg_keys=['<app-id>'],
+            function=subcommand.delay_reset),
+
+        cmds.Command(
             hierarchy=['marathon', 'about'],
             arg_keys=[],
             function=subcommand.about),
@@ -242,6 +247,7 @@ def _cmds():
             hierarchy=['marathon'],
             arg_keys=['--config-schema', '--info'],
             function=_marathon)
+
     ]
 
 
@@ -854,6 +860,25 @@ class MarathonSubcommand(object):
         versions = client.get_app_versions(app_id, max_count)
 
         emitter.publish(versions)
+        return 0
+
+    def delay_reset(self, app_id):
+        """
+        :param app_id: the id of the application to reset delay.
+                       This can be a pod_id as well.
+        :type app_id: str
+        :rtype: int
+
+        NOTE: This method takes ONLY one parameter `app_id` but the help menu
+        says that the delay subcommand can accept one of `app_id|pod_id`.
+        Since this expression always means that there is only one parameter,
+        this method has only one parameter too. Also because the name of the
+        parameter is sensitive to how it was named in the help menu, the
+        argument MUST be named as `app_id` even though it actually maps to
+        `app_id|pod_id` in help menu.
+        """
+        result = self._create_marathon_client().delay_reset(app_id)
+        emitter.publish(result)
         return 0
 
     def deployment_list(self, app_id, json_, quiet_=False):
