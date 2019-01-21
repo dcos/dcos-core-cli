@@ -122,7 +122,15 @@ def get_config_dir_path():
 
     config_dir = os.environ.get(constants.DCOS_DIR_ENV) or \
         os.path.join("~", constants.DCOS_DIR)
-    return os.path.expanduser(config_dir)
+    logger.debug("Config directory: {}".format(config_dir))
+
+    try:
+        config_dir_path = os.path.expanduser(config_dir)
+    except KeyError:
+        logger.exception("Cannot find the user's home directory, export"
+                         " 'DCOS_DIR' to specify where the parent of"
+                         " the directory '.dcos' is")
+    return config_dir_path
 
 
 def get_config(mutable=False):
