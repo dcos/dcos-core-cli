@@ -27,7 +27,7 @@ _dcos_node() {
     if [ -z "$command" ]; then
         case "$cur" in
             --*)
-                __dcos_hande_compreply "${flags[@]}"
+                __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
                 __dcos_handle_compreply "${commands[@]}"
@@ -159,7 +159,7 @@ _dcos_node_list_components() {
 
 _dcos_node_log() {
     local i command
-    
+
     if ! __dcos_default_command_parse; then
         return
     fi
