@@ -26,6 +26,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 
 	cmd.AddCommand(
+		newCmdNodeDecommission(ctx),
 		newCmdNodeList(ctx),
 	)
 	return cmd

@@ -1,10 +1,13 @@
 package mesos
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	mesos "github.com/mesos/mesos-go/api/v1/lib"
+	"github.com/mesos/mesos-go/api/v1/lib/master"
 )
 
 // Client is a Mesos client for DC/OS.
@@ -84,4 +87,20 @@ func (c *Client) Slaves() ([]Slave, error) {
 	}
 
 	return state.Slaves, nil
+}
+
+// MarkAgentGone marks an agent as gone.
+func (c *Client) MarkAgentGone(agentID string) error {
+	body := master.Call{
+		Type: master.Call_MARK_AGENT_GONE,
+		MarkAgentGone: &master.Call_MarkAgentGone{
+			AgentID: mesos.AgentID{Value: agentID},
+		},
+	}
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+		return err
+	}
+	_, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(true))
+	return err
 }
