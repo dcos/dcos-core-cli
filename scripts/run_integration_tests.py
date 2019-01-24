@@ -115,7 +115,7 @@ def _run_tests(cluster, admin_username, admin_password):
         exec_command(['dcos', 'cluster', 'setup', '--no-check', '--username',
                       admin_username, '--password', admin_password, master_ip])
 
-        exec_command(['dcos', 'plugin', 'add', '../build/' + sys.platform + '/dcos-core-cli.zip'])
+        exec_command(['dcos', 'plugin', 'add', '-u', '../build/' + sys.platform + '/dcos-core-cli.zip'])
 
         os.chdir("../python/lib/dcoscli")
 
