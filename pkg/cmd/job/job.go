@@ -1,7 +1,6 @@
 package job
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +8,8 @@ import (
 	"os"
 
 	"github.com/dcos/dcos-cli/api"
-	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/metronome"
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -43,26 +42,11 @@ func metronomeClient(ctx api.Context) (*metronome.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	baseURL, _ := cluster.Config().Get("job.url").(string)
 	if baseURL == "" {
 		baseURL = cluster.URL() + "/service/metronome"
 	}
-
-	return metronome.NewClient(
-		httpclient.New(
-			baseURL,
-			httpclient.Logger(ctx.Logger()),
-			httpclient.ACSToken(cluster.ACSToken()),
-			httpclient.Timeout(cluster.Timeout()),
-			httpclient.TLS(&tls.Config{
-				InsecureSkipVerify: cluster.TLS().Insecure,
-				RootCAs:            cluster.TLS().RootCAs,
-			}),
-		),
-		ctx.Logger(),
-	), nil
-
+	return metronome.NewClient(pluginutil.HTTPClient(baseURL), pluginutil.Logger()), nil
 }
 
 func parseJSONJob(r io.Reader) (*metronome.Job, error) {
