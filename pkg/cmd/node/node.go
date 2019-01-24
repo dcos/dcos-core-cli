@@ -1,12 +1,10 @@
 package node
 
 import (
-	"crypto/tls"
-
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
-	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
@@ -30,32 +28,9 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.AddCommand(
 		newCmdNodeList(ctx),
 	)
-
 	return cmd
 }
 
-func mesosClient(ctx api.Context) (*mesos.Client, error) {
-	cluster, err := ctx.Cluster()
-	if err != nil {
-		return nil, err
-	}
-
-	baseURL, _ := cluster.Config().Get("core.dcos_url").(string)
-	if baseURL == "" {
-		baseURL = cluster.URL()
-	}
-
-	return mesos.NewClient(
-		httpclient.New(
-			baseURL,
-			httpclient.Logger(ctx.Logger()),
-			httpclient.ACSToken(cluster.ACSToken()),
-			httpclient.Timeout(cluster.Timeout()),
-			httpclient.TLS(&tls.Config{
-				InsecureSkipVerify: cluster.TLS().Insecure,
-				RootCAs:            cluster.TLS().RootCAs,
-			}),
-		),
-	), nil
-
+func mesosClient() *mesos.Client {
+	return mesos.NewClient(pluginutil.HTTPClient(""))
 }

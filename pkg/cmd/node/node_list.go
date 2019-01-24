@@ -23,10 +23,7 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 		Short: "Show all nodes in the cluster",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := mesosClient(ctx)
-			if err != nil {
-				return err
-			}
+			client := mesosClient()
 
 			// The following code allows us to do the API calls for
 			// the state and the masters concurrently which results
