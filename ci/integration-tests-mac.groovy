@@ -40,7 +40,7 @@ pipeline {
               source env/bin/activate; \
               export LC_ALL=en_US.UTF-8; \
               export PYTHONIOENCODING=utf-8; \
-              pip install --upgrade pip; \
+              pip install --upgrade pip==18.1; \
               pip install -r requirements.txt; \
               wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/darwin/x86-64/0.7.x/dcos; \
               dcos cluster remove --all; \
