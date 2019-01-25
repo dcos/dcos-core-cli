@@ -2,7 +2,7 @@ package mesos
 
 import "strings"
 
-// Master represents a single mesos master node
+// Master represents a single mesos master node.
 type Master struct {
 	Host    string `json:"host"`
 	IP      string `json:"ip"`
@@ -14,7 +14,7 @@ type Master struct {
 	Version string `json:"version"`
 }
 
-// Resources represents a resource type for a task
+// Resources represents a resource type for a task.
 type Resources struct {
 	CPUs  float64 `json:"cpus"`
 	Disk  float64 `json:"disk"`
@@ -34,7 +34,7 @@ type Domain struct {
 	} `json:"fault_domain"`
 }
 
-// Slave represents a single mesos slave node
+// Slave represents a single mesos slave node.
 type Slave struct {
 	TaskError           int                    `json:"TASK_ERROR"`
 	TaskFailed          int                    `json:"TASK_FAILED"`
