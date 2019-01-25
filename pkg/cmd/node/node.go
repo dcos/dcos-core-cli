@@ -28,6 +28,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.AddCommand(
 		newCmdNodeDecommission(ctx),
 		newCmdNodeList(ctx),
+		newCmdNodeListComponents(ctx),
 	)
 	return cmd
 }
