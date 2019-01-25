@@ -39,7 +39,7 @@ pipeline {
               cd scripts; \
               python3 -m venv env; \
               source env/bin/activate; \
-              pip install --upgrade pip setuptools; \
+              pip install --upgrade pip==18.1 setuptools; \
               pip install -r requirements.txt; \
               wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/0.7.x/dcos; \
               dcos cluster remove --all; \
