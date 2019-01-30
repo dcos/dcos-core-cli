@@ -7,7 +7,7 @@ import (
 
 func newCmdNodeDecommission(ctx api.Context) *cobra.Command {
 	return &cobra.Command{
-		Use:   "decommission",
+		Use:   "decommission <mesos-id>",
 		Short: "Mark an agent as gone",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
