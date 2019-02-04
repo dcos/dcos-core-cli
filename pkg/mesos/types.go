@@ -22,14 +22,15 @@ type Host struct {
 
 // Master represents a single mesos master node.
 type Master struct {
-	Host    string `json:"host"`
-	IP      string `json:"ip"`
-	Type    string `json:"type"`
-	Region  string `json:"region"`
-	Zone    string `json:"zone"`
-	ID      string `json:"id"`
-	PID     string `json:"pid"`
-	Version string `json:"version"`
+	Host      string   `json:"host"`
+	IP        string   `json:"ip"`
+	PublicIPs []string `json:"public_ips"`
+	Type      string   `json:"type"`
+	Region    string   `json:"region"`
+	Zone      string   `json:"zone"`
+	ID        string   `json:"id"`
+	PID       string   `json:"pid"`
+	Version   string   `json:"version"`
 }
 
 // Resources represents a resource type for a task.
@@ -58,6 +59,7 @@ type Slave struct {
 	Domain              Domain                 `json:"domain"`
 	FrameworkIDs        []string               `json:"framework_ids"`
 	Hostname            string                 `json:"hostname"`
+	PublicIPs           []string               `json:"public_ips"`
 	ID                  string                 `json:"id"`
 	PID                 string                 `json:"pid"`
 	Port                int                    `json:"port"`
