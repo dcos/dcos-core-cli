@@ -140,8 +140,12 @@ def test_repo_remove_multi_and_empty():
 
 
 def test_describe_nonexistent():
+    stderr = (
+        b"Package [xyzzy] not found. Find the correct package name using "
+        b"'dcos package search'\n"
+    )
     assert_command(['dcos', 'package', 'describe', 'xyzzy'],
-                   stderr=b'Package [xyzzy] not found\n',
+                   stderr=stderr,
                    returncode=1)
 
 
@@ -430,7 +434,10 @@ def test_package_metadata():
 
 
 def test_install_missing_package():
-    stderr = b'Package [missing-package] not found\n'
+    stderr = (
+        b"Package [missing-package] not found. "
+        b"Find the correct package name using 'dcos package search'\n"
+    )
     assert_command(['dcos', 'package', 'install', 'missing-package'],
                    returncode=1,
                    stderr=stderr)

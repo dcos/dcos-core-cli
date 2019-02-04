@@ -522,6 +522,9 @@ def _format_error_message(error):
         error_message = _format_json_schema_mismatch_message(error)
     elif error.get("type") == "MarathonBadResponse":
         error_message = _format_marathon_bad_response_message(error)
+    elif error.get("type") == "PackageNotFound":
+        helper = ". Find the correct package name using 'dcos package search'"
+        error_message = error.get("message") + helper
     elif error.get('type') == 'NotImplemented':
         error_message = 'DC/OS has not been ' \
                         'configured to support this operation'
