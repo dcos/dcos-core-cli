@@ -43,7 +43,7 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 					return err
 				}
 				for _, agent := range agents {
-					if mesosID == agent.AgentInfo.GetID().String() {
+					if mesosID == agent.AgentInfo.GetID().Value {
 						ip = agent.AgentInfo.GetHostname()
 					}
 				}
