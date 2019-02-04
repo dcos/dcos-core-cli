@@ -20,10 +20,10 @@ func NewClient(baseClient *httpclient.Client) *Client {
 }
 
 // Units returns the units of a certain node.
-func (c *Client) Units(node string) (UnitsHealthResponseJSONStruct, error) {
+func (c *Client) Units(node string) (*UnitsHealthResponseJSONStruct, error) {
 	resp, err := c.http.Get(fmt.Sprintf("/system/health/v1/nodes/%s/units", node))
 	if err != nil {
-		return UnitsHealthResponseJSONStruct{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	switch resp.StatusCode {
@@ -31,10 +31,10 @@ func (c *Client) Units(node string) (UnitsHealthResponseJSONStruct, error) {
 		var units UnitsHealthResponseJSONStruct
 		err = json.NewDecoder(resp.Body).Decode(&units)
 		if err != nil {
-			return UnitsHealthResponseJSONStruct{}, err
+			return nil, err
 		}
-		return units, nil
+		return &units, nil
 	default:
-		return UnitsHealthResponseJSONStruct{}, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
 	}
 }
