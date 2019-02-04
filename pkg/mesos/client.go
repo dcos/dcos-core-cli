@@ -22,11 +22,28 @@ func NewClient(baseClient *httpclient.Client) *Client {
 	}
 }
 
+// Hosts returns the IP address(es) of an host.
+func (c *Client) Hosts(host string) ([]Host, error) {
+	resp, err := c.http.Get("/mesos_dns/v1/hosts/" + host)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		var hosts []Host
+		err = json.NewDecoder(resp.Body).Decode(&hosts)
+		return hosts, err
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
 // Leader returns the Mesos leader of the connected cluster.
-func (c *Client) Leader() (Master, error) {
+func (c *Client) Leader() (*Master, error) {
 	resp, err := c.http.Get("/mesos_dns/v1/hosts/leader.mesos")
 	if err != nil {
-		return Master{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	switch resp.StatusCode {
@@ -34,11 +51,11 @@ func (c *Client) Leader() (Master, error) {
 		var hosts []Master
 		err = json.NewDecoder(resp.Body).Decode(&hosts)
 		if len(hosts) > 1 {
-			return Master{}, fmt.Errorf("expecting one leader. Got %d", len(hosts))
+			return nil, fmt.Errorf("expecting one leader. Got %d", len(hosts))
 		}
-		return hosts[0], err
+		return &hosts[0], err
 	default:
-		return Master{}, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
 	}
 }
 

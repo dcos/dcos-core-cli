@@ -2,6 +2,24 @@ package mesos
 
 import "strings"
 
+// Domain holds information about a nodes region and zone.
+type Domain struct {
+	FaultDomain struct {
+		Region struct {
+			Name string `json:"name"`
+		} `json:"region"`
+		Zone struct {
+			Name string `json:"name"`
+		} `json:"zone"`
+	} `json:"fault_domain"`
+}
+
+// Host holds information about a host and its IP.
+type Host struct {
+	Host string `json:"host"`
+	IP   string `json:"ip"`
+}
+
 // Master represents a single mesos master node.
 type Master struct {
 	Host    string `json:"host"`
@@ -20,18 +38,6 @@ type Resources struct {
 	Disk  float64 `json:"disk"`
 	Mem   float64 `json:"mem"`
 	Ports string  `json:"ports"`
-}
-
-// Domain holds information about a nodes region and zone.
-type Domain struct {
-	FaultDomain struct {
-		Region struct {
-			Name string `json:"name"`
-		} `json:"region"`
-		Zone struct {
-			Name string `json:"name"`
-		} `json:"zone"`
-	} `json:"fault_domain"`
 }
 
 // Slave represents a single mesos slave node.
