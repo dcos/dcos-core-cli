@@ -3,6 +3,7 @@ package node
 import (
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
+	"github.com/dcos/dcos-core-cli/pkg/diagnostics"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
@@ -33,6 +34,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 
 	cmd.AddCommand(
 		newCmdNodeDecommission(ctx),
+		newCmdNodeDiagnostics(ctx),
 		newCmdNodeDNS(ctx),
 		newCmdNodeList(ctx),
 		newCmdNodeListComponents(ctx),
