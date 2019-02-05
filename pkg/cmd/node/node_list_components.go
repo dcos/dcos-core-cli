@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
-	"github.com/dcos/dcos-core-cli/pkg/diagnostics"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
