@@ -18,7 +18,11 @@ func NewCommand(ctx api.Context) *cobra.Command {
 			_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
 			if !ok {
 				ctx.Deprecated("Getting the list of nodes from `dcos node` is deprecated. Please use `dcos node list`.")
-				return newCmdNodeList(ctx).RunE(cmd, args)
+				listCmd := newCmdNodeList(ctx)
+				// Execute by default would use os.Args[1:], which is everything after `dcos ...`.
+				// We need all command line arguments after `dcos node ...`.
+				listCmd.SetArgs(ctx.Args()[2:])
+				return listCmd.Execute()
 			}
 			return cmd.Help()
 		},
