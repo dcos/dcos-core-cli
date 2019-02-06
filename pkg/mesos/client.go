@@ -126,7 +126,7 @@ func (c *Client) Agents() ([]master.Response_GetAgents_Agent, error) {
 		return nil, err
 	}
 
-	resp, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(true))
+	resp, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody)
 	if err != nil {
 		return nil, err
 	}
