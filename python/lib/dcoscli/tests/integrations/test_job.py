@@ -38,6 +38,11 @@ def test_add_job_with_schedule():
         _list_jobs('snorlax')
 
 
+def test_add_job_with_env():
+    with _env_instance_job():
+        _list_jobs('job-env-secret')
+
+
 def test_show_job_schedule():
     with _schedule_instance_job():
         show_job_schedule('snorlax', 'snore-nightly')
@@ -205,6 +210,13 @@ def _no_schedule_instance_job():
 def _schedule_instance_job():
     with job('tests/data/metronome/jobs/snorlax.json',
              'snorlax'):
+        yield
+
+
+@contextlib.contextmanager
+def _env_instance_job():
+    with job('tests/data/metronome/jobs/job-env.json',
+             'job-env-secret'):
         yield
 
 
