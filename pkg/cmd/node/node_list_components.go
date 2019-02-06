@@ -52,7 +52,7 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 				}
 			}
 
-			units, err := diagnostics.NewClient(pluginutil.HTTPClient("")).Units(ip)
+			units, err := diagnosticsClient().Units(ip)
 			if err != nil {
 				return err
 			}
