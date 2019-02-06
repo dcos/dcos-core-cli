@@ -39,6 +39,10 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
+func diagnosticsClient() *diagnostics.Client {
+	return diagnostics.NewClient(pluginutil.HTTPClient(""))
+}
+
 func mesosClient() *mesos.Client {
 	return mesos.NewClient(pluginutil.HTTPClient(""))
 }
