@@ -62,7 +62,7 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 			}
 
 			fmt.Fprintln(ctx.Out(), historyMessage(job, failures))
-			table := cli.NewTable(ctx.Out(), []string{"ID", "STARTED", "FINISHED"})
+			table := cli.NewTable(ctx.Out(), []string{"TASK ID", "STARTED", "FINISHED"})
 			for _, run := range runs {
 				table.Append([]string{run.ID, run.CreatedAt, run.FinishedAt})
 			}
@@ -80,12 +80,18 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 
 func historyMessage(job *metronome.Job, failures bool) string {
 	if failures {
+		if job.History.FailureCount == 0 {
+			return fmt.Sprintf(`"%s"  Failure runs: 0`, job.ID)
+		}
 		return fmt.Sprintf(
 			`"%s"  Failure runs: %d Last Failure: %s`,
 			job.ID, job.History.FailureCount, job.History.LastFailureAt,
 		)
 	}
 
+	if job.History.SuccessCount == 0 {
+		return fmt.Sprintf(`"%s"  Successful runs: 0`, job.ID)
+	}
 	return fmt.Sprintf(
 		`"%s"  Successful runs: %d Last Success: %s`,
 		job.ID, job.History.SuccessCount, job.History.LastSuccessAt,

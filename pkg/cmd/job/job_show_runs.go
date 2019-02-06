@@ -52,9 +52,9 @@ func newCmdJobShowRuns(ctx api.Context) *cobra.Command {
 				return enc.Encode(runs)
 			}
 
-			table := cli.NewTable(ctx.Out(), []string{"JOB ID", "RUN ID", "STARTED"})
+			table := cli.NewTable(ctx.Out(), []string{"TASK ID", "JOB ID", "STARTED AT"})
 			for _, run := range runs {
-				table.Append([]string{args[0], run.ID, run.CreatedAt})
+				table.Append([]string{run.ID, args[0], run.CreatedAt})
 			}
 			table.Render()
 
