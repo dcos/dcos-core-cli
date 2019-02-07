@@ -2,6 +2,8 @@ package node
 
 import (
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -26,6 +28,7 @@ type ipsResult struct {
 
 func newCmdNodeList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
+	var fields []string
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Show all nodes in the cluster",
@@ -77,7 +80,11 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			// In order to create a nodes json object that contains masters and agents
 			// we need a slice of interface{} that is able to contain both node types.
 			nodes := make([]interface{}, 0)
-			table := cli.NewTable(ctx.Out(), []string{"HOSTNAME", "IP", "PUBLIC IPS", "ID", "TYPE", "REGION", "ZONE"})
+			tableHeader := []string{"HOSTNAME", "IP", "PUBLIC IPS", "ID", "TYPE", "REGION", "ZONE"}
+			for _, field := range fields {
+				tableHeader = append(tableHeader, field)
+			}
+			table := cli.NewTable(ctx.Out(), tableHeader)
 
 			slaves := state.Slaves
 			for _, s := range slaves {
@@ -85,8 +92,14 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				s.Region = s.Domain.FaultDomain.Region.Name
 				s.Zone = s.Domain.FaultDomain.Zone.Name
 				s.PublicIPs = ips[s.IP()]
+
 				nodes = append(nodes, s)
-				table.Append([]string{s.Hostname, s.IP(), strings.Join(s.PublicIPs, ", "), s.ID, s.Type, s.Region, s.Zone})
+
+				tableItem := []string{s.Hostname, s.IP(), strings.Join(s.PublicIPs, ", "), s.ID, s.Type, s.Region, s.Zone}
+				for _, field := range fields {
+					tableItem = append(tableItem, nodeExtraField(s, strings.Split(field, ".")))
+				}
+				table.Append(tableItem)
 			}
 
 			for _, m := range masters {
@@ -98,8 +111,10 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 					m.Zone = state.Domain.FaultDomain.Zone.Name
 					m.ID, m.PID, m.Version = state.ID, state.PID, state.Version
 				}
+
 				nodes = append(nodes, m)
-				table.Append([]string{
+
+				tableItem := []string{
 					m.Host,
 					m.IP,
 					strings.Join(m.PublicIPs, ", "),
@@ -107,7 +122,11 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 					m.Type,
 					tablewriter.ConditionString(m.Region != "", m.Region, "N/A"),
 					tablewriter.ConditionString(m.Zone != "", m.Zone, "N/A"),
-				})
+				}
+				for _, field := range fields {
+					tableItem = append(tableItem, nodeExtraField(m, strings.Split(field, ".")))
+				}
+				table.Append(tableItem)
 			}
 
 			if jsonOutput {
@@ -122,5 +141,24 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().StringArrayVar(&fields, "field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
 	return cmd
+}
+
+func nodeExtraField(data interface{}, field []string) string {
+	val := reflect.ValueOf(data)
+	switch val.Kind() {
+	case reflect.Struct:
+		for i := 0; i < val.NumField(); i++ {
+			tag, ok := val.Type().Field(i).Tag.Lookup("json")
+			tag = strings.Split(tag, ",")[0]
+			if !ok || len(field) == 0 || tag != field[0] {
+				continue
+			}
+			return nodeExtraField(val.Field(i).Interface(), field[1:])
+		}
+	default:
+		return fmt.Sprintf("%v", val)
+	}
+	return ""
 }
