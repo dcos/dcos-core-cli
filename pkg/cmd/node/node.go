@@ -21,6 +21,8 @@ func NewCommand(ctx api.Context) *cobra.Command {
 				// Execute by default would use os.Args[1:], which is everything after `dcos ...`.
 				// We need all command line arguments after `dcos node ...`.
 				listCmd.SetArgs(ctx.Args()[2:])
+				listCmd.SilenceErrors = true
+				listCmd.SilenceUsage = true
 				return listCmd.Execute()
 			}
 			return cmd.Help()
