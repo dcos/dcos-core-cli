@@ -12,6 +12,7 @@ env:
  - NO_DOCKER=1 GO111MODULE=on
 
 before_install:
+ - sudo apt-get install -y libsystemd-journal-dev
  - env GO111MODULE=off go get -u golang.org/x/lint/golint
 
 script:

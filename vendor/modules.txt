@@ -1,47 +1,79 @@
+# github.com/StackExchange/wmi v0.0.0-20181212234831-e0a55b97c705
+github.com/StackExchange/wmi
 # github.com/VividCortex/ewma v1.1.1
 github.com/VividCortex/ewma
-# github.com/davecgh/go-spew v1.1.0
+# github.com/coreos/go-systemd v0.0.0-20190204112023-081494f7ee4f
+github.com/coreos/go-systemd/dbus
+github.com/coreos/go-systemd/sdjournal
+# github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
+github.com/coreos/pkg/dlopen
+# github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee
 github.com/dcos/dcos-cli/api
 github.com/dcos/dcos-cli/pkg/cli
 github.com/dcos/dcos-cli/pkg/httpclient
+github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/config
 github.com/dcos/dcos-cli/pkg/login
 github.com/dcos/dcos-cli/pkg/open
 github.com/dcos/dcos-cli/pkg/plugin
 github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
-github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/cli/version
 github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/fsutil
 github.com/dcos/dcos-cli/pkg/internal/corecli
 github.com/dcos/dcos-cli/pkg/internal/cosmos
 github.com/dcos/dcos-cli/pkg/mesos
+# github.com/dcos/dcos-diagnostics v0.0.0-20190124104548-1c343c31385e
+github.com/dcos/dcos-diagnostics/api
+github.com/dcos/dcos-diagnostics/config
+github.com/dcos/dcos-diagnostics/dcos
+github.com/dcos/dcos-diagnostics/units
+github.com/dcos/dcos-diagnostics/util
+# github.com/dcos/dcos-go v0.0.0-20190205125227-3b86d9c7fac3
+github.com/dcos/dcos-go/exec
+github.com/dcos/dcos-go/dcos
+github.com/dcos/dcos-go/dcos/nodeutil
+# github.com/dcos/dcos-log v0.0.0-20181017122245-1ad4746b7359
+github.com/dcos/dcos-log/dcos-log/journal/reader
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
+# github.com/go-ole/go-ole v1.2.2
+github.com/go-ole/go-ole
+github.com/go-ole/go-ole/oleutil
+# github.com/godbus/dbus v4.1.0+incompatible
+github.com/godbus/dbus
 # github.com/gogo/protobuf v1.2.0
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+# github.com/gorilla/handlers v1.4.0
+github.com/gorilla/handlers
+# github.com/gorilla/mux v1.7.0
+github.com/gorilla/mux
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/mattn/go-isatty v0.0.4
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
 # github.com/mesos/mesos-go v0.0.8
-github.com/mesos/mesos-go/api/v1/lib/master
 github.com/mesos/mesos-go/api/v1/lib
+github.com/mesos/mesos-go/api/v1/lib/master
+github.com/mesos/mesos-go/api/v1/lib/encoding
+github.com/mesos/mesos-go/api/v1/lib/roles
 github.com/mesos/mesos-go/api/v1/lib/allocator
 github.com/mesos/mesos-go/api/v1/lib/maintenance
 github.com/mesos/mesos-go/api/v1/lib/quota
-github.com/mesos/mesos-go/api/v1/lib/encoding
-github.com/mesos/mesos-go/api/v1/lib/roles
 github.com/mesos/mesos-go/api/v1/lib/encoding/framing
 # github.com/mitchellh/go-homedir v1.0.0
 github.com/mitchellh/go-homedir
+# github.com/mitchellh/mapstructure v1.1.2
+github.com/mitchellh/mapstructure
 # github.com/olekukonko/tablewriter v0.0.0-20180506121414-d4647c9c7a84
 github.com/olekukonko/tablewriter
 # github.com/pelletier/go-toml v1.2.0
@@ -51,18 +83,21 @@ github.com/pmezard/go-difflib/difflib
 # github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7
 github.com/pquerna/ffjson/fflib/v1
 github.com/pquerna/ffjson/fflib/v1/internal
-# github.com/sirupsen/logrus v1.0.6
+# github.com/shirou/gopsutil v2.18.12+incompatible
+github.com/shirou/gopsutil/disk
+github.com/shirou/gopsutil/internal/common
+# github.com/sirupsen/logrus v1.2.0
 github.com/sirupsen/logrus
-# github.com/spf13/afero v1.1.1
+# github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.2.0
+# github.com/spf13/cast v1.3.0
 github.com/spf13/cast
 # github.com/spf13/cobra v0.0.2
 github.com/spf13/cobra
-# github.com/spf13/pflag v1.0.1
+# github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.2.1
+# github.com/stretchr/testify v1.2.2
 github.com/stretchr/testify/require
 github.com/stretchr/testify/assert
 # github.com/vbauerster/mpb v3.3.3+incompatible
@@ -70,11 +105,13 @@ github.com/vbauerster/mpb
 github.com/vbauerster/mpb/decor
 github.com/vbauerster/mpb/cwriter
 github.com/vbauerster/mpb/internal
-# golang.org/x/crypto v0.0.0-20180830192347-182538f80094
+# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789
+# golang.org/x/sys v0.0.0-20181205085412-a5c9d58dba9a
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+golang.org/x/sys/windows/svc
+golang.org/x/sys/windows/svc/mgr
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm

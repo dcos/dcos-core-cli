@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/dcos/dcos-diagnostics/api"
 )
 
 // Client is a diagnostics client for DC/OS.
@@ -20,7 +21,7 @@ func NewClient(baseClient *httpclient.Client) *Client {
 }
 
 // Units returns the units of a certain node.
-func (c *Client) Units(node string) (*UnitsHealthResponseJSONStruct, error) {
+func (c *Client) Units(node string) (*api.UnitsHealthResponseJSONStruct, error) {
 	resp, err := c.http.Get(fmt.Sprintf("/system/health/v1/nodes/%s/units", node))
 	if err != nil {
 		return nil, err
@@ -28,7 +29,7 @@ func (c *Client) Units(node string) (*UnitsHealthResponseJSONStruct, error) {
 	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case 200:
-		var units UnitsHealthResponseJSONStruct
+		var units api.UnitsHealthResponseJSONStruct
 		err = json.NewDecoder(resp.Body).Decode(&units)
 		if err != nil {
 			return nil, err
