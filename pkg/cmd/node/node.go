@@ -10,7 +10,6 @@ import (
 
 // NewCommand creates the `core node` subcommand.
 func NewCommand(ctx api.Context) *cobra.Command {
-	var jsonOutput bool
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Display DC/OS node information",
@@ -27,7 +26,8 @@ func NewCommand(ctx api.Context) *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().Bool("json", false, "Print in json format")
+	cmd.Flags().StringArray("field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
 
 	cmd.AddCommand(
 		newCmdNodeDecommission(ctx),
