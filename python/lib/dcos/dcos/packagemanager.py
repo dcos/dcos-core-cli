@@ -429,12 +429,14 @@ class CosmosPackageVersion():
 
         return base64.b64decode(template) if template else None
 
-    def marathon_json(self, options):
+    def marathon_json(self, options, app_id=None):
         """Returns the JSON content of the marathon.json template, after
         rendering it with options.
 
         :param options: the template options to use in rendering
         :type options: dict
+        :param app_id: the app ID to specify which app to render
+        :type app_id: str | None
         :rtype: dict
         """
 
@@ -444,6 +446,8 @@ class CosmosPackageVersion():
         }
         if options:
             params["options"] = options
+        if app_id:
+            params["appId"] = app_id
         response = PackageManager(
             self._cosmos_url
         ).cosmos_post("render", params)
