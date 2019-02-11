@@ -198,6 +198,28 @@ def test_describe_render():
     assert returncode == 0
 
 
+def test_describe_render_app_id():
+    stdout = file_json(
+        'tests/data/package/json/test_describe_helloworld_app_id_render.json')
+    stdout = json.loads(stdout.decode('utf-8'))
+    expected_labels = stdout.pop("labels", None)
+
+    returncode, stdout_, stderr = exec_command(['dcos', 'package', 'describe',
+                                                'helloworld', '--app',
+                                                '--render',
+                                                '--app-id=helloworld'])
+
+    stdout_ = json.loads(stdout_.decode('utf-8'))
+    actual_labels = stdout_.pop("labels", None)
+
+    for label, value in expected_labels.items():
+        assert value == actual_labels.get(label)
+
+    assert stdout == stdout_
+    assert stderr == b''
+    assert returncode == 0
+
+
 def test_describe_package_version():
     stdout = file_json(
         'tests/data/package/json/test_describe_helloworld.json')

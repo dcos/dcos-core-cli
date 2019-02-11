@@ -69,7 +69,7 @@ def _cmds():
             hierarchy=['package', 'describe'],
             arg_keys=['<package-name>', '--app', '--cli', '--options',
                       '--render', '--package-versions', '--package-version',
-                      '--config'],
+                      '--config', '--app-id'],
             function=_describe),
 
         cmds.Command(
@@ -240,7 +240,8 @@ def _describe(package_name,
               render,
               package_versions,
               package_version,
-              config):
+              config,
+              app_id):
     """Describe the specified package.
 
     :param package_name: The package to describe
@@ -262,6 +263,8 @@ def _describe(package_name,
     :type package_version: str | None
     :param config: If True, config.json will be printed
     :type config: boolean
+    :param app_id: app ID to specify which app to describe
+    :type app_id: str | None
     :returns: Process status
     :rtype: int
     """
@@ -284,7 +287,7 @@ def _describe(package_name,
             emitter.publish(pkg.cli_definition())
         if app:
             if render:
-                app_output = pkg.marathon_json(user_options)
+                app_output = pkg.marathon_json(user_options, app_id)
             else:
                 app_output = pkg.marathon_template().decode("UTF-8")
                 if app_output and app_output[-1] == '\n':
