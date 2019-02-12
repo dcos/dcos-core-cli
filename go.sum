@@ -9,6 +9,8 @@ github.com/dcos/dcos-cli v0.0.0-20190117112155-be9e423766fe h1:QWCPmPWW3qCORLPfO
 github.com/dcos/dcos-cli v0.0.0-20190117112155-be9e423766fe/go.mod h1:/IRs/NUanJblg5zgpVS3eAIcqm2HHIsDrQ8jcGnxVRE=
 github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee h1:8yvIA3fbzMU6KMP515nhEU2cRTa+J7KCKmQUEH7JL0I=
 github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee/go.mod h1:AQS14aZaWn6dIKmqfhOm5qOuG629DfkkEV0Pbi0ijJA=
+github.com/dcos/dcos-cli v0.0.0-20190214153610-6cfa38b64f00 h1:8df7FIBZ55iqrFYW1XioDiM54hnFEF/bTcqEac9Ujb4=
+github.com/dcos/dcos-cli v0.0.0-20190214153610-6cfa38b64f00/go.mod h1:AQS14aZaWn6dIKmqfhOm5qOuG629DfkkEV0Pbi0ijJA=
 github.com/dcos/dcos-core-cli v0.0.0-20180824155600-78703af735ae h1:5fBhzf76AZ7lkHBcf+w9o8mhk8+nkCRxrQMnPQ4nrKc=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
@@ -38,6 +40,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7 h1:gGBSHPOU7g8YjTbhwn+lvFm2VDEhhA+PwDIlstkgSxE=
 github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7/go.mod h1:YARuvh7BUWHNhzDq2OM5tzR2RiCcN2D7sapiKyCel/M=
+github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4 h1:0laMx6aMgEGjqF586NPN6c7zRX5Upl3IV5qRYF6l9zw=
+github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4/go.mod h1:GFTLGeO4uhsAhDsI1GgKFTegVYuNZ6g5qJ15Mheq7cI=
 github.com/sirupsen/logrus v1.0.5/go.mod h1:pMByvHTf9Beacp5x1UXfOR9xyW/9antXMhjMPG0dEzc=
 github.com/sirupsen/logrus v1.0.6 h1:hcP1GmhGigz/O7h1WVUM5KklBp1JoNS9FggWKdj/j3s=
 github.com/sirupsen/logrus v1.0.6/go.mod h1:pMByvHTf9Beacp5x1UXfOR9xyW/9antXMhjMPG0dEzc=
@@ -57,8 +61,12 @@ github.com/vbauerster/mpb v3.3.3+incompatible/go.mod h1:zAHG26FUhVKETRu+MWqYXcI7
 golang.org/x/crypto v0.0.0-20180411161317-d6449816ce06/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20180830192347-182538f80094 h1:rVTAlhYa4+lCfNxmAIEOGQRoD23UqP72M3+rSWVGDTg=
 golang.org/x/crypto v0.0.0-20180830192347-182538f80094/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
+golang.org/x/net v0.0.0-20190213061140-3a22650c66bd h1:HuTn7WObtcDo9uEEU7rEqL0jYthdXAmZ6PP+meazmaU=
+golang.org/x/net v0.0.0-20190213061140-3a22650c66bd/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/sys v0.0.0-20180417080122-b126b21c05a9/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789 h1:T8D7l6WB3tLu+VpKvw06ieD/OhBi1XpJmG1U/FtttZg=
 golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+gopkg.in/cenkalti/backoff.v1 v1.1.0 h1:Arh75ttbsvlpVA7WtVpH4u9h6Zl46xuptxqLxPiSo4Y=
+gopkg.in/cenkalti/backoff.v1 v1.1.0/go.mod h1:J6Vskwqd+OMVJl8C33mmtxTBs2gyzfv7UDAkHu8BrjI=
