@@ -38,6 +38,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		newCmdNodeDNS(ctx),
 		newCmdNodeList(ctx),
 		newCmdNodeListComponents(ctx),
+		newCmdNodeLog(ctx),
 		newCmdNodeMetrics(ctx),
 		newCmdNodeSSH(ctx),
 	)

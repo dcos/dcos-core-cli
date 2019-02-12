@@ -2,9 +2,10 @@
 github.com/VividCortex/ewma
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
-# github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee
+# github.com/dcos/dcos-cli v0.0.0-20190214153610-6cfa38b64f00
 github.com/dcos/dcos-cli/api
 github.com/dcos/dcos-cli/pkg/cli
+github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/httpclient
 github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/config
@@ -14,7 +15,6 @@ github.com/dcos/dcos-cli/pkg/plugin
 github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
 github.com/dcos/dcos-cli/pkg/cli/version
-github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/fsutil
 github.com/dcos/dcos-cli/pkg/internal/corecli
 github.com/dcos/dcos-cli/pkg/internal/cosmos
@@ -53,6 +53,8 @@ github.com/pmezard/go-difflib/difflib
 # github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7
 github.com/pquerna/ffjson/fflib/v1
 github.com/pquerna/ffjson/fflib/v1/internal
+# github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4
+github.com/r3labs/sse
 # github.com/sirupsen/logrus v1.0.6
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.1
@@ -74,9 +76,13 @@ github.com/vbauerster/mpb/cwriter
 github.com/vbauerster/mpb/internal
 # golang.org/x/crypto v0.0.0-20180830192347-182538f80094
 golang.org/x/crypto/ssh/terminal
+# golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
+golang.org/x/net/context
 # golang.org/x/sys v0.0.0-20180831094639-fa5fdf94c789
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# gopkg.in/cenkalti/backoff.v1 v1.1.0
+gopkg.in/cenkalti/backoff.v1
