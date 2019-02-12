@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/golang/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/master"
 )
@@ -121,12 +123,13 @@ func (c *Client) Agents() ([]master.Response_GetAgents_Agent, error) {
 	body := master.Call{
 		Type: master.Call_GET_AGENTS,
 	}
-	var reqBody bytes.Buffer
-	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+	reqBody, err := proto.Marshal(&body)
+	if err != nil {
 		return nil, err
 	}
 
-	resp, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody)
+	resp, err := c.http.Post("/mesos/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+		httpclient.Header("Accept", "application/x-protobuf"))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +138,11 @@ func (c *Client) Agents() ([]master.Response_GetAgents_Agent, error) {
 	switch resp.StatusCode {
 	case 200:
 		var agents master.Response
-		err = json.NewDecoder(resp.Body).Decode(&agents)
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		err = proto.Unmarshal(bodyBytes, &agents)
 		return agents.GetAgents.Agents, err
 	case 503:
 		return nil, fmt.Errorf("could not connect to the leading mesos master")

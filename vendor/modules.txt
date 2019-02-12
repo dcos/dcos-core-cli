@@ -6,13 +6,13 @@ github.com/davecgh/go-spew/spew
 github.com/dcos/dcos-cli/api
 github.com/dcos/dcos-cli/pkg/cli
 github.com/dcos/dcos-cli/pkg/httpclient
+github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/config
 github.com/dcos/dcos-cli/pkg/login
 github.com/dcos/dcos-cli/pkg/open
 github.com/dcos/dcos-cli/pkg/plugin
 github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
-github.com/dcos/dcos-cli/pkg/log
 github.com/dcos/dcos-cli/pkg/cli/version
 github.com/dcos/dcos-cli/pkg/dcos
 github.com/dcos/dcos-cli/pkg/fsutil
@@ -25,6 +25,8 @@ github.com/dgrijalva/jwt-go
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+# github.com/golang/protobuf v1.2.0
+github.com/golang/protobuf/proto
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/mattn/go-isatty v0.0.4
@@ -32,13 +34,13 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.3
 github.com/mattn/go-runewidth
 # github.com/mesos/mesos-go v0.0.8
-github.com/mesos/mesos-go/api/v1/lib/master
 github.com/mesos/mesos-go/api/v1/lib
+github.com/mesos/mesos-go/api/v1/lib/master
+github.com/mesos/mesos-go/api/v1/lib/encoding
+github.com/mesos/mesos-go/api/v1/lib/roles
 github.com/mesos/mesos-go/api/v1/lib/allocator
 github.com/mesos/mesos-go/api/v1/lib/maintenance
 github.com/mesos/mesos-go/api/v1/lib/quota
-github.com/mesos/mesos-go/api/v1/lib/encoding
-github.com/mesos/mesos-go/api/v1/lib/roles
 github.com/mesos/mesos-go/api/v1/lib/encoding/framing
 # github.com/mitchellh/go-homedir v1.0.0
 github.com/mitchellh/go-homedir
