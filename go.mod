@@ -3,6 +3,7 @@ module github.com/dcos/dcos-core-cli
 require (
 	github.com/dcos/dcos-cli v0.0.0-20190122135555-b6f7887e8aee
 	github.com/gogo/protobuf v1.2.0 // indirect
+	github.com/golang/protobuf v1.2.0
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mesos/mesos-go v0.0.8
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
