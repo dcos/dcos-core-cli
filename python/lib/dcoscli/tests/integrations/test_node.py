@@ -21,13 +21,9 @@ def test_help():
     assert_command(['dcos', 'node', '--help'], stdout=stdout)
 
 
-def test_info():
-    stdout = b"View DC/OS node information\n"
-    assert_command(['dcos', 'node', '--info'], stdout=stdout)
-
-
 def test_node():
-    returncode, stdout, stderr = exec_command(['dcos', 'node', '--json'])
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'node', 'list', '--json'])
 
     assert returncode == 0
     assert stderr == b''
@@ -40,7 +36,7 @@ def test_node():
 
 
 def test_node_table():
-    returncode, stdout, stderr = exec_command(['dcos', 'node'])
+    returncode, stdout, stderr = exec_command(['dcos', 'node', 'list'])
 
     assert returncode == 0
     assert stderr == b''
@@ -49,7 +45,7 @@ def test_node_table():
 
 def test_node_table_field_option():
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'node', '--field=disk_used:used_resources.disk'])
+        ['dcos', 'node', 'list', '--field=disk_used:used_resources.disk'])
 
     assert returncode == 0
     assert stderr == b''
@@ -61,7 +57,7 @@ def test_node_table_field_option():
 
 def test_node_table_uppercase_field_option():
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'node', '--field=TASK_RUNNING'])
+        ['dcos', 'node', 'list', '--field=TASK_RUNNING'])
 
     assert returncode == 0
     assert stderr == b''
@@ -72,7 +68,7 @@ def test_node_table_uppercase_field_option():
 
 
 def test_node_log_empty():
-    stderr = b"You must choose one of --leader or --mesos-id.\n"
+    stderr = b"Error: '--leader' or '--mesos-id' must be provided\n"
     assert_command(['dcos', 'node', 'log'], returncode=1, stderr=stderr)
 
 
@@ -93,9 +89,8 @@ def test_node_log_missing_slave():
         ['dcos', 'node', 'log', '--mesos-id=bogus'])
 
     assert returncode == 1
-    assert stdout == b''
     stderr_str = str(stderr)
-    assert 'No files exist. Exiting.' in stderr_str
+    assert 'HTTP 404' in stderr_str
 
 
 def test_node_log_lines():
@@ -108,10 +103,12 @@ def test_node_log_lines():
 
 
 def test_node_log_invalid_lines():
-    assert_command(['dcos', 'node', 'log', '--leader', '--lines=bogus'],
-                   stdout=b'',
-                   stderr=b'Error parsing string as int\n',
-                   returncode=1)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'node', 'log', '--leader', '--lines=bogus'])
+
+    assert returncode == 1
+    stderr_str = str(stderr)
+    assert 'invalid argument'  in stderr_str
 
 
 def test_node_metrics_agent_summary():
@@ -281,17 +278,14 @@ def test_node_ssh_user():
 def test_node_ssh_master_proxy_no_agent():
     env = os.environ.copy()
     env.pop('SSH_AUTH_SOCK', None)
-    stderr = (b"There is no SSH_AUTH_SOCK env variable, which likely means "
-              b"you aren't running `ssh-agent`.  `dcos node ssh "
-              b"--master-proxy/--proxy-ip` depends on `ssh-agent` to safely "
-              b"use your private key to hop between nodes in your cluster.  "
-              b"Please run `ssh-agent`, then add your private key with "
-              b"`ssh-add`.\n")
 
-    assert_command(['dcos', 'node', 'ssh', '--master-proxy', '--leader'],
-                   stderr=stderr,
-                   returncode=1,
-                   env=env)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'node', 'ssh', '--master-proxy', '--leader'],
+        env=env)
+
+    assert returncode == 1
+    stderr_str = str(stderr)
+    assert 'ssh-agent'  in stderr_str
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -398,7 +392,6 @@ def _node():
     returncode, stdout, stderr = exec_command(['dcos', 'node', '--json'])
 
     assert returncode == 0
-    assert stderr == b''
 
     return [n for n in json.loads(stdout.decode('utf-8'))
             if n['type'] == 'agent']
