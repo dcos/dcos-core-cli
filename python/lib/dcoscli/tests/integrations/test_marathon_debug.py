@@ -153,7 +153,6 @@ def check_debug_details(id):
     returncode, stdout, stderr = exec_command(['dcos', 'node', '--json'])
 
     assert returncode == 0
-    assert stderr == b''
     agent_count = len(
       [n for n in json.loads(stdout.decode('utf-8'))
        if n['type'] == 'agent']
