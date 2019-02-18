@@ -23,7 +23,7 @@ description = "Deploy and manage applications to DC/OS"
 
 [[commands]]
 name = "node"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "View DC/OS node information"
 
 [[commands]]
