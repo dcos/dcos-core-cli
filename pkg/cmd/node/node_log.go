@@ -19,7 +19,7 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	var mesosID string
 	cmd := &cobra.Command{
 		Use:   "log",
-		Short: "Print the Mesos logs for the leading master node, agent nodes, or both",
+		Short: "Print logs for the leading master node or agent nodes",
 		Args:  cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if !leader && mesosID == "" {
