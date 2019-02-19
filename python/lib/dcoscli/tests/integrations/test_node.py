@@ -17,8 +17,11 @@ from ..fixtures.node import slave_fixture
 
 def test_help():
     with open('dcoscli/data/help/node.txt') as content:
-        stdout = six.b(content.read())
-    assert_command(['dcos', 'node', '--help'], stdout=stdout)
+        planned_stdout = six.b(content.read())
+    returncode, stdout, stderr = exec_command(['dcos', 'node', '--help'])
+    assert returncode == 0
+    assert stderr == b''
+    assert stdout == planned_stdout
 
 
 def test_node():
@@ -29,10 +32,11 @@ def test_node():
     assert stderr == b''
 
     nodes = json.loads(stdout.decode('utf-8'))
+    assert len(nodes) > 0
     slave_nodes = [node for node in nodes if node['type'] == 'agent']
     schema = _get_schema(slave_fixture())
     for node in slave_nodes:
-        assert not util.validate_json(node, schema)
+        assert util.validate_json(node, schema)
 
 
 def test_node_table():
@@ -45,14 +49,15 @@ def test_node_table():
 
 def test_node_table_field_option():
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'node', 'list', '--field=disk_used:used_resources.disk'])
+        ['dcos', 'node', 'list', '--field=used_resources.disk'])
 
     assert returncode == 0
     assert stderr == b''
     lines = stdout.decode('utf-8').splitlines()
     assert len(lines) > 2
-    assert lines[0].split() == ['HOSTNAME', 'IP', 'ID', 'TYPE', 'REGION',
-                                'ZONE', 'DISK_USED']
+    assert lines[0].split() == ["HOSTNAME", "IP", "PUBLIC", "IPS", "ID",
+                                "TYPE", "REGION", "ZONE", "USED",
+                                "RESOURCES", "DISK"]
 
 
 def test_node_table_uppercase_field_option():
@@ -63,8 +68,8 @@ def test_node_table_uppercase_field_option():
     assert stderr == b''
     lines = stdout.decode('utf-8').splitlines()
     assert len(lines) > 2
-    assert lines[0].split() == ['HOSTNAME', 'IP', 'ID', 'TYPE', 'REGION',
-                                'ZONE', 'TASK_RUNNING']
+    assert lines[0].split() == ["HOSTNAME", "IP", "PUBLIC", "IPS", "ID",
+                                "TYPE", "REGION", "ZONE", "TASK", "RUNNING"]
 
 
 def test_node_log_empty():
@@ -89,8 +94,7 @@ def test_node_log_missing_slave():
         ['dcos', 'node', 'log', '--mesos-id=bogus'])
 
     assert returncode == 1
-    stderr_str = str(stderr)
-    assert 'HTTP 404' in stderr_str
+    assert b"'bogus' not found" in stderr
 
 
 def test_node_log_lines():
@@ -107,8 +111,7 @@ def test_node_log_invalid_lines():
         ['dcos', 'node', 'log', '--leader', '--lines=bogus'])
 
     assert returncode == 1
-    stderr_str = str(stderr)
-    assert 'invalid argument'  in stderr_str
+    assert b'invalid argument' in stderr
 
 
 def test_node_metrics_agent_summary():
@@ -138,10 +141,11 @@ def test_node_metrics_agent_summary_json():
 
     metrics = [
         'cpu.total',
-        'memory.total',
-        'memory.free',
         'filesystem.capacity.total',
         'filesystem.capacity.used',
+        'load.1min',
+        'memory.total',
+        'memory.free',
     ]
 
     for d in node_json:
@@ -252,7 +256,6 @@ def test_node_ssh_slave_with_private_ip():
 def test_node_ssh_option():
     stdout, stderr, _ = _node_ssh_output(
         ['--leader', '--option', 'Protocol=0'])
-    assert stdout == b''
     assert b'ignoring bad proto spec' in stderr
 
 
@@ -262,7 +265,6 @@ def test_node_ssh_config_file():
     stdout, stderr, _ = _node_ssh_output(
         ['--leader', '--config-file', 'tests/data/node/ssh_config'])
     assert stdout == b''
-    assert b'ignoring bad proto spec' in stderr
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -275,6 +277,8 @@ def test_node_ssh_user():
     assert b'Permission denied' in stderr
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='No pseudo terminal on windows')
 def test_node_ssh_master_proxy_no_agent():
     env = os.environ.copy()
     env.pop('SSH_AUTH_SOCK', None)
@@ -284,8 +288,7 @@ def test_node_ssh_master_proxy_no_agent():
         env=env)
 
     assert returncode == 1
-    stderr_str = str(stderr)
-    assert 'ssh-agent'  in stderr_str
+    assert b'Permission denied' in stderr
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -338,7 +341,7 @@ def test_node_decommission_unexisting_agent():
 
     assert returncode == 1
     assert stdout == b''
-    assert stderr.startswith(b"Couldn't mark agent not-a-mesos-id as gone :")
+    assert b"not mark agent 'not-a-mesos-id' as gone" in stderr
 
 
 def _node_ssh_output(args):
@@ -368,7 +371,6 @@ def _node_ssh(args, expected_returncode=None, expected_stdout=None):
             returncode, stdout, stderr)
     if expected_stdout is not None:
         assert stdout.decode('utf-8').startswith(expected_stdout)
-    assert b"Running `" in stderr
 
 
 def _get_schema(slave):
