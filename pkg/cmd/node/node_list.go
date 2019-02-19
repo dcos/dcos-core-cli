@@ -21,6 +21,11 @@ type stateResult struct {
 	err   error
 }
 
+type stateSummaryResult struct {
+	state *mesos.StateSummary
+	err   error
+}
+
 type ipsResult struct {
 	ips map[string][]string
 	err error
@@ -44,6 +49,13 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				state, err := client.State()
 				stateRes <- stateResult{state, err}
 			}()
+
+			stateSummaryRes := make(chan stateSummaryResult)
+			go func() {
+				stateSummary, err := client.StateSummary()
+				stateSummaryRes <- stateSummaryResult{stateSummary, err}
+			}()
+
 
 			ipsRes := make(chan ipsResult)
 			go func() {
@@ -71,6 +83,12 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			}
 			ips := ipsResult.ips
 
+			stateSummaryResult := <-stateSummaryRes
+			if stateSummaryResult.err != nil {
+				return err
+			}
+			stateSummary := stateSummaryResult.state
+
 			stateResult := <-stateRes
 			if stateResult.err != nil {
 				return err
@@ -92,6 +110,20 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				s.Region = s.Domain.FaultDomain.Region.Name
 				s.Zone = s.Domain.FaultDomain.Zone.Name
 				s.PublicIPs = ips[s.IP()]
+
+				for _, sSummary := range stateSummary.Slaves {
+					if sSummary.ID == s.ID {
+						s.TaskError = sSummary.TaskError
+						s.TaskFailed = sSummary.TaskFailed
+						s.TaskFinished = sSummary.TaskFinished
+						s.TaskKilled = sSummary.TaskKilled
+						s.TaskKilling = sSummary.TaskKilling
+						s.TaskLost = sSummary.TaskLost
+						s.TaskRunning = sSummary.TaskRunning
+						s.TaskStaging = sSummary.TaskStaging
+						s.TaskStarting = sSummary.TaskStarting
+					}
+				}
 
 				nodes = append(nodes, s)
 
