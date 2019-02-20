@@ -85,6 +85,13 @@ func (c *Client) configureDestination() {
 
 		c.args = append(c.args, fmt.Sprintf("%s", c.opts.Proxy))
 		c.args = append(c.args, "ssh")
+
+		for _, option := range c.opts.SSHOptions {
+			c.args = append(c.args, "-o", fmt.Sprintf("%s", option))
+		}
+		if c.opts.Config == "" {
+			c.args = append(c.args, "-l", fmt.Sprintf("%s", c.opts.User))
+		}
 	}
 
 	c.args = append(c.args, baseArgs...)
