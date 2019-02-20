@@ -163,6 +163,14 @@ func (c *Client) MarkAgentGone(agentID string) error {
 	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
 		return err
 	}
-	_, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(true))
-	return err
+	resp, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return fmt.Errorf("could not mark agent '%s' as gone", agentID)
+	}
+	return nil
 }
