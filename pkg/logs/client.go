@@ -1,32 +1,38 @@
 package logs
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"math"
 	"os"
-	"os/signal"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/r3labs/sse"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Client is a logs client for DC/OS.
 type Client struct {
-	http *httpclient.Client
-	out  io.Writer
+	http    *httpclient.Client
+	out     io.Writer
+	colored bool
 }
 
 // NewClient creates a new logs client.
 func NewClient(baseClient *httpclient.Client, out io.Writer) *Client {
-	return &Client{
-		http: baseClient,
-		out:  out,
+	c := &Client{http: baseClient, out: out}
+
+	// Enable colors on UNIX when Out is a terminal.
+	if outFile, ok := out.(*os.File); ok {
+		if runtime.GOOS != "windows" && terminal.IsTerminal(int(outFile.Fd())) {
+			c.colored = true
+		}
 	}
+	return c
 }
 
 // PrintComponent prints a component logs.
@@ -42,44 +48,70 @@ func (c *Client) PrintComponent(route string, service string, skip int, filters 
 		client.Headers["Authorization"] = c.http.Header().Get("Authorization")
 		client.Headers["User-Agent"] = c.http.Header().Get("User-Agent")
 
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, os.Interrupt)
 		events := make(chan *sse.Event)
 		err := client.SubscribeChanRaw(events)
 		if err != nil {
 			return err
 		}
-		var data SSEEventDataField
+		defer client.Unsubscribe(events)
 
-		for {
-			select {
-			case msg := <-events:
-				err := json.Unmarshal(msg.Data, &data)
-				if err != nil {
-					client.Unsubscribe(events)
-					return err
-				}
-				date := time.Unix(data.RealtimeTimestamp/int64(math.Pow(10, 6)), 0)
-				fmt.Fprintln(c.out, date.Format("2006-01-02 15:04:05 MST")+": "+data.Fields.Message)
-			case <-sig:
-				fmt.Fprintln(c.out, "User interrupted command with Ctrl-C")
-				client.Unsubscribe(events)
-				return nil
+		for msg := range events {
+			err := c.printEntry(msg.Data)
+			if err != nil {
+				return err
 			}
 		}
+		return nil
 	}
-	resp, err := c.http.Get(endpoint)
+
+	resp, err := c.http.Get(endpoint, httpclient.Header("Accept", "application/json"))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+	for scanner := bufio.NewScanner(resp.Body); scanner.Scan(); {
+		err := c.printEntry(scanner.Bytes())
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(c.out, strings.TrimSpace(string(bodyBytes)))
-		return nil
 	}
-	return fmt.Errorf("HTTP %d error", resp.StatusCode)
+	return nil
+}
+
+func (c *Client) printEntry(rawEntry []byte) error {
+	var entry Entry
+	err := json.Unmarshal(rawEntry, &entry)
+	if err != nil {
+		return err
+	}
+
+	if c.colored {
+		var color string
+		switch entry.Fields.Priority {
+		// EMERGENCY, ALERT, CRITICAL, ERROR are printed in red.
+		case "0", "1", "2", "3":
+			color = "31"
+		// WARNING is printed in yellow.
+		case "4":
+			color = "33"
+		// NOTICE is printed in bright blue.
+		case "5":
+			color = "34;1"
+		default:
+			color = "0"
+		}
+		fmt.Fprintf(c.out, "\033[0;%sm", color)
+	}
+
+	date := time.Unix(entry.RealtimeTimestamp/1000000, 0).UTC().Format("2006-01-02 15:04:05 MST")
+	fmt.Fprint(c.out, date+": "+entry.Fields.Message)
+	if c.colored {
+		fmt.Fprint(c.out, "\033[0m")
+	}
+	fmt.Fprintln(c.out)
+	return nil
 }
