@@ -1,7 +1,6 @@
 package sshclient
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -65,11 +64,11 @@ func NewClient(opts ClientOpts, logger *logrus.Logger) (*Client, error) {
 
 func (c *Client) configureSSHOptions() {
 	for _, option := range c.opts.SSHOptions {
-		c.args = append(c.args, "-o", fmt.Sprintf("%s", option))
+		c.args = append(c.args, "-o", option)
 	}
 
 	if c.opts.Config != "" {
-		c.args = append(c.args, "-F", fmt.Sprintf("%s", c.opts.Config))
+		c.args = append(c.args, "-F", c.opts.Config)
 	}
 }
 
@@ -80,22 +79,22 @@ func (c *Client) configureDestination() {
 		c.args = append(c.args, baseArgs...)
 
 		if c.opts.Config == "" {
-			c.args = append(c.args, "-l", fmt.Sprintf("%s", c.opts.User))
+			c.args = append(c.args, "-l", c.opts.User)
 		}
 
-		c.args = append(c.args, fmt.Sprintf("%s", c.opts.Proxy))
+		c.args = append(c.args, c.opts.Proxy)
 		c.args = append(c.args, "ssh")
 
 		for _, option := range c.opts.SSHOptions {
-			c.args = append(c.args, "-o", fmt.Sprintf("%s", option))
+			c.args = append(c.args, "-o", option)
 		}
 		if c.opts.Config == "" {
-			c.args = append(c.args, "-l", fmt.Sprintf("%s", c.opts.User))
+			c.args = append(c.args, "-l", c.opts.User)
 		}
 	}
 
 	c.args = append(c.args, baseArgs...)
-	c.args = append(c.args, fmt.Sprintf("%s", c.opts.Host))
+	c.args = append(c.args, c.opts.Host)
 }
 
 // Run adds the optional remote command and starts the SSH session.
