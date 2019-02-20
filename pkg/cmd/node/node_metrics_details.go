@@ -19,7 +19,7 @@ func newCmdNodeMetricsDetails(ctx api.Context) *cobra.Command {
 		Short: "Print details of the metrics of an agent",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			node, err := metrics.NewClient(pluginutil.HTTPClient("")).Node(args[1])
+			node, err := metrics.NewClient(pluginutil.HTTPClient("")).Node(args[0])
 			if err != nil {
 				return err
 			}
