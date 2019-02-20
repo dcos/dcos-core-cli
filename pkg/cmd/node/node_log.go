@@ -42,9 +42,26 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 			} else {
 				route = "/agent/" + mesosID
 			}
+
 			service := ""
 			if component != "" {
 				service = fmt.Sprintf("/%s.service", component)
+			}
+
+			if mesosID != "" {
+				agents, err := mesosClient().Agents()
+				if err != nil {
+					return err
+				}
+				for i, agent := range agents {
+					if mesosID == agent.AgentInfo.GetID().Value {
+						break
+					}
+					if i == len(agents) - 1 {
+						return fmt.Errorf("agent '%s' not found", mesosID)
+					}
+				}
+
 			}
 
 			client := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
