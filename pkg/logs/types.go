@@ -1,15 +1,15 @@
 package logs
 
-// SSEEventDataField is what is returned when subscribing to an event stream.
-type SSEEventDataField struct {
-	Fields             SSEEventFields `json:"fields"`
-	Cursor             string         `json:"cursor"`
-	MonotonicTimestamp int64          `json:"monotonic_timestamp"`
-	RealtimeTimestamp  int64          `json:"realtime_timestamp"`
+// Entry refers to a DC/OS log entry.
+type Entry struct {
+	Fields             EntryFields `json:"fields"`
+	Cursor             string      `json:"cursor"`
+	MonotonicTimestamp int64       `json:"monotonic_timestamp"`
+	RealtimeTimestamp  int64       `json:"realtime_timestamp"`
 }
 
-// SSEEventFields is part of the SSEEventDataField.
-type SSEEventFields struct {
+// EntryFields are the fields in a DC/OS log entry.
+type EntryFields struct {
 	Message          string `json:"MESSAGE"`
 	Priority         string `json:"PRIORITY"`
 	SyslogFacility   string `json:"SYSLOG_FACILITY"`
