@@ -93,6 +93,19 @@ class DCOSConnectionError(DCOSException):
         return 'URL [{0}] is unreachable.'.format(self.url)
 
 
+class DCOSBadGateway(DCOSHTTPException):
+    """A wrapper around Response objects for HTTP Bad Gateway (502).
+
+    :param response: requests Response object
+    :type response: Response
+    """
+    def __init__(self, response):
+        self.response = response
+
+    def __str__(self):
+        return "Bad gateway."
+
+
 class DCOSBadRequest(DCOSHTTPException):
     """A wrapper around Response objects for HTTP Bad Request (400).
 

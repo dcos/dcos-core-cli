@@ -6,9 +6,9 @@ from six.moves.urllib.parse import urlparse
 
 from dcos import config, util
 from dcos.errors import (DCOSAuthenticationException,
-                         DCOSAuthorizationException, DCOSBadRequest,
-                         DCOSConnectionError, DCOSException, DCOSHTTPException,
-                         DCOSUnprocessableException)
+                         DCOSAuthorizationException, DCOSBadGateway,
+                         DCOSBadRequest, DCOSConnectionError, DCOSException,
+                         DCOSHTTPException, DCOSUnprocessableException)
 
 
 logger = util.get_logger(__name__)
@@ -276,6 +276,8 @@ def request(method,
         raise DCOSAuthorizationException(response)
     elif response.status_code == 400:
         raise DCOSBadRequest(response)
+    elif response.status_code == 502:
+        raise DCOSBadGateway(response)
     else:
         raise DCOSHTTPException(response)
 

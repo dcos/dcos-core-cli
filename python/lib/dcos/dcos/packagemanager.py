@@ -7,9 +7,9 @@ from six.moves import urllib
 
 from dcos import cosmos, emitting, util
 from dcos.errors import (DCOSAuthenticationException,
-                         DCOSAuthorizationException, DCOSBadRequest,
-                         DCOSConnectionError, DCOSException, DCOSHTTPException,
-                         DefaultError)
+                         DCOSAuthorizationException, DCOSBadGateway,
+                         DCOSBadRequest, DCOSConnectionError, DCOSException,
+                         DCOSHTTPException, DefaultError)
 
 logger = util.get_logger(__name__)
 emitter = emitting.FlatEmitter()
@@ -75,6 +75,8 @@ class PackageManager:
         except DCOSAuthorizationException:
             raise
         except DCOSConnectionError:
+            raise
+        except DCOSBadGateway:
             raise
         except Exception as e:
             logger.exception(e)
