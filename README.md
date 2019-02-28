@@ -105,7 +105,7 @@ configuration listed below:
     installer_url: ${CLI_TEST_INSTALLER_URL}
     platform: aws
     provider: onprem
-    aws_region: us-west-2
+    aws_region: us-east-1
     aws_key_name: ${CLI_TEST_SSH_KEY_NAME}
     ssh_private_key_filename: ${CLI_TEST_SSH_KEY_PATH}
     os_name: cent-os-7
@@ -117,7 +117,7 @@ configuration listed below:
         cluster_name: DC/OS CLI Integration Tests
         resolvers:
             - 10.10.0.2
-        dns_search: us-west-2.compute.internal
+        dns_search: us-east-1.compute.internal
         master_discovery: static
 
 Where `CLI_TEST_DEPLOYMENT_NAME` is a custom name set by the user,
