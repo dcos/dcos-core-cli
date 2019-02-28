@@ -109,7 +109,7 @@ configuration listed below:
     aws_key_name: ${CLI_TEST_SSH_KEY_NAME}
     ssh_private_key_filename: ${CLI_TEST_SSH_KEY_PATH}
     os_name: cent-os-7
-    instance_type: m4.large
+    instance_type: m5.large
     num_masters: 1
     num_private_agents: 1
     num_public_agents: 1
