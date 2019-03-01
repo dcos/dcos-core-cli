@@ -56,7 +56,6 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				stateSummaryRes <- stateSummaryResult{stateSummary, err}
 			}()
 
-
 			ipsRes := make(chan ipsResult)
 			go func() {
 				c := networking.NewClient(pluginutil.HTTPClient(""))
@@ -135,12 +134,18 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			}
 
 			for _, m := range masters {
-				m.Type = "master"
+				m.Type = "master (standby)"
+				// All masters must be in the same region:
+				// https://github.com/apache/mesos/blob/3944124da5338791ce28c4a9285c98ee80c99b16/src/master/master.cpp#L2127
+				m.Region = state.Domain.FaultDomain.Region.Name
 				m.PublicIPs = ips[m.IP]
 				if m.IP == state.Hostname {
 					m.Type = "master (leader)"
-					m.Region = state.Domain.FaultDomain.Region.Name
+					// The only way to get the zone for non-leader masters would be
+					// to SSH on each of them and get the content of `GET_FLAGS`.
 					m.Zone = state.Domain.FaultDomain.Zone.Name
+					// Only the leader master has an ID:
+					// https://github.com/apache/mesos/blob/3944124da5338791ce28c4a9285c98ee80c99b16/src/common/protobuf_utils.cpp#L565
 					m.ID, m.PID, m.Version = state.ID, state.PID, state.Version
 				}
 
