@@ -97,7 +97,7 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			// In order to create a nodes json object that contains masters and agents
 			// we need a slice of interface{} that is able to contain both node types.
 			nodes := make([]interface{}, 0)
-			tableHeader := []string{"HOSTNAME", "IP", "PUBLIC IPS", "ID", "TYPE", "REGION", "ZONE"}
+			tableHeader := []string{"HOSTNAME", "IP", "PUBLIC IP(S)", "ID", "TYPE", "REGION", "ZONE"}
 			for _, field := range fields {
 				tableHeader = append(tableHeader, field)
 			}
