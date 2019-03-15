@@ -6,7 +6,7 @@ Usage:
     dcos task --info
     dcos task --version
     dcos task attach [--no-stdin] <task>
-    dcos task exec [--interactive --tty] <task> <cmd> [<args>...]
+    dcos task exec [--interactive --tty] <task> [--] <cmd> [<args>...]
     dcos task log [--all | --completed] [--follow --lines=N] [<task>] [<file>]
     dcos task ls [--all | --completed] [--long] [<task>] [<path>]
     dcos task metrics details <task-id> [--json]
