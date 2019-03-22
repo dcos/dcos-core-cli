@@ -11,7 +11,11 @@ func newCmdNodeDecommission(ctx api.Context) *cobra.Command {
 		Short: "Mark an agent as gone",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return mesosClient().MarkAgentGone(args[0])
+			c, err := mesosClient(ctx)
+			if err != nil {
+				return err
+			}
+			return c.MarkAgentGone(args[0])
 		},
 	}
 }

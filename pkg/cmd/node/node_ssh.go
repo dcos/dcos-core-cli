@@ -26,7 +26,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 		Short: "Establish an SSH connection to the master or agent nodes of your DC/OS cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-			clientOpts.Host, err = detectHost(leader, mesosID, privateIP)
+			clientOpts.Host, err = detectHost(ctx, leader, mesosID, privateIP)
 			if err != nil {
 				return err
 			}
@@ -64,14 +64,13 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
-func detectHost(leader bool, mesosID, privateIP string) (string, error) {
+func detectHost(ctx api.Context, leader bool, mesosID, privateIP string) (string, error) {
 	if privateIP != "" {
 		return privateIP, nil
 	}
 
-	c := mesosClient()
 	if leader {
-		leader, err := c.Leader()
+		leader, err := mesosDNSClient().Leader()
 		if err != nil {
 			return "", err
 		}
@@ -80,7 +79,10 @@ func detectHost(leader bool, mesosID, privateIP string) (string, error) {
 		}
 		return leader.IP, nil
 	}
-
+	c, err := mesosClient(ctx)
+	if err != nil {
+		return "", err
+	}
 	state, err := c.State()
 	if err != nil {
 		return "", err

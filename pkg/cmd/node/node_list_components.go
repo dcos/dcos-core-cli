@@ -27,7 +27,7 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ip := ""
 			if leader {
-				leader, err := mesosClient().Leader()
+				leader, err := mesosDNSClient().Leader()
 				if err != nil {
 					return err
 				}
@@ -36,7 +36,11 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 				}
 				ip = leader.IP
 			} else {
-				agents, err := mesosClient().Agents()
+				c, err := mesosClient(ctx)
+				if err != nil {
+					return err
+				}
+				agents, err := c.Agents()
 				if err != nil {
 					return err
 				}

@@ -49,7 +49,11 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 			}
 
 			if mesosID != "" {
-				agents, err := mesosClient().Agents()
+				c, err := mesosClient(ctx)
+				if err != nil {
+					return err
+				}
+				agents, err := c.Agents()
 				if err != nil {
 					return err
 				}
@@ -57,7 +61,7 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 					if mesosID == agent.AgentInfo.GetID().Value {
 						break
 					}
-					if i == len(agents) - 1 {
+					if i == len(agents)-1 {
 						return fmt.Errorf("agent '%s' not found", mesosID)
 					}
 				}

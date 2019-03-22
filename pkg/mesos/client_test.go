@@ -89,7 +89,7 @@ func TestState(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/mesos/master/state", r.URL.String())
+		assert.Equal(t, "/master/state", r.URL.String())
 		assert.Equal(t, "GET", r.Method)
 		assert.NoError(t, json.NewEncoder(w).Encode(expectedState))
 	}))
@@ -116,7 +116,7 @@ func TestStateSummary(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/mesos/master/state-summary", r.URL.String())
+		assert.Equal(t, "/master/state-summary", r.URL.String())
 		assert.Equal(t, "GET", r.Method)
 		assert.NoError(t, json.NewEncoder(w).Encode(expectedState))
 	}))
@@ -146,7 +146,7 @@ func TestAgents(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/mesos/api/v1", r.URL.String())
+		assert.Equal(t, "/api/v1", r.URL.String())
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "application/x-protobuf", r.Header.Get("Accept"))
 		assert.Equal(t, "application/x-protobuf", r.Header.Get("Content-Type"))
@@ -173,7 +173,7 @@ func TestMarkAgentGone(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/mesos/api/v1", r.URL.String())
+		assert.Equal(t, "/api/v1", r.URL.String())
 		assert.Equal(t, "POST", r.Method)
 		var payload master.Call
 		err := json.NewDecoder(r.Body).Decode(&payload)
