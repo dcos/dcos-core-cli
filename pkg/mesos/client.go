@@ -80,7 +80,7 @@ func (c *Client) Masters() ([]Master, error) {
 
 // State returns the current State of the Mesos master.
 func (c *Client) State() (*State, error) {
-	resp, err := c.http.Get("/mesos/master/state")
+	resp, err := c.http.Get("/master/state")
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (c *Client) State() (*State, error) {
 
 // StateSummary returns a StateSummary of the Mesos master.
 func (c *Client) StateSummary() (*StateSummary, error) {
-	resp, err := c.http.Get("/mesos/master/state-summary")
+	resp, err := c.http.Get("/master/state-summary")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *Client) Agents() ([]master.Response_GetAgents_Agent, error) {
 		return nil, err
 	}
 
-	resp, err := c.http.Post("/mesos/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+	resp, err := c.http.Post("/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
 		httpclient.Header("Accept", "application/x-protobuf"))
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (c *Client) MarkAgentGone(agentID string) error {
 	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
 		return err
 	}
-	resp, err := c.http.Post("/mesos/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	resp, err := c.http.Post("/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
 	if err != nil {
 		return err
 	}

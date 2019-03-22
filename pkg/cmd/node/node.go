@@ -49,6 +49,20 @@ func diagnosticsClient() *diagnostics.Client {
 	return diagnostics.NewClient(pluginutil.HTTPClient(""))
 }
 
-func mesosClient() *mesos.Client {
+// mesosDNSClient returns a client with a`baseURL` to communicate with Mesos-DNS.
+func mesosDNSClient() *mesos.Client {
 	return mesos.NewClient(pluginutil.HTTPClient(""))
+}
+
+// mesosClient returns a client with a `baseURL` to communicate with Mesos.
+func mesosClient(ctx api.Context) (*mesos.Client, error) {
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return nil, err
+	}
+	baseURL, _ := cluster.Config().Get("core.mesos_master_url").(string)
+	if baseURL == "" {
+		baseURL = cluster.URL() + "/mesos"
+	}
+	return mesos.NewClient(pluginutil.HTTPClient(baseURL)), nil
 }

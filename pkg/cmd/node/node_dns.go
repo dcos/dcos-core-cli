@@ -15,7 +15,7 @@ func newCmdNodeDNS(ctx api.Context) *cobra.Command {
 		Short: "Return the IP address(es) corresponding to a given hostname",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hosts, err := mesosClient().Hosts(args[0])
+			hosts, err := mesosDNSClient().Hosts(args[0])
 			if err != nil {
 				return err
 			}
