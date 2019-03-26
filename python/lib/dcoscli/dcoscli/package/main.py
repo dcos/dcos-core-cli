@@ -554,7 +554,7 @@ def _confirm_uninstall(installed_pkg, remove_all, app_id):
                        "uninstall [{}] and delete all of its persistent "
                        "(logs, configurations, database artifacts, "
                        "everything).").format(app_id)
-        confirm_prompt = "Please type the name of the service to confirm"
+        confirm_prompt = "Please type the full name of the app ID to confirm"
         expected_text = app_id
     else:
         confirm_cta = ("WARNING: This action cannot be undone. This will "
