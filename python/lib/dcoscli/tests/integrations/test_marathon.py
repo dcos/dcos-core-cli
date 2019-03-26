@@ -21,7 +21,7 @@ from dcoscli.test.marathon import (app, list_apps, list_deployments, show_app,
 
 
 _ZERO_INSTANCE_APP_ID = 'zero-instance-app'
-_ZERO_INSTANCE_APP_INSTANCES = 100
+_ZERO_INSTANCE_APP_INSTANCES = 40
 
 
 def test_help():
