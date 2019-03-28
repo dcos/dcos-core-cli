@@ -109,6 +109,10 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			slaves := state.Slaves
 			for _, s := range slaves {
 				s.Type = "agent"
+				if val, ok := s.Attributes["public_ip"].(string); ok && val == "true" {
+					s.Type = "agent (public)"
+				}
+
 				s.Region = s.Domain.FaultDomain.Region.Name
 				s.Zone = s.Domain.FaultDomain.Zone.Name
 				s.PublicIPs = ips[s.IP()]
