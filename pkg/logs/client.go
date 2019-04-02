@@ -108,7 +108,18 @@ func (c *Client) printEntry(rawEntry []byte) error {
 	}
 
 	date := time.Unix(entry.RealtimeTimestamp/1000000, 0).UTC().Format("2006-01-02 15:04:05 MST")
-	fmt.Fprint(c.out, date+": "+entry.Fields.Message)
+	var pid string
+	if entry.Fields.PID != "" {
+		pid = fmt.Sprintf(" [%s]", entry.Fields.PID)
+	}
+	fmt.Fprint(
+		c.out,
+		date,
+		entry.Fields.SyslogIdentifier,
+		pid,
+		": ",
+		entry.Fields.Message,
+	)
 	if c.colored {
 		fmt.Fprint(c.out, "\033[0m")
 	}
