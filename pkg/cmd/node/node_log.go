@@ -11,12 +11,11 @@ import (
 )
 
 func newCmdNodeLog(ctx api.Context) *cobra.Command {
-	var component string
+	var component, mesosID, output string
 	var filters []string
-	var follow bool
-	var leader bool
+	var follow, leader bool
 	var lines int
-	var mesosID string
+
 	cmd := &cobra.Command{
 		Use:   "log",
 		Short: "Print logs for the leading master node or agent nodes",
@@ -70,7 +69,14 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 
 			client := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
 
-			return client.PrintComponent(route, service, -1*lines, filters, follow)
+			opts := logs.Options{
+				Filters: filters,
+				Follow:  follow,
+				Format:  output,
+				Skip:    -1 * lines,
+			}
+
+			return client.PrintComponent(route, service, opts)
 		},
 	}
 	cmd.Flags().StringVar(&component, "component", "", "Show DC/OS component logs")
@@ -79,5 +85,6 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&leader, "leader", false, "The leading master")
 	cmd.Flags().IntVar(&lines, "lines", 10, "Dynamically update the log")
 	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The agent ID of a node")
+	cmd.Flags().StringVarP(&output, "output", "o", "short", "Format log message output")
 	return cmd
 }
