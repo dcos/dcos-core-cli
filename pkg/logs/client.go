@@ -22,6 +22,14 @@ type Client struct {
 	colored bool
 }
 
+// Options encapsulates options that can be set via flags on the command.
+type Options struct {
+	Filters []string
+	Follow  bool
+	Format  string
+	Skip    int
+}
+
 // NewClient creates a new logs client.
 func NewClient(baseClient *httpclient.Client, out io.Writer) *Client {
 	c := &Client{http: baseClient, out: out}
@@ -36,13 +44,13 @@ func NewClient(baseClient *httpclient.Client, out io.Writer) *Client {
 }
 
 // PrintComponent prints a component logs.
-func (c *Client) PrintComponent(route string, service string, skip int, filters []string, follow bool) error {
+func (c *Client) PrintComponent(route string, service string, opts Options) error {
 	requestFilters := ""
-	if len(filters) > 0 {
-		requestFilters = "&filter=" + strings.Join(filters, "&filter=")
+	if len(opts.Filters) > 0 {
+		requestFilters = "&filter=" + strings.Join(opts.Filters, "&filter=")
 	}
-	endpoint := fmt.Sprintf("/system/v1%s/logs/v2/component%s?skip=%d%s", route, service, skip, requestFilters)
-	if follow {
+	endpoint := fmt.Sprintf("/system/v1%s/logs/v2/component%s?skip=%d%s", route, service, opts.Skip, requestFilters)
+	if opts.Follow {
 		client := sse.NewClient(c.http.BaseURL().String() + endpoint)
 		client.Connection = c.http.BaseClient()
 		client.Headers["Authorization"] = c.http.Header().Get("Authorization")
@@ -56,7 +64,7 @@ func (c *Client) PrintComponent(route string, service string, skip int, filters 
 		defer client.Unsubscribe(events)
 
 		for msg := range events {
-			err := c.printEntry(msg.Data)
+			err := c.printEntry(msg.Data, opts)
 			if err != nil {
 				return err
 			}
@@ -74,7 +82,7 @@ func (c *Client) PrintComponent(route string, service string, skip int, filters 
 		return fmt.Errorf("HTTP %d error", resp.StatusCode)
 	}
 	for scanner := bufio.NewScanner(resp.Body); scanner.Scan(); {
-		err := c.printEntry(scanner.Bytes())
+		err := c.printEntry(scanner.Bytes(), opts)
 		if err != nil {
 			return err
 		}
@@ -82,16 +90,50 @@ func (c *Client) PrintComponent(route string, service string, skip int, filters 
 	return nil
 }
 
-func (c *Client) printEntry(rawEntry []byte) error {
+func (c *Client) printEntry(rawEntry []byte, opts Options) error {
 	var entry Entry
 	err := json.Unmarshal(rawEntry, &entry)
 	if err != nil {
 		return err
 	}
 
+	enc := json.NewEncoder(c.out)
+	switch opts.Format {
+	case "json-pretty":
+		enc.SetIndent("", "    ")
+		fallthrough
+	case "json":
+		return enc.Encode(entry.JournalctlJSON())
+	case "cat":
+		c.setColor(entry.Fields.Priority)
+		fmt.Fprint(c.out, entry.Fields.Message)
+		c.resetColor()
+	default:
+		c.setColor(entry.Fields.Priority)
+		date := time.Unix(entry.RealtimeTimestamp/1000000, 0).UTC().Format("2006-01-02 15:04:05 MST")
+		var pid string
+		if entry.Fields.PID != "" {
+			pid = fmt.Sprintf(" [%s]", entry.Fields.PID)
+		}
+		fmt.Fprint(
+			c.out,
+			date,
+			entry.Fields.SyslogIdentifier,
+			pid,
+			": ",
+			entry.Fields.Message,
+		)
+		c.resetColor()
+	}
+
+	fmt.Fprintln(c.out)
+	return nil
+}
+
+func (c *Client) setColor(priority string) {
 	if c.colored {
 		var color string
-		switch entry.Fields.Priority {
+		switch priority {
 		// EMERGENCY, ALERT, CRITICAL, ERROR are printed in red.
 		case "0", "1", "2", "3":
 			color = "31"
@@ -106,23 +148,10 @@ func (c *Client) printEntry(rawEntry []byte) error {
 		}
 		fmt.Fprintf(c.out, "\033[0;%sm", color)
 	}
+}
 
-	date := time.Unix(entry.RealtimeTimestamp/1000000, 0).UTC().Format("2006-01-02 15:04:05 MST")
-	var pid string
-	if entry.Fields.PID != "" {
-		pid = fmt.Sprintf(" [%s]", entry.Fields.PID)
-	}
-	fmt.Fprint(
-		c.out,
-		date,
-		entry.Fields.SyslogIdentifier,
-		pid,
-		": ",
-		entry.Fields.Message,
-	)
+func (c *Client) resetColor() {
 	if c.colored {
 		fmt.Fprint(c.out, "\033[0m")
 	}
-	fmt.Fprintln(c.out)
-	return nil
 }

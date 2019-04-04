@@ -34,6 +34,7 @@ func TestPrintComponent(t *testing.T) {
 		service        string
 		skip           int
 		filters        []string
+		format         string
 		entries        []*Entry
 		colored        bool
 		expectedPath   string
@@ -68,6 +69,28 @@ func TestPrintComponent(t *testing.T) {
 		},
 		{
 			route:          "/leader/mesos",
+			entries:        []*Entry{infoEntry},
+			format:         "cat",
+			colored:        true,
+			expectedPath:   "/system/v1/leader/mesos/logs/v2/component?skip=0",
+			expectedOutput: "\x1b[0;0minfo message\x1b[0m\n",
+		},
+		{
+			route:        "/leader/mesos",
+			entries:      []*Entry{infoEntry},
+			format:       "json-pretty",
+			colored:      true,
+			expectedPath: "/system/v1/leader/mesos/logs/v2/component?skip=0",
+		},
+		{
+			route:        "/leader/mesos",
+			entries:      []*Entry{infoEntry},
+			format:       "json",
+			colored:      true,
+			expectedPath: "/system/v1/leader/mesos/logs/v2/component?skip=0",
+		},
+		{
+			route:          "/leader/mesos",
 			entries:        []*Entry{errorEntry},
 			colored:        true,
 			expectedPath:   "/system/v1/leader/mesos/logs/v2/component?skip=0",
@@ -89,9 +112,24 @@ func TestPrintComponent(t *testing.T) {
 		c := NewClient(pluginutil.HTTPClient(ts.URL), &b)
 		c.colored = fixture.colored
 
-		err := c.PrintComponent(fixture.route, fixture.service, fixture.skip, fixture.filters, false)
-		require.Equal(t, nil, err)
-		require.Equal(t, fixture.expectedOutput, b.String())
+		opts := Options{
+			Filters: fixture.filters,
+			Format:  fixture.format,
+			Skip:    fixture.skip,
+		}
+
+		err := c.PrintComponent(fixture.route, fixture.service, opts)
+		require.NoError(t, err)
+
+		switch fixture.format {
+		case "json", "json-pretty":
+			var entry JournalctlJSONEntry
+			require.NoError(t, json.Unmarshal([]byte(b.String()), &entry))
+			require.Equal(t, entry, infoEntry.JournalctlJSON())
+		default:
+			require.Equal(t, fixture.expectedOutput, b.String())
+		}
+
 		ts.Close()
 	}
 }
