@@ -88,6 +88,8 @@ func (c *Client) Create(nodes []string) (*BundleCreateResponseJSONStruct, error)
 		var createdBundle BundleCreateResponseJSONStruct
 		err = json.NewDecoder(resp.Body).Decode(&createdBundle)
 		return &createdBundle, err
+	case 409:
+		return nil, fmt.Errorf("another bundle already in progress")
 	case 503:
 		return nil, fmt.Errorf("Requested nodes %v not found", nodes)
 	default:
