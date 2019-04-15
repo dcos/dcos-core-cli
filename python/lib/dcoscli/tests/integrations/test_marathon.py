@@ -328,6 +328,8 @@ def test_restarting_missing_app():
                    stderr=b"Error: App '/missing-id' does not exist\n")
 
 
+@pytest.mark.skip(
+    reason='https://jira.mesosphere.com/browse/DCOS-51820')
 def test_killing_app():
     with _zero_instance_app():
         start_app('zero-instance-app', 3)
