@@ -273,12 +273,12 @@ def _log(all_, follow, completed, lines, task, file_):
                 raise DCOSException(msg)
         raise DCOSException('No matching tasks. Exiting.')
 
-    for t in tasks:
-        if t == fltr:
-            tasks = [t]
-
     # check for dcos-log v2
     if log.dcos_log_enabled(version=2):
+        # dcos-log does not support multiple tasks, we filter the given ones.
+        for t in tasks:
+            if t == fltr:
+                tasks = [t]
         _dcos_log_v2(follow, tasks, lines, file_)
         return 0
 
