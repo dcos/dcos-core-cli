@@ -26,10 +26,7 @@ type stateSummaryResult struct {
 	err   error
 }
 
-type ipsResult struct {
-	ips map[string][]string
-	err error
-}
+type ipsResult map[string][]string
 
 func newCmdNodeList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
@@ -63,15 +60,16 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			go func() {
 				c := networking.NewClient(pluginutil.HTTPClient(""))
 				nodes, err := c.Nodes()
-				if err != nil {
-					ipsRes <- ipsResult{nil, err}
-				}
 
 				ips := make(map[string][]string)
-				for _, node := range nodes {
-					ips[node.PrivateIP] = node.PublicIPs
+				if err != nil {
+					ctx.Logger().Debug(err)
+				} else {
+					for _, node := range nodes {
+						ips[node.PrivateIP] = node.PublicIPs
+					}
 				}
-				ipsRes <- ipsResult{ips, nil}
+				ipsRes <- ips
 			}()
 
 			masters, err := mesosDNSClient().Masters()
@@ -79,11 +77,7 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			ipsResult := <-ipsRes
-			if ipsResult.err != nil {
-				return err
-			}
-			ips := ipsResult.ips
+			ips := <-ipsRes
 
 			stateSummaryResult := <-stateSummaryRes
 			if stateSummaryResult.err != nil {
