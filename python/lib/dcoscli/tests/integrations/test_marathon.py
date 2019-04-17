@@ -1,3 +1,4 @@
+import ast
 import contextlib
 import json
 import os
@@ -328,23 +329,19 @@ def test_restarting_missing_app():
                    stderr=b"Error: App '/missing-id' does not exist\n")
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/DCOS-51820')
 def test_killing_app():
     with _zero_instance_app():
         start_app('zero-instance-app', 3)
         watch_all_deployments()
-        task_set_1 = set([task['id']
-                          for task in _list_tasks(3, 'zero-instance-app')])
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'kill', 'zero-instance-app'])
         assert returncode == 0
-        assert stdout.decode().startswith('Killed tasks: ')
         assert stderr == b''
-        watch_all_deployments()
-        task_set_2 = set([task['id']
-                          for task in _list_tasks(app_id='zero-instance-app')])
-        assert len(task_set_1.intersection(task_set_2)) == 0
+        out = stdout.decode()
+        assert out.startswith('Killed tasks: ')
+        out = out.strip('Killed tasks: ')
+        dictout = ast.literal_eval(out)
+        assert len(dictout) == 3
 
 
 def test_killing_scaling_app():
