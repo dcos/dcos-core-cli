@@ -58,7 +58,6 @@ def test_node_table_field_option():
     assert lines[0].split() == ["HOSTNAME", "IP", "PUBLIC", "IP(S)", "ID",
                                 "TYPE", "REGION", "ZONE", "USED",
                                 "RESOURCES", "DISK"]
-    assert stdout.decode('utf-8').count("agent (public)") == 1
 
 
 def test_node_table_uppercase_field_option():
