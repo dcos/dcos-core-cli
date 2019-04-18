@@ -1,8 +1,6 @@
 import contextlib
 import json
 import re
-
-import pytest
 import retrying
 
 from dcoscli.test.common import exec_command
@@ -12,15 +10,11 @@ list_regex = '/stuck-(?:sleep|pod)\W+[^Z]+Z\W+\d\W+(?:True|False)' \
              '\W+\d{1,2}\W+\d{1,2}\W+[^Z]+Z\W+[^Z]+Z'
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_list():
     with _stuck_app():
         check_debug_list()
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_list_json():
     with _stuck_app():
         returncode, stdout, stderr = exec_command(
@@ -52,15 +46,11 @@ def check_debug_list():
     assert re.search(list_regex, decoded) is not None
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_list_pod():
     with _stuck_pod():
         check_debug_list()
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_list_pod_json():
     with _stuck_pod():
         returncode, stdout, stderr = exec_command(
@@ -75,8 +65,6 @@ def test_debug_list_pod_json():
         assert '"reason": "UnfulfilledConstraint"' in decoded
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_summary():
     with _stuck_app():
         @retrying.retry(wait_fixed=1000, stop_max_attempt_number=30)
@@ -94,8 +82,6 @@ def test_debug_summary():
         check_debug_summary()
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_summary_json():
     with _stuck_app():
         returncode, stdout, stderr = exec_command(
@@ -110,8 +96,6 @@ def test_debug_summary_json():
                in decoded
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_summary_pod():
     with _stuck_pod():
         @retrying.retry(wait_fixed=1000, stop_max_attempt_number=30)
@@ -131,8 +115,6 @@ def test_debug_summary_pod():
         check_debug_summary()
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_summary_pod_json():
     with _stuck_pod():
         returncode, stdout, stderr = exec_command(
@@ -147,8 +129,6 @@ def test_debug_summary_pod_json():
                in decoded
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_details():
     with _stuck_app():
         check_debug_details('/stuck-sleep')
@@ -184,8 +164,6 @@ def check_debug_details(id):
     assert len(decoded.split('\n')) == agent_count + 2
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_details_json():
     with _stuck_app():
         returncode, stdout, stderr = exec_command(
@@ -200,15 +178,11 @@ def test_debug_details_json():
                in decoded
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_details_pod():
     with _stuck_pod():
         check_debug_details('/stuck-pod')
 
 
-@pytest.mark.skip(
-    reason='https://jira.mesosphere.com/browse/MARATHON-8612')
 def test_debug_details_pod_json():
     with _stuck_pod():
         returncode, stdout, stderr = exec_command(
