@@ -27,6 +27,8 @@ node('mesos-ubuntu') {
             checkout scm
             sh 'make windows'
             stash includes: 'build/windows/**', name: 'dcos-windows'
+            sh 'wget https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/master/dcos.exe'
+            stash includes: 'dcos.exe', name: 'dcos-exe'
         }
     }
 }
@@ -74,6 +76,7 @@ node('py36') {
                         // CLI tests, but it is not addressed in dcos e2e.
                         dir('dcos-core-cli') {
                             unstash 'dcos-windows'
+                            unstash "dcos-exe"
 
                             bat '''
                                 bash -exc " \
@@ -86,8 +89,7 @@ node('py36') {
                                 python scripts/plugin/package_plugin.py; \
                                 cd python/lib/dcoscli; \
                                 make env; \
-                                rm -f ./env/Scripts/dcos.exe; \
-                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/master/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
+                                mv ../../../dcos.exe dist; \
                                 PATH=$PWD/dist:$PATH; \
                                 dcos cluster remove --all; \
                                 dcos cluster setup ${DCOS_TEST_URL} --insecure; \
