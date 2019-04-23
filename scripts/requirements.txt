@@ -7,6 +7,6 @@ dcos-e2e==2019.04.02.1
 dcos_launch==0.1-dev
 dcos-test-utils==0.1
 requests==2.21.0
-urllib3==1.23
+urllib3==1.24.2
 -e ../python/lib/dcos
 -e ../python/lib/dcoscli
