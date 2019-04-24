@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/golang/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/master"
@@ -22,6 +24,19 @@ func NewClient(baseClient *httpclient.Client) *Client {
 	return &Client{
 		http: baseClient,
 	}
+}
+
+// NewClientWithContext returns a client with a `baseURL` to communicate with Mesos.
+func NewClientWithContext(ctx api.Context) (*Client, error) {
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return nil, err
+	}
+	baseURL, _ := cluster.Config().Get("core.mesos_master_url").(string)
+	if baseURL == "" {
+		baseURL = cluster.URL() + "/mesos"
+	}
+	return NewClient(pluginutil.HTTPClient(baseURL)), nil
 }
 
 // Hosts returns the IP address(es) of an host.
