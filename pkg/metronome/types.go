@@ -25,6 +25,7 @@ type Job struct {
 		Mem            int                    `json:"mem"`
 		Placement      *placement             `json:"placement,omitempty"`
 		Secrets        map[string]interface{} `json:"secrets,omitempty"`
+		UCR            *ucr                   `json:"ucr,omitempty"`
 		User           string                 `json:"user,omitempty"`
 		Restart        *restart               `json:"restart,omitempty"`
 		Volumes        []volume               `json:"volumes,omitempty"`
@@ -48,6 +49,10 @@ type docker struct {
 	Image string `json:"image,omitempty"`
 }
 
+type ucr struct {
+	Image map[string]interface{} `json:"image,omitempty"`
+}
+
 type placement struct {
 	Constraints []constraint `json:"constraints"`
 }
@@ -64,9 +69,10 @@ type restart struct {
 }
 
 type volume struct {
-	ContainerPath string `json:"containerPath"`
-	HostPath      string `json:"hostPath"`
-	Mode          string `json:"mode"`
+	ContainerPath string `json:"containerPath,omitempty"`
+	HostPath      string `json:"hostPath,omitempty"`
+	Mode          string `json:"mode,omitempty"`
+	Secret        string `json:"secret,omitempty"`
 }
 
 // Run contains information about a run of a Job.
