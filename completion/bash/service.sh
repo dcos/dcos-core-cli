@@ -54,6 +54,7 @@ _dcos_service_log() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_service_names
                 ;;
         esac
         return
@@ -61,5 +62,10 @@ _dcos_service_log() {
 }
 
 _dcos_service_shutdown() {
-    return
+    __dcos_complete_service_names
+}
+
+__dcos_complete_service_names() {
+    while IFS=$'\n' read -r line; do service_names+=("$line"); done < <(dcos service list -q 2> /dev/null)
+    __dcos_handle_compreply "${service_names[@]}"
 }

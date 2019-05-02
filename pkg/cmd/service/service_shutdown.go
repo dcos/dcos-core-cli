@@ -8,7 +8,7 @@ import (
 
 func newCmdServiceShutdown(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "shutdown <service-id>",
+		Use:   "shutdown <service-name>",
 		Short: "Shutdown a service",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

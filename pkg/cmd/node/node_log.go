@@ -83,7 +83,7 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	cmd.Flags().StringArrayVar(&filters, "filter", nil, "Filter logs by field and value. Filter must be a string separated by colon. For example: --filter _PID:0 --filter _UID:1")
 	cmd.Flags().BoolVar(&follow, "follow", false, "Dynamically update the log")
 	cmd.Flags().BoolVar(&leader, "leader", false, "The leading master")
-	cmd.Flags().IntVar(&lines, "lines", 10, "Dynamically update the log")
+	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines. 10 is the default")
 	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The agent ID of a node")
 	cmd.Flags().StringVarP(&output, "output", "o", "short", "Format log message output")
 	return cmd
