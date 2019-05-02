@@ -13,7 +13,7 @@ import (
 )
 
 func newCmdServiceList(ctx api.Context) *cobra.Command {
-	var jsonOutput, completed, inactive bool
+	var jsonOutput, completed, inactive, quietOutput bool
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -48,6 +48,12 @@ func newCmdServiceList(ctx api.Context) *cobra.Command {
 			tableHeader := []string{"NAME", "HOST", "ACTIVE", "TASKS", "CPU", "MEM", "DISK", "ID"}
 			table := cli.NewTable(ctx.Out(), tableHeader)
 
+			if quietOutput {
+				for _, f := range frameworks {
+					fmt.Fprintln(ctx.Out(), f.Name)
+				}
+			}
+
 			for _, f := range frameworks {
 				item := []string{
 					f.Name,
@@ -69,6 +75,7 @@ func newCmdServiceList(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	cmd.Flags().BoolVar(&completed, "completed", false, "Print completed and active services")
 	cmd.Flags().BoolVar(&inactive, "inactive", false, "Print inactive and active services")
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed services")
 	return cmd
 }
 

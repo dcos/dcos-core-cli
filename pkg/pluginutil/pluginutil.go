@@ -4,9 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
+	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-cli/pkg/log"
 	"github.com/sirupsen/logrus"
@@ -43,6 +45,43 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 		}
 	}
 	return httpclient.New(strings.TrimRight(baseURL, "/"), append(baseOpts, opts...)...)
+}
+
+// NewHTTPClient returns an HTTP client from a plugin runtime.
+// It is created with the `client-go` package and will eventually
+// replace the httpClient of the CLI.
+func NewHTTPClient(baseURL string) *http.Client {
+	dcosConfig := dcos.NewConfig(nil)
+
+	if baseURL == "" {
+		baseURL, _ = os.LookupEnv("DCOS_URL")
+	}
+
+	if acsToken, _ := os.LookupEnv("DCOS_ACS_TOKEN"); acsToken != "" {
+		dcosConfig.SetACSToken(acsToken)
+	}
+
+	var tls dcos.TLS
+	tlsInsecure, _ := os.LookupEnv("DCOS_TLS_INSECURE")
+	if tlsInsecure == "1" {
+		tls.Insecure = true
+	} else {
+		tlsCAPath, _ := os.LookupEnv("DCOS_TLS_CA_PATH")
+		if tlsCAPath != "" {
+			rootCAsPEM, err := ioutil.ReadFile(tlsCAPath)
+			if err == nil {
+				certPool := x509.NewCertPool()
+				if certPool.AppendCertsFromPEM(rootCAsPEM) {
+					tls.RootCAs = certPool
+				}
+			}
+		}
+	}
+	dcosConfig.SetTLS(tls)
+
+	client := dcos.NewHTTPClient(dcosConfig)
+	client.Transport.(*dcos.DefaultTransport).Logger = Logger()
+	return client
 }
 
 // Logger returns a logger for a given plugin runtime.

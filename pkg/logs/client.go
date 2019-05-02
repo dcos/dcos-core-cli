@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -87,6 +88,52 @@ func (c *Client) PrintComponent(route string, service string, opts Options) erro
 			return err
 		}
 	}
+	return nil
+}
+
+// PrintTask prints a tasks logs.
+func (c *Client) PrintTask(taskID string, file string, opts Options) error {
+	endpoint := fmt.Sprintf("/system/v1/logs/v2/task/%s/file/%s?cursor=END&skip=%d", taskID, file, opts.Skip)
+	if opts.Follow {
+		client := sse.NewClient(c.http.BaseURL().String() + endpoint)
+		client.Connection = c.http.BaseClient()
+		client.Headers["Authorization"] = c.http.Header().Get("Authorization")
+		client.Headers["User-Agent"] = c.http.Header().Get("User-Agent")
+
+		events := make(chan *sse.Event)
+		err := client.SubscribeChanRaw(events)
+		if err != nil {
+			return err
+		}
+		defer client.Unsubscribe(events)
+
+		for msg := range events {
+			err := c.printEntry(msg.Data, opts)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	resp, err := c.http.Get(endpoint, httpclient.Header("Accept", "text/plain"))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+
+	// Due to a bug in `dcos-log` we can't receive task logs as json
+	// Output option for task will be ignored for now
+	// TODO(rgoegge): Refactor to receive application/json once `dcos-log is fixed
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(c.out, string(b))
 	return nil
 }
 
