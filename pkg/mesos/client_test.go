@@ -186,5 +186,29 @@ func TestMarkAgentGone(t *testing.T) {
 
 	err := c.MarkAgentGone(expectedAgentID)
 	require.NoError(t, err)
+}
 
+func TestTeardownFramework(t *testing.T) {
+	const expectedFrameworkID = "yolo"
+	expectedBody := master.Call{
+		Type: master.Call_TEARDOWN,
+		Teardown: &master.Call_Teardown{
+			FrameworkID: mesos.FrameworkID{Value: expectedFrameworkID},
+		},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/v1", r.URL.String())
+		assert.Equal(t, "POST", r.Method)
+		var payload master.Call
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, payload)
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+
+	err := c.TeardownFramework(expectedFrameworkID)
+	require.NoError(t, err)
 }
