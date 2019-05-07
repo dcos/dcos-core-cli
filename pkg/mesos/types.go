@@ -37,6 +37,7 @@ type Master struct {
 type Resources struct {
 	CPUs  float64 `json:"cpus"`
 	Disk  float64 `json:"disk"`
+	GPUs  float64 `json:"gpus"`
 	Mem   float64 `json:"mem"`
 	Ports string  `json:"ports"`
 }
