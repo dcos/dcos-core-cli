@@ -189,3 +189,27 @@ func (c *Client) MarkAgentGone(agentID string) error {
 	}
 	return nil
 }
+
+// TeardownFramework teardowns a framework.
+func (c *Client) TeardownFramework(frameworkID string) error {
+	body := master.Call{
+		Type: master.Call_TEARDOWN,
+		Teardown: &master.Call_Teardown{
+			FrameworkID: mesos.FrameworkID{Value: frameworkID},
+		},
+	}
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+		return err
+	}
+	resp, err := c.http.Post("/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return fmt.Errorf("could not teardown framework '%s'", frameworkID)
+	}
+	return nil
+}
