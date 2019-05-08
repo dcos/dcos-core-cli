@@ -10,7 +10,7 @@ import (
 // newCmdClusterRun runs a given job right now.
 func newCmdJobRun(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run",
+		Use:   "run <job-id>",
 		Short: "Run a job now",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
