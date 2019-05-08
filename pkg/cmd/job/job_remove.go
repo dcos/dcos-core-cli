@@ -9,7 +9,7 @@ import (
 func newCmdJobRemove(ctx api.Context) *cobra.Command {
 	var force bool
 	cmd := &cobra.Command{
-		Use:   "remove",
+		Use:   "remove  <job-id>",
 		Short: "Remove a job",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -21,6 +21,6 @@ func newCmdJobRemove(ctx api.Context) *cobra.Command {
 			return client.RemoveJob(args[0], force)
 		},
 	}
-	cmd.Flags().BoolVar(&force, "stop-current-job-runs", false, "Force to stopp all current runs")
+	cmd.Flags().BoolVar(&force, "stop-current-job-runs", false, "Force to stop all current runs")
 	return cmd
 }

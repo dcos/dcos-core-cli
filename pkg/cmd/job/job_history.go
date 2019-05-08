@@ -17,7 +17,7 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 	var last bool
 	var failures bool
 	cmd := &cobra.Command{
-		Use:   "history",
+		Use:   "history <job-id>",
 		Short: "Provides a job run history",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
