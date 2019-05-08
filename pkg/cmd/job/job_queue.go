@@ -15,7 +15,7 @@ func newCmdJobQueue(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	var quietOutput bool
 	cmd := &cobra.Command{
-		Use:   "queue",
+		Use:   "queue [<job-id>]",
 		Short: "Show job runs that are queued",
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {

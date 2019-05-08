@@ -62,6 +62,7 @@ _dcos_job_remove() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -75,7 +76,7 @@ _dcos_job_update() {
 
 _dcos_job_kill() {
     local i command
-    
+
     if ! __dcos_default_command_parse; then
         return
     fi
@@ -90,6 +91,7 @@ _dcos_job_kill() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -113,6 +115,7 @@ _dcos_job_run() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -172,7 +175,7 @@ _dcos_job_schedule() {
 }
 
 _dcos_job_schedule_add() {
-    return
+    __dcos_complete_job_ids
 }
 
 _dcos_job_schedule_show() {
@@ -192,6 +195,7 @@ _dcos_job_schedule_show() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -199,11 +203,11 @@ _dcos_job_schedule_show() {
 }
 
 _dcos_job_schedule_remove() {
-    return
+    __dcos_complete_job_ids
 }
 
 _dcos_job_schedule_update() {
-    return
+    __dcos_complete_job_ids
 }
 
 _dcos_job_show() {
@@ -222,6 +226,7 @@ _dcos_job_show() {
             --*)
                 ;;
             *)
+                while IFS=$'\n' read -r line; do commands+=("$line"); done < <(dcos job list -q 2> /dev/null)
                 __dcos_handle_compreply "${commands[@]}"
                 ;;
         esac
@@ -250,6 +255,7 @@ _dcos_job_show_runs() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -274,6 +280,7 @@ _dcos_job_queue() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
@@ -300,8 +307,14 @@ _dcos_job_history() {
                 __dcos_handle_compreply "$flags[@]}"
                 ;;
             *)
+                __dcos_complete_job_ids
                 ;;
         esac
         return
     fi
+}
+
+__dcos_complete_job_ids() {
+    while IFS=$'\n' read -r line; do job_ids+=("$line"); done < <(dcos job list -q 2> /dev/null)
+    __dcos_handle_compreply "${job_ids[@]}"
 }
