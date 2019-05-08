@@ -3,17 +3,23 @@ PKG=github.com/dcos/dcos-core-cli
 PKG_DIR=/go/src/$(PKG)
 IMAGE_NAME=dcos/dcos-core-cli
 
+PLATFORM?=$(shell uname | tr [A-Z] [a-z])
 windows_EXE=.exe
 
 .PHONY: default
-default:
-	@make $(shell uname | tr [A-Z] [a-z])
+default: $(PLATFORM)
 
 .PHONY: darwin linux windows
 darwin linux windows: docker-image
 	$(call inDocker,env GOOS=$(@) GO111MODULE=on go build \
 		-tags '$(GO_BUILD_TAGS)' -mod=vendor \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
+
+.PHONY: install
+install:
+	@make $(PLATFORM)
+	@make plugin
+	dcos plugin add -u ./build/$(PLATFORM)/dcos-core-cli.zip
 
 .PHONY: plugin
 plugin: python
