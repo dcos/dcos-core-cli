@@ -4,6 +4,8 @@ The DC/OS Command Line Interface (CLI) is a cross-platform command line
 utility that provides a user-friendly yet powerful way to manage DC/OS
 clusters.
 
+Bonjour.
+
 ## Installation and usage
 
 If you're a **user** of DC/OS, please follow the [installation
