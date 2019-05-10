@@ -91,6 +91,8 @@ node('py36') {
                                 PATH=$PWD/dist:$PATH; \
                                 dcos cluster remove --all; \
                                 dcos cluster setup ${DCOS_TEST_URL} --insecure; \
+                                dcos cluster list; \
+                                dcos job list; \
                                 ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations"
                             '''
                         }
