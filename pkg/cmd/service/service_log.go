@@ -95,7 +95,7 @@ func marathonMasterURL(c *marathon.Client, ctx api.Context) (string, error) {
 		return "", err
 	}
 
-	nodeIPs:= <-ipsRes
+	nodeIPs := <-ipsRes
 	if nodeIPs.err != nil {
 		return "", nil
 	}
@@ -151,7 +151,7 @@ func serviceAppID(c *marathon.Client, service string) (string, error) {
 	case 1:
 		return appIDs[0], nil
 	default:
-		return "", fmt.Errorf("multiple marathon apps found for service name [%s]: [%s]", service, strings.Join(appIDs,", "))
+		return "", fmt.Errorf("multiple marathon apps found for service name [%s]: [%s]", service, strings.Join(appIDs, ", "))
 	}
 }
 
@@ -163,7 +163,7 @@ func serviceTaskID(c *marathon.Client, appID string) (string, error) {
 
 	switch len(app.Tasks) {
 	case 1:
-		return app.Tasks[0].ID , nil
+		return app.Tasks[0].ID, nil
 	default:
 		return "", fmt.Errorf("expected marathon app [%s] to be running 1 task, but instead found %d tasks", appID, len(app.Tasks))
 	}

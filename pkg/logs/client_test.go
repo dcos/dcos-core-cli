@@ -3,6 +3,7 @@ package logs
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -129,6 +130,76 @@ func TestPrintComponent(t *testing.T) {
 		default:
 			require.Equal(t, fixture.expectedOutput, b.String())
 		}
+
+		ts.Close()
+	}
+}
+
+func TestPrintTask(t *testing.T) {
+	entry := &Entry{
+		Fields: EntryFields{
+			Message: "info message",
+		},
+	}
+
+	fixtures := []struct {
+		file           string
+		task           string
+		skip           int
+		filters        []string
+		entries        []*Entry
+		colored        bool
+		expectedPath   string
+		expectedOutput string
+	}{
+		{
+			file:           "stdout",
+			task:           "f70251-task-1",
+			skip:           -10,
+			entries:        []*Entry{entry},
+			expectedPath:   "/system/v1/logs/v2/task/f70251-task-1/file/stdout?cursor=END&skip=-10",
+			expectedOutput: "info message\n",
+		},
+		{
+			file:           "stderr",
+			task:           "944c71-task-2",
+			skip:           5,
+			entries:        []*Entry{entry},
+			expectedPath:   "/system/v1/logs/v2/task/944c71-task-2/file/stderr?cursor=END&skip=5",
+			expectedOutput: "info message\n",
+		},
+		{
+			file:           "stdout",
+			task:           "256164-task-3",
+			entries:        []*Entry{entry},
+			expectedPath:   "/system/v1/logs/v2/task/256164-task-3/file/stdout?cursor=END&skip=0",
+			expectedOutput: "info message\n",
+		},
+	}
+
+	for _, fixture := range fixtures {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "text/plain", r.Header.Get("Accept"))
+			assert.Equal(t, fixture.expectedPath, r.URL.String())
+
+			for _, entry := range fixture.entries {
+				fmt.Fprintln(w, entry.Fields.Message)
+			}
+		}))
+
+		var b bytes.Buffer
+		c := NewClient(pluginutil.HTTPClient(ts.URL), &b)
+		c.colored = fixture.colored
+
+		opts := Options{
+			Filters: fixture.filters,
+			Skip:    fixture.skip,
+		}
+
+		err := c.PrintTask(fixture.task, fixture.file, opts)
+		require.NoError(t, err)
+
+		require.Equal(t, fixture.expectedOutput, b.String())
 
 		ts.Close()
 	}
