@@ -17,7 +17,7 @@ _dcos_node() {
     "diagnostics"
     "dns"
     "list"
-    "list-components"
+    "list-units"
     "log"
     "metrics"
     "ssh"
@@ -168,7 +168,7 @@ _dcos_node_list() {
     fi
 }
 
-_dcos_node_list_components() {
+_dcos_node_list_units() {
     local i command
 
     if ! __dcos_default_command_parse; then
@@ -179,6 +179,7 @@ _dcos_node_list_components() {
     "--leader"
     "--mesos-id="
     "--json"
+    "--type="
     )
 
     if [ -z "$command" ]; then
@@ -211,6 +212,13 @@ _dcos_node_log() {
 
     if [ -z "$command" ]; then
         case "$cur" in
+            --component=*)
+                local components=()
+                while IFS=$'\n' read -r line; do components+=("$line"); done < <(dcos node list-units --leader --type service 2> /dev/null)
+                local compreply=($(compgen -W "${components[*]}" -- "${cur#*=}"))
+
+                COMPREPLY=( "${compreply[@]/%/ }" )
+                ;;
             --*)
                 __dcos_handle_compreply "${flags[@]}"
                 ;;

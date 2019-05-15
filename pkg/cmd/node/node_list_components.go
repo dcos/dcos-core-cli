@@ -3,19 +3,22 @@ package node
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-core-cli/pkg/diagnostics"
 	"github.com/spf13/cobra"
 )
 
 func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	var leader bool
-	var mesosID string
+	var mesosID, unitType string
 	cmd := &cobra.Command{
-		Use:   "list-components",
-		Short: "Print a list of available DC/OS components on specified node",
-		Args:  cobra.NoArgs,
+		Use:     "list-units",
+		Aliases: []string{"list-components"},
+		Short:   "Print a list of available DC/OS systemd units on specified node",
+		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if !leader && mesosID == "" {
 				return fmt.Errorf("'--leader' or '--mesos-id' must be provided")
@@ -54,18 +57,27 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 				}
 			}
 
-			units, err := diagnosticsClient().Units(ip)
+			unitsHealth, err := diagnosticsClient().Units(ip)
 			if err != nil {
 				return err
+			}
+
+			var units []diagnostics.HealthResponseValues
+
+			for _, unit := range unitsHealth.Array {
+				if unitType != "" && !strings.HasSuffix(unit.UnitID, "."+unitType) {
+					continue
+				}
+				units = append(units, unit)
 			}
 
 			if jsonOutput {
 				enc := json.NewEncoder(ctx.Out())
 				enc.SetIndent("", "    ")
-				return enc.Encode(units.Array)
+				return enc.Encode(units)
 			}
-			for _, component := range units.Array {
-				fmt.Println(component.UnitID)
+			for _, unit := range units {
+				fmt.Println(strings.TrimSuffix(unit.UnitID, "."+unitType))
 			}
 			return nil
 		},
@@ -73,5 +85,6 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	cmd.Flags().BoolVar(&leader, "leader", false, "The leading master")
 	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The agent ID of a node")
+	cmd.Flags().StringVar(&unitType, "type", "", "Only list a given type of unit (eg. service, socket, etc.)")
 	return cmd
 }
