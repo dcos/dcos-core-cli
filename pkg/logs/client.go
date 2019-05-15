@@ -65,6 +65,9 @@ func (c *Client) PrintComponent(route string, service string, opts Options) erro
 		defer client.Unsubscribe(events)
 
 		for msg := range events {
+			if len(msg.Data) == 0 {
+				continue
+			}
 			err := c.printEntry(msg.Data, opts)
 			if err != nil {
 				return err
