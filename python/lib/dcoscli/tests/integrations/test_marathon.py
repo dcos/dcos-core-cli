@@ -693,9 +693,6 @@ def test_bad_configuration(env):
             ['dcos', 'marathon', 'about'], env=env)
 
         assert returncode == 1
-        assert stdout == b''
-        assert stderr.startswith(
-            b"URL [http://localhost:88888/v2/info] is unreachable")
 
 
 def test_app_locked_error():
