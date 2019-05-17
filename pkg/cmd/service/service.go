@@ -33,6 +33,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.AddCommand(
 		newCmdServiceList(ctx),
 		newCmdServiceLog(ctx),
+		newCmdServiceShutdown(ctx),
 	)
 	return cmd
 }

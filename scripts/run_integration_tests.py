@@ -124,7 +124,7 @@ def _run_tests(cluster, admin_username, admin_password):
             '-x',
             '--durations=10',
             '-p', 'no:cacheprovider',
-            'tests/integrations'
+            'tests/integrations/test_service.py'
         ])
 
     if retcode != 0:

@@ -6,18 +6,14 @@ import time
 
 import pytest
 
-import dcos.util as util
-from dcos.util import create_schema
-
 from dcoscli.test.common import (assert_command, assert_lines, delete_zk_node,
-                                 delete_zk_nodes, exec_command, ssh_output)
+                                 delete_zk_nodes, exec_command)
 from dcoscli.test.marathon import remove_app
 from dcoscli.test.package import (package, package_install,
                                   setup_universe_server,
                                   teardown_universe_server)
 from dcoscli.test.service import (get_services, service_shutdown,
                                   wait_for_service)
-from ..fixtures.service import framework_fixture
 
 
 def setup_module(module):
@@ -35,21 +31,8 @@ def test_help():
                        stdout=content.read().encode('utf-8'))
 
 
-def test_info():
-    stdout = b"Manage DC/OS services\n"
-    assert_command(['dcos', 'service', '--info'], stdout=stdout)
-
-
-def test_service():
-    services = get_services()
-
-    schema = _get_schema(framework_fixture())
-    for srv in services:
-        assert not util.validate_json(srv, schema)
-
-
 def test_service_table():
-    assert_lines(['dcos', 'service'], 3)
+    assert_lines(['dcos', 'service', 'list'], 3)
 
 
 def test_service_inactive_and_completed():
@@ -103,7 +86,7 @@ def test_log():
 
     with package(package_name, deploy=True):
         returncode, stdout, stderr = exec_command(
-            ['dcos', 'service', 'log', package_name])
+            ['dcos', '-vv', 'service', 'log', package_name])
 
         assert returncode == 0
         assert len(stdout.decode('utf-8').split('\n')) > 1
@@ -118,47 +101,29 @@ def test_log():
 
 
 def test_log_marathon_file():
+    stderr = (b'Error: the <file> argument is invalid for marathon\n')
     assert_command(['dcos', 'service', 'log', 'marathon', 'stderr'],
-                   stderr=(b'The <file> argument is invalid for marathon. ' +
-                           b'The systemd journal is always used for the ' +
-                           b'marathon log.\n'),
+                   stderr=stderr,
                    returncode=1)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason='No pseduo terminal on windows')
 def test_log_marathon_config():
-    stdout, stderr, _ = ssh_output(
-        'dcos service log marathon ' +
-        '--ssh-config-file=tests/data/node/ssh_config')
+    returncode, stdout, stderr = exec_command(
+            ['dcos', 'service', 'log', 'marathon',
+             '--ssh-config-file=tests/data/node/ssh_config'])
 
-    assert stdout == b''
-    assert b'ignoring bad proto spec' in stderr
+    assert returncode == 0
+    assert len(stdout.decode('utf-8').split('\n')) > 1
+    assert stderr == b''
 
 
-@pytest.mark.skipif(True,
-                    reason=(
-                        "Now that we test against an AWS cluster, this test "
-                        "is blocked on DCOS-3104requires python3.3"))
 def test_log_marathon():
-    stdout, stderr, _ = ssh_output(
-        'dcos service log marathon ' +
-        '--ssh-config-file=tests/data/service/ssh_config')
+    returncode, stdout, stderr = exec_command(
+            ['dcos', 'service', 'log', 'marathon'])
 
-    assert len(stdout.decode('utf-8').split('\n')) > 10
-
-    assert b"Running `" in stderr
-    num_lines = len(stderr.decode('utf-8').split('\n'))
-    assert ((num_lines == 2) or
-            (num_lines == 3 and b'Warning: Permanently added' in stderr))
-
-
-def test_log_config():
-    assert_command(
-        ['dcos', 'service', 'log', 'chronos', '--ssh-config-file=/path'],
-        stderr=(b'The `--ssh-config-file` argument is invalid for '
-                b'non-marathon services. SSH is not used.\n'),
-        returncode=1)
+    assert returncode == 0
+    assert len(stdout.decode('utf-8').split('\n')) > 1
+    assert stderr == b''
 
 
 @pytest.mark.skipif(os.environ.get('DCOS_ENABLE_LOG_TEST') != 1,
@@ -226,8 +191,8 @@ def test_log_multiple_apps():
     wait_for_service('marathon-user', number_of_services=2)
 
     try:
-        stderr = (b'Multiple marathon apps found for service name ' +
-                  b'[marathon-user]: [/marathon-user], [/marathon-user2]\n')
+        stderr = (b'Error: multiple marathon apps found for service name ' +
+                  b'[marathon-user]: [/marathon-user, /marathon-user2]\n')
         assert_command(['dcos', 'service', 'log', 'marathon-user'],
                        returncode=1,
                        stderr=stderr)
@@ -244,18 +209,7 @@ def test_log_multiple_apps():
 
 
 def test_log_no_apps():
+    stderr = (b'Error: no marathon apps found for service name [bogus]\n')
     assert_command(['dcos', 'service', 'log', 'bogus'],
-                   stderr=b'No marathon apps found for service name [bogus]\n',
+                   stderr=stderr,
                    returncode=1)
-
-
-def _get_schema(service):
-    schema = create_schema(service.dict(), True)
-    schema['required'].remove('reregistered_time')
-    schema['required'].remove('pid')
-    schema['required'].remove('executors')
-    schema['properties']['offered_resources']['required'].remove('ports')
-    schema['properties']['resources']['required'].remove('ports')
-    schema['properties']['used_resources']['required'].remove('ports')
-
-    return schema

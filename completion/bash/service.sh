@@ -62,10 +62,15 @@ _dcos_service_log() {
 }
 
 _dcos_service_shutdown() {
-    __dcos_complete_service_names
+    __dcos_complete_service_ids
 }
 
 __dcos_complete_service_names() {
     while IFS=$'\n' read -r line; do service_names+=("$line"); done < <(dcos service list -q 2> /dev/null)
     __dcos_handle_compreply "${service_names[@]}"
+}
+
+__dcos_complete_service_ids() {
+    while IFS=$'\n' read -r line; do service_ids+=("$line"); done < <(dcos service list --id-only 2> /dev/null)
+    __dcos_handle_compreply "${service_ids[@]}"
 }

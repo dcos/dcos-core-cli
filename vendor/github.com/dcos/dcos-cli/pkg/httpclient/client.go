@@ -261,7 +261,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		_, failOnErrStatus := req.Context().Value(ctxKeyFailOnErrStatus).(struct{})
 
 		if failOnErrStatus && resp.StatusCode >= 400 && resp.StatusCode < 600 {
-			return nil, &HTTPError{resp}
+			return nil, &HTTPError{Response: resp}
 		}
 	}
 	return resp, err

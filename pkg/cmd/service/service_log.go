@@ -26,13 +26,17 @@ func newCmdServiceLog(ctx api.Context) *cobra.Command {
 		Use:   "log <service-name> [file]",
 		Short: "Print logs for DC/OS services",
 		Args:  cobra.RangeArgs(1, 2),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			switch len(args) {
 			case 1:
 				file = "stdout"
 			case 2:
+				if args[0] == "marathon" {
+					return fmt.Errorf("the <file> argument is invalid for marathon")
+				}
 				file = args[1]
 			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			marathonClient, err := marathon.NewClient(ctx)
