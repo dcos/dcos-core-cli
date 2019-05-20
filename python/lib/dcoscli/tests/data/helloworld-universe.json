@@ -26,7 +26,7 @@
           "containerPort": 80
         }
       ],
-      "image": "mesosphere/universe-server:20181114T101130Z-pull-2045-103b6edd71",
+      "image": "mesosphere/universe-server:20190520T151412Z-pull-2287-ccb472786f",
       "network": "BRIDGE"
     },
     "type": "DOCKER"
