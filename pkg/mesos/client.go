@@ -39,6 +39,39 @@ func NewClientWithContext(ctx api.Context) (*Client, error) {
 	return NewClient(pluginutil.HTTPClient(baseURL)), nil
 }
 
+// Frameworks returns the frameworks of the connected cluster.
+func (c *Client) Frameworks() ([]master.Response_GetFrameworks_Framework, error) {
+	body := master.Call{
+		Type: master.Call_GET_FRAMEWORKS,
+	}
+	reqBody, err := proto.Marshal(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.http.Post("/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+		httpclient.Header("Accept", "application/x-protobuf"))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var frameworks master.Response
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		err = proto.Unmarshal(bodyBytes, &frameworks)
+		return frameworks.GetFrameworks.Frameworks, err
+	case 503:
+		return nil, fmt.Errorf("could not connect to the leading mesos master")
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
 // Hosts returns the IP address(es) of an host.
 func (c *Client) Hosts(host string) ([]Host, error) {
 	resp, err := c.http.Get("/mesos_dns/v1/hosts/" + host)
@@ -88,6 +121,42 @@ func (c *Client) Masters() ([]Master, error) {
 		var hosts []Master
 		err = json.NewDecoder(resp.Body).Decode(&hosts)
 		return hosts, err
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
+// Tasks returns all the tasks known in a Mesos cluster.
+func (c *Client) Tasks() ([]mesos.Task, error) {
+	body := master.Call{
+		Type: master.Call_GET_TASKS,
+	}
+	reqBody, err := proto.Marshal(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.http.Post("/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+		httpclient.Header("Accept", "application/x-protobuf"))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var tasks master.Response
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		err = proto.Unmarshal(bodyBytes, &tasks)
+		allTasks := append(tasks.GetTasks.Tasks, tasks.GetTasks.CompletedTasks...)
+		allTasks = append(allTasks, tasks.GetTasks.UnreachableTasks...)
+		allTasks = append(allTasks, tasks.GetTasks.OrphanTasks...)
+		return allTasks, err
+	case 503:
+		return nil, fmt.Errorf("could not connect to the leading mesos master")
 	default:
 		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
 	}
