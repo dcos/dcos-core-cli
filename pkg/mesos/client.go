@@ -39,6 +39,48 @@ func NewClientWithContext(ctx api.Context) (*Client, error) {
 	return NewClient(pluginutil.HTTPClient(baseURL)), nil
 }
 
+// Debug returns the agent's internal virtual path mapping.
+func (c *Client) Debug(agent string) (map[string]string, error) {
+	resp, err := c.http.Get("/agent/" + agent + "/files/debug")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		debug := make(map[string]string)
+		err = json.NewDecoder(resp.Body).Decode(&debug)
+		if err != nil {
+			return nil, err
+		}
+
+		return debug, nil
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
+// Browse returns a file listing for an agent's directory
+func (c *Client) Browse(agent string, path string) ([]File, error) {
+	resp, err := c.http.Get("/agent/" + agent + "/files/browse?path=" + path)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		var browse []File
+		err = json.NewDecoder(resp.Body).Decode(&browse)
+		if err != nil {
+			return nil, err
+		}
+
+		return browse, nil
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
 // Frameworks returns the frameworks of the connected cluster.
 func (c *Client) Frameworks() ([]master.Response_GetFrameworks_Framework, error) {
 	body := master.Call{

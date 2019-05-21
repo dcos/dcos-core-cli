@@ -201,6 +201,17 @@ type Executor struct {
 	Tasks          []Task    `json:"tasks"`
 }
 
+// File represents an element returned when hitting the '/browse' endpoint.
+type File struct {
+	GID   string  `json:"gid"`
+	Mode  string  `json:"mode"`
+	MTime float64 `json:"mtime"`
+	NLink float64 `json:"nlink"`
+	Path  string  `json:"path"`
+	Size  float64 `json:"size"`
+	UID   string  `json:"uid"`
+}
+
 // Container represents one way a Mesos task can be ran
 type Container struct {
 	Type   string `json:"type"`
