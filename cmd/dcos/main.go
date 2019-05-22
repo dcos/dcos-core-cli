@@ -24,7 +24,7 @@ func run(ctx api.Context, args []string) error {
 
 func errorMessage(err error) string {
 	if httpErr, ok := err.(*httpclient.HTTPError); ok {
-		switch httpErr.Response().StatusCode {
+		switch httpErr.Response.StatusCode {
 		case 401:
 			return "authentication failed, please run `dcos auth login`"
 		case 403:

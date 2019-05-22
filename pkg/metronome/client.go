@@ -87,7 +87,7 @@ func (c *Client) Job(jobID string, opts ...JobsOption) (*Job, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -118,7 +118,7 @@ func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 		err = json.NewDecoder(resp.Body).Decode(&jobs)
 		return jobs, err
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -154,7 +154,7 @@ func (c *Client) addOrUpdateJob(job *Job, add bool) (*Job, error) {
 		}
 		return &j, nil
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -186,7 +186,7 @@ func (c *Client) RunJob(jobID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -208,7 +208,7 @@ func (c *Client) Run(jobID, runID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -230,7 +230,7 @@ func (c *Client) Runs(jobID string) ([]Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -304,7 +304,7 @@ func (c *Client) Schedules(jobID string) ([]Schedule, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -341,7 +341,7 @@ func (c *Client) addOrUpdateSchedule(jobID string, schedule *Schedule, add bool)
 		}
 		return &s, nil
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -397,7 +397,7 @@ func (c *Client) Queued(jobID string) ([]Queue, error) {
 		}
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -407,7 +407,9 @@ func httpResponseToError(resp *http.Response) error {
 	}
 	var apiError *Error
 	if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-		return &httpclient.HTTPError{resp}
+		return &httpclient.HTTPError{
+			Response: resp,
+		}
 	}
 	apiError.Code = resp.StatusCode
 	return apiError
