@@ -48,17 +48,12 @@ type ctxKey int
 
 // HTTPError represents an HTTP error, it is returned when FailOnErrStatus is enabled.
 type HTTPError struct {
-	resp *http.Response
+	Response *http.Response
 }
 
 // Error returns the error message.
 func (err *HTTPError) Error() string {
-	return fmt.Sprintf("HTTP %d error", err.resp.StatusCode)
-}
-
-// Response returns the HTTP error response.
-func (err *HTTPError) Response() *http.Response {
-	return err.resp
+	return fmt.Sprintf("HTTP %d error", err.Response.StatusCode)
 }
 
 // ctxKeyFailOnErrStatus is a request context key which, when sets, indicates that
