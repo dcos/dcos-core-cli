@@ -6,7 +6,7 @@ import retrying
 
 from dcos import constants
 
-from dcoscli.test.common import assert_command, exec_command
+from dcoscli.test.common import assert_command, exec_command, update_config
 from dcoscli.test.job import job, show_job, show_job_schedule
 
 
@@ -22,6 +22,16 @@ def env():
     r.update({constants.PATH_ENV: os.environ[constants.PATH_ENV]})
 
     return r
+
+
+def test_job_list_unauthorized():
+    with update_config('core.dcos_acs_token', None):
+        assert_command(
+            ['dcos', 'job', 'list'],
+            stdout=b"",
+            stderr=(b'Error: authentication failed, '
+                    b'please run `dcos auth login`\n'),
+            returncode=1)
 
 
 def test_empty_list():

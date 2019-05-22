@@ -17,6 +17,7 @@ func NewDCOSCommand(ctx api.Context) *cobra.Command {
 		Use: "dcos",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 		},
 	}
 
