@@ -14,7 +14,7 @@ default: $(PLATFORM)
 .PHONY: darwin linux windows
 darwin linux windows: docker-image
 	$(call inDocker,env GOOS=$(@) GO111MODULE=on go build \
-		-tags '$(GO_BUILD_TAGS)' -mod=vendor \
+		-tags '$(GO_BUILD_TAGS)' \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
 
 .PHONY: install
