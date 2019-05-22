@@ -6,6 +6,8 @@ IMAGE_NAME=dcos/dcos-core-cli
 PLATFORM?=$(shell uname | tr [A-Z] [a-z])
 windows_EXE=.exe
 
+export GOFLAGS := -mod=vendor
+
 .PHONY: default
 default: $(PLATFORM)
 
