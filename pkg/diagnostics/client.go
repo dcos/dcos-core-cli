@@ -40,7 +40,7 @@ func (c *Client) Units(node string) (*UnitsHealthResponseJSONStruct, error) {
 		}
 		return &units, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -65,7 +65,7 @@ func (c *Client) Cancel() (*BundleGenericResponseJSONStruct, error) {
 		}
 		return nil, errors.New(cancelBundle.Status)
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -93,7 +93,7 @@ func (c *Client) Create(nodes []string) (*BundleCreateResponseJSONStruct, error)
 	case 503:
 		return nil, fmt.Errorf("Requested nodes %v not found", nodes)
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -126,7 +126,7 @@ func (c *Client) Delete(bundle string) (*BundleGenericResponseJSONStruct, error)
 	case 404:
 		return nil, fmt.Errorf("Bundle '%s' not found, unable to delete it", bundle)
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -144,7 +144,7 @@ func (c *Client) List() (map[string][]Bundle, error) {
 		err = json.NewDecoder(resp.Body).Decode(&list)
 		return list, err
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -165,6 +165,15 @@ func (c *Client) Status() (map[string]BundleReportStatus, error) {
 		}
 		return status, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
+	}
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	return &httpclient.HTTPError{
+		Response: resp,
 	}
 }
