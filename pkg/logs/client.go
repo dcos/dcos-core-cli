@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -83,7 +84,7 @@ func (c *Client) PrintComponent(route string, service string, opts Options) erro
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return httpResponseToError(resp)
 	}
 	for scanner := bufio.NewScanner(resp.Body); scanner.Scan(); {
 		err := c.printEntry(scanner.Bytes(), opts)
@@ -126,7 +127,7 @@ func (c *Client) PrintTask(taskID string, file string, opts Options) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return httpResponseToError(resp)
 	}
 
 	// Due to a bug in `dcos-log` we can't receive task logs as json
@@ -203,5 +204,14 @@ func (c *Client) setColor(priority string) {
 func (c *Client) resetColor() {
 	if c.colored {
 		fmt.Fprint(c.out, "\033[0m")
+	}
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	return &httpclient.HTTPError{
+		Response: resp,
 	}
 }

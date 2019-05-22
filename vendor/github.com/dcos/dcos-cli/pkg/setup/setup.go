@@ -2,6 +2,7 @@ package setup
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -16,10 +17,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/antihax/optional"
+	dcosclient "github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/pkg/config"
 	"github.com/dcos/dcos-cli/pkg/dcos"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
@@ -300,12 +304,16 @@ func (s *Setup) installDefaultPlugins(httpClient *httpclient.Client) error {
 	pbar := mpb.New(mpb.WithOutput(s.errout), mpb.WithWaitGroup(&wg))
 	wg.Add(2)
 
+	installedPlugins := []string{"dcos-core-cli"}
+
 	// Install dcos-enterprise-cli.
 	go func() {
 		// Install dcos-enterprise-cli if the DC/OS variant metadata is "enterprise".
 		if version.DCOSVariant == "enterprise" {
 			if err := s.installPlugin("dcos-enterprise-cli", httpClient, version, pbar); err != nil {
 				s.logger.Debug(err)
+			} else {
+				installedPlugins = append(installedPlugins, "dcos-enterprise-cli")
 			}
 		} else if version.DCOSVariant == "" {
 			// We add this message if the DC/OS variant is "" (DC/OS < 1.12)
@@ -322,8 +330,25 @@ func (s *Setup) installDefaultPlugins(httpClient *httpclient.Client) error {
 	if errCore != nil {
 		// Extract the dcos-core-cli bundle if it coudln't be downloaded.
 		errCore = corecli.InstallPlugin(s.fs, s.pluginManager, s.deprecated)
+		if errCore != nil {
+			return errCore
+		}
 	}
-	return errCore
+
+	var newCommands []string
+	for _, installedPlugin := range installedPlugins {
+		p, err := s.pluginManager.Plugin(installedPlugin)
+		if err != nil {
+			s.logger.Debug(err)
+			continue
+		}
+		for _, command := range p.Commands {
+			newCommands = append(newCommands, command.Name)
+		}
+	}
+	sort.Strings(newCommands)
+	fmt.Fprintf(s.errout, "New commands available: %s\n", strings.Join(newCommands, ", "))
+	return nil
 }
 
 // installPlugin installs a plugin by its name.
@@ -362,7 +387,7 @@ func (s *Setup) installPluginFromCanonicalURL(name string, version *dcos.Version
 		domain, name, platform, name, dcosVersion,
 	)
 	httpClient := httpclient.New("")
-	req, err := httpClient.NewRequest("HEAD", url, nil)
+	req, err := httpClient.NewRequest("HEAD", url, nil, httpclient.FailOnErrStatus(false))
 	if err != nil {
 		return err
 	}
@@ -386,27 +411,34 @@ func (s *Setup) installPluginFromCanonicalURL(name string, version *dcos.Version
 // installPluginFromCosmos installs a plugin through Cosmos.
 func (s *Setup) installPluginFromCosmos(name string, httpClient *httpclient.Client, pbar *mpb.Progress) error {
 	// Get package information from Cosmos.
-	pkgInfo, err := cosmos.NewClient(httpClient).DescribePackage(name)
+	cosmosClient, err := cosmos.NewClient()
+	if err != nil {
+		return err
+	}
+	pkg, _, err := cosmosClient.PackageDescribe(context.TODO(), &dcosclient.PackageDescribeOpts{
+		CosmosPackageDescribeV1Request: optional.NewInterface(dcosclient.CosmosPackageDescribeV1Request{
+			PackageName: name,
+		}),
+	})
 	if err != nil {
 		return err
 	}
 
-	// Get the download URL for the current platform.
-	p, ok := pkgInfo.Package.Resource.CLI.Plugins[runtime.GOOS]["x86-64"]
-	if !ok {
-		return fmt.Errorf("'%s' isn't available for '%s')", name, runtime.GOOS)
+	pluginInfo, err := cosmos.CLIPluginInfo(pkg, httpClient.BaseURL())
+	if err != nil {
+		return err
 	}
 
 	var checksum plugin.Checksum
-	for _, contentHash := range p.ContentHash {
+	for _, contentHash := range pluginInfo.ContentHash {
 		switch contentHash.Algo {
-		case "sha256":
+		case dcosclient.SHA256:
 			checksum.Hasher = sha256.New()
 			checksum.Value = contentHash.Value
 		}
 	}
-	return s.pluginManager.Install(p.URL, &plugin.InstallOpts{
-		Name:        pkgInfo.Package.Name,
+	return s.pluginManager.Install(pluginInfo.Url, &plugin.InstallOpts{
+		Name:        pkg.Package.Name,
 		Update:      true,
 		Checksum:    checksum,
 		ProgressBar: pbar,
@@ -417,7 +449,7 @@ func (s *Setup) installPluginFromCosmos(name string, httpClient *httpclient.Clie
 				return err
 			}
 			defer pkgInfoFile.Close()
-			return json.NewEncoder(pkgInfoFile).Encode(pkgInfo.Package)
+			return json.NewEncoder(pkgInfoFile).Encode(pkg.Package)
 		},
 	})
 }

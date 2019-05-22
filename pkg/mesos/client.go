@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
@@ -110,7 +111,7 @@ func (c *Client) Frameworks() ([]master.Response_GetFrameworks_Framework, error)
 	case 503:
 		return nil, fmt.Errorf("could not connect to the leading mesos master")
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -127,7 +128,7 @@ func (c *Client) Hosts(host string) ([]Host, error) {
 		err = json.NewDecoder(resp.Body).Decode(&hosts)
 		return hosts, err
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -147,7 +148,7 @@ func (c *Client) Leader() (*Master, error) {
 		}
 		return &hosts[0], err
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -164,7 +165,7 @@ func (c *Client) Masters() ([]Master, error) {
 		err = json.NewDecoder(resp.Body).Decode(&hosts)
 		return hosts, err
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -200,7 +201,7 @@ func (c *Client) Tasks() ([]mesos.Task, error) {
 	case 503:
 		return nil, fmt.Errorf("could not connect to the leading mesos master")
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -220,7 +221,7 @@ func (c *Client) State() (*State, error) {
 	case 503:
 		return nil, fmt.Errorf("could not connect to the leading mesos master")
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -273,7 +274,7 @@ func (c *Client) Agents() ([]master.Response_GetAgents_Agent, error) {
 	case 503:
 		return nil, fmt.Errorf("could not connect to the leading mesos master")
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -295,10 +296,14 @@ func (c *Client) MarkAgentGone(agentID string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
 		return fmt.Errorf("could not mark agent '%s' as gone", agentID)
+	default:
+		return httpResponseToError(resp)
 	}
-	return nil
 }
 
 // TeardownFramework teardowns a framework.
@@ -319,8 +324,21 @@ func (c *Client) TeardownFramework(frameworkID string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
 		return fmt.Errorf("could not teardown framework '%s'", frameworkID)
+	default:
+		return httpResponseToError(resp)
 	}
-	return nil
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	return &httpclient.HTTPError{
+		Response: resp,
+	}
 }

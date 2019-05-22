@@ -87,19 +87,14 @@ func (c *Client) Job(jobID string, opts ...JobsOption) (*Job, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
 // Jobs returns a list of all job definitions.
 func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 
-	req, err := c.http.NewRequest("GET", "/v1/jobs", nil, httpclient.FailOnErrStatus(true))
+	req, err := c.http.NewRequest("GET", "/v1/jobs", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +118,7 @@ func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 		err = json.NewDecoder(resp.Body).Decode(&jobs)
 		return jobs, err
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -164,12 +154,7 @@ func (c *Client) addOrUpdateJob(job *Job, add bool) (*Job, error) {
 		}
 		return &j, nil
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -201,12 +186,7 @@ func (c *Client) RunJob(jobID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -228,12 +208,7 @@ func (c *Client) Run(jobID, runID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -255,12 +230,7 @@ func (c *Client) Runs(jobID string) ([]Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -279,12 +249,7 @@ func (c *Client) Kill(jobID, runID string) error {
 	case 404:
 		return fmt.Errorf(`job "%s" or run "%s" does not exist`, jobID, runID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return err
-		}
-		apiError.Code = resp.StatusCode
-		return apiError
+		return httpResponseToError(resp)
 	}
 }
 
@@ -316,12 +281,7 @@ func (c *Client) RemoveJob(jobID string, force bool) error {
 	case 409:
 		return fmt.Errorf(`job "%s" is running`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return err
-		}
-		apiError.Code = resp.StatusCode
-		return apiError
+		return httpResponseToError(resp)
 	}
 }
 
@@ -344,12 +304,7 @@ func (c *Client) Schedules(jobID string) ([]Schedule, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -386,12 +341,7 @@ func (c *Client) addOrUpdateSchedule(jobID string, schedule *Schedule, add bool)
 		}
 		return &s, nil
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -419,12 +369,7 @@ func (c *Client) RemoveSchedule(jobID, scheduleID string) error {
 	case 404:
 		return fmt.Errorf(`job "%s" or schedule "%s" does not exist`, jobID, scheduleID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return err
-		}
-		apiError.Code = resp.StatusCode
-		return apiError
+		return httpResponseToError(resp)
 	}
 }
 
@@ -452,11 +397,20 @@ func (c *Client) Queued(jobID string) ([]Queue, error) {
 		}
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		var apiError *Error
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
-			return nil, err
-		}
-		apiError.Code = resp.StatusCode
-		return nil, apiError
+		return nil, httpResponseToError(resp)
 	}
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	var apiError *Error
+	if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+		return &httpclient.HTTPError{
+			Response: resp,
+		}
+	}
+	apiError.Code = resp.StatusCode
+	return apiError
 }

@@ -32,6 +32,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *CosmosApi* | [**PackageDescribe**](docs/CosmosApi.md#packagedescribe) | **Post** /package/describe | 
 *CosmosApi* | [**PackageInstall**](docs/CosmosApi.md#packageinstall) | **Post** /package/install | 
+*CosmosApi* | [**PackageList**](docs/CosmosApi.md#packagelist) | **Post** /package/list | 
 *CosmosApi* | [**PackageRepositoryAdd**](docs/CosmosApi.md#packagerepositoryadd) | **Post** /package/repository/add | 
 *CosmosApi* | [**PackageRepositoryDelete**](docs/CosmosApi.md#packagerepositorydelete) | **Post** /package/repository/delete | 
 *CosmosApi* | [**PackageSearch**](docs/CosmosApi.md#packagesearch) | **Post** /package/search | 
@@ -61,10 +62,10 @@ Class | Method | HTTP request | Description
 *IAMApi* | [**DeleteResourceACL**](docs/IAMApi.md#deleteresourceacl) | **Delete** /acs/api/v1/acls/{rid} | Delete ACL for a certain resource.
 *IAMApi* | [**DeleteSAMLProvider**](docs/IAMApi.md#deletesamlprovider) | **Delete** /acs/api/v1/auth/saml/providers/{provider-id} | Delete provider.
 *IAMApi* | [**DeleteUser**](docs/IAMApi.md#deleteuser) | **Delete** /acs/api/v1/users/{uid} | Delete account.
+*IAMApi* | [**ForbidResourceGroupActions**](docs/IAMApi.md#forbidresourcegroupactions) | **Delete** /acs/api/v1/acls/{rid}/groups/{gid} | Forbid all actions of given group to given resource.
 *IAMApi* | [**ForbidResourceUserAction**](docs/IAMApi.md#forbidresourceuseraction) | **Delete** /acs/api/v1/acls/{rid}/users/{uid}/{action} | Forbid single action for given account and resource.
 *IAMApi* | [**ForbidResourceUserActions**](docs/IAMApi.md#forbidresourceuseractions) | **Delete** /acs/api/v1/acls/{rid}/users/{uid} | Forbid all actions of given account to given resource.
 *IAMApi* | [**ForbitResourceGroupAction**](docs/IAMApi.md#forbitresourcegroupaction) | **Delete** /acs/api/v1/acls/{rid}/groups/{gid}/{action} | Forbid single action for given resource and group.
-*IAMApi* | [**ForbitResourceGroupActions**](docs/IAMApi.md#forbitresourcegroupactions) | **Delete** /acs/api/v1/acls/{rid}/groups/{gid} | Forbid all actions of given group to given resource.
 *IAMApi* | [**GetACLs**](docs/IAMApi.md#getacls) | **Get** /acs/api/v1/acls | Retrieve all ACL objects.
 *IAMApi* | [**GetGroup**](docs/IAMApi.md#getgroup) | **Get** /acs/api/v1/groups/{gid} | Get single group object.
 *IAMApi* | [**GetGroupPermissions**](docs/IAMApi.md#getgrouppermissions) | **Get** /acs/api/v1/groups/{gid}/permissions | Retrieve group permissions.
@@ -102,6 +103,7 @@ Class | Method | HTTP request | Description
 *IAMApi* | [**UpdateResourceACL**](docs/IAMApi.md#updateresourceacl) | **Patch** /acs/api/v1/acls/{rid} | Update ACL for a certain resource.
 *IAMApi* | [**UpdateSAMLProvider**](docs/IAMApi.md#updatesamlprovider) | **Patch** /acs/api/v1/auth/saml/providers/{provider-id} | Update SAML provider config.
 *IAMApi* | [**UpdateUser**](docs/IAMApi.md#updateuser) | **Patch** /acs/api/v1/users/{uid} | Update user account.
+*MetadataApi* | [**Metadata**](docs/MetadataApi.md#metadata) | **Get** /metadata | 
 *SecretsApi* | [**CreateSecret**](docs/SecretsApi.md#createsecret) | **Put** /secrets/v1/secret/{store}/{path-to-secret} | Create a secret in the store at the path.
 *SecretsApi* | [**DeleteSecret**](docs/SecretsApi.md#deletesecret) | **Delete** /secrets/v1/secret/{store}/{path-to-secret} | Delete a secret.
 *SecretsApi* | [**GetSecret**](docs/SecretsApi.md#getsecret) | **Get** /secrets/v1/secret/{store}/{path-to-secret} | Read or list a secret from the store by its path.
@@ -124,6 +126,10 @@ Class | Method | HTTP request | Description
  - [CosmosPackageInstallV1Request](docs/CosmosPackageInstallV1Request.md)
  - [CosmosPackageInstallV1Response](docs/CosmosPackageInstallV1Response.md)
  - [CosmosPackageLicense](docs/CosmosPackageLicense.md)
+ - [CosmosPackageListV1Package](docs/CosmosPackageListV1Package.md)
+ - [CosmosPackageListV1PackageInformation](docs/CosmosPackageListV1PackageInformation.md)
+ - [CosmosPackageListV1Request](docs/CosmosPackageListV1Request.md)
+ - [CosmosPackageListV1Response](docs/CosmosPackageListV1Response.md)
  - [CosmosPackageManager](docs/CosmosPackageManager.md)
  - [CosmosPackageMarathon](docs/CosmosPackageMarathon.md)
  - [CosmosPackageRepo](docs/CosmosPackageRepo.md)
@@ -210,6 +216,7 @@ Class | Method | HTTP request | Description
  - [IamsamlProviderConfig](docs/IamsamlProviderConfig.md)
  - [IamsamlacsCallbackUrlObject](docs/IamsamlacsCallbackUrlObject.md)
  - [InlineResponse200](docs/InlineResponse200.md)
+ - [Metadata](docs/Metadata.md)
  - [SecretsV1Secret](docs/SecretsV1Secret.md)
 
 

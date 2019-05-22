@@ -3,6 +3,7 @@ package networking
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 )
@@ -35,6 +36,15 @@ func (c *Client) Nodes() ([]Node, error) {
 		}
 		return nodes, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
+	}
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	return &httpclient.HTTPError{
+		Response: resp,
 	}
 }
