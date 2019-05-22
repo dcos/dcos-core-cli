@@ -7,13 +7,14 @@ PLATFORM?=$(shell uname | tr [A-Z] [a-z])
 windows_EXE=.exe
 
 export GOFLAGS := -mod=vendor
+export GO111MODULE := on
 
 .PHONY: default
 default: $(PLATFORM)
 
 .PHONY: darwin linux windows
 darwin linux windows: docker-image
-	$(call inDocker,env GOOS=$(@) GO111MODULE=on go build \
+	$(call inDocker,env GOOS=$(@) go build \
 		-tags '$(GO_BUILD_TAGS)' \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
 
@@ -70,6 +71,7 @@ ifdef NO_DOCKER
 else
   define inDocker
     docker run \
+		  -e GOFLAGS -e GO111MODULE \
       -v $(CURRENT_DIR):$(PKG_DIR) \
       -w $(PKG_DIR) \
       --rm \
