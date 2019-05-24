@@ -13,7 +13,7 @@ import (
 func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	var component, mesosID, output string
 	var filters []string
-	var follow, leader bool
+	var all, follow, leader bool
 	var lines int
 
 	cmd := &cobra.Command{
@@ -25,6 +25,10 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 				return fmt.Errorf("'--leader' or '--mesos-id' must be provided")
 			} else if leader && mesosID != "" {
 				return fmt.Errorf("unable to use leader and mesos id at the same time")
+			}
+
+			if all {
+				lines = 0
 			}
 
 			for _, filter := range filters {
@@ -79,11 +83,12 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 			return client.PrintComponent(route, service, opts)
 		},
 	}
+	cmd.Flags().BoolVar(&all, "all", false, "Print all the lines available")
 	cmd.Flags().StringVar(&component, "component", "", "Show DC/OS component logs")
 	cmd.Flags().StringArrayVar(&filters, "filter", nil, "Filter logs by field and value. Filter must be a string separated by colon. For example: --filter _PID:0 --filter _UID:1")
 	cmd.Flags().BoolVar(&follow, "follow", false, "Dynamically update the log")
 	cmd.Flags().BoolVar(&leader, "leader", false, "The leading master")
-	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines. 10 is the default")
+	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines")
 	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The agent ID of a node")
 	cmd.Flags().StringVarP(&output, "output", "o", "short", "Format log message output")
 	return cmd
