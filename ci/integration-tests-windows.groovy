@@ -89,6 +89,7 @@ node('py36') {
                                 python scripts/plugin/package_plugin.py; \
                                 cd python/lib/dcoscli; \
                                 make env; \
+                                rm -f ./env/Scripts/dcos.exe; \
                                 mv ../../../dcos.exe dist; \
                                 PATH=$PWD/dist:$PATH; \
                                 dcos cluster remove --all; \
