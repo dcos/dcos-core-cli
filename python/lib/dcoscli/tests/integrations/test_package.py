@@ -324,7 +324,7 @@ def test_bad_install_helloworld_msg():
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason='Does not work on Windows CI')
+                    reason='Does not work on windows')
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
          util.temptext(b'{"name": "/hello2"}') as opts_hello2:
@@ -556,32 +556,22 @@ def test_uninstall_multiple_apps():
 def test_list(zk_znode):
     empty = b'[]\n'
 
+    _list(args=['--json'], stdout=empty)
     _list(args=['xyzzy', '--json'], stdout=empty)
     _list(args=['--app-id=/xyzzy', '--json'], stdout=empty)
 
     with _helloworld():
-        cmd = ['dcos', 'package', 'list', '--json']
-        returncode, stdout, _ = exec_command(cmd)
-        assert returncode == 0
-        assert 'helloworld' in stdout.decode('utf-8')
-
-        cmd = ['dcos', 'package', 'list', '--json', 'helloworld']
-        returncode, stdout, _ = exec_command(cmd)
-        assert returncode == 0
-        assert 'helloworld' in stdout.decode('utf-8')
-
-        cmd = ['dcos', 'package', 'list', '--json', '--app-id=/helloworld']
-        returncode, stdout, _ = exec_command(cmd)
-        assert returncode == 0
-        assert 'helloworld' in stdout.decode('utf-8')
+        expected_output = file_json(
+            'tests/data/package/json/test_list_helloworld.json')
+        _list(args=['--json'], stdout=expected_output)
+        _list(args=['--json', 'helloworld'], stdout=expected_output)
+        _list(args=['--json', '--app-id=/helloworld'], stdout=expected_output)
 
     le_package = 'ceci-nest-pas-une-package'
     _list(args=['--json', le_package], stdout=empty)
     _list(args=['--json', '--app-id=/' + le_package], stdout=empty)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason='Does not work on Windows CI')
 def test_list_table():
     with _helloworld():
         assert_lines(['dcos', 'package', 'list'], 2)
@@ -628,10 +618,9 @@ def test_install_no():
 
 def test_list_cli():
     _install_helloworld()
-    cmd = ['dcos', 'package', 'list', '--json']
-    returncode, stdout, _ = exec_command(cmd)
-    assert returncode == 0
-    assert 'helloworld' in stdout.decode('utf-8')
+    stdout = file_json(
+        'tests/data/package/json/test_list_helloworld.json')
+    _list(args=['--json'], stdout=stdout)
     _uninstall_helloworld()
 
     stdout = (
@@ -646,10 +635,9 @@ def test_list_cli():
     )
     _install_helloworld(args=['--cli', '--yes'], stdout=stdout)
 
-    cmd = ['dcos', 'package', 'list', '--json']
-    returncode, stdout, _ = exec_command(cmd)
-    assert returncode == 0
-    assert 'helloworld' in stdout.decode('utf-8')
+    stdout = file_json(
+        'tests/data/package/json/test_list_helloworld_cli.json')
+    _list(args=['--json'], stdout=stdout)
 
     _uninstall_cli_helloworld()
 
