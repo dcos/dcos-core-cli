@@ -323,8 +323,6 @@ def test_bad_install_helloworld_msg():
         _uninstall_helloworld()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason='Does not work on windows')
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
          util.temptext(b'{"name": "/hello2"}') as opts_hello2:
@@ -481,10 +479,7 @@ def test_uninstall_missing():
 def test_uninstall_subcommand():
     _install_helloworld()
     _uninstall_helloworld()
-    cmd = ['dcos', 'package', 'list', '--json']
-    returncode, stdout, _ = exec_command(cmd)
-    assert returncode == 0
-    assert 'hello' not in stdout.decode('utf-8')
+    _list(args=['--json'], stdout=b'[]\n')
 
 
 def test_uninstall_cli():
