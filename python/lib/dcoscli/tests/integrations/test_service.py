@@ -86,7 +86,7 @@ def test_log():
 
     with package(package_name, deploy=True):
         returncode, stdout, stderr = exec_command(
-            ['dcos', '-vv', 'service', 'log', package_name])
+            ['dcos', 'service', 'log', package_name])
 
         assert returncode == 0
         assert len(stdout.decode('utf-8').split('\n')) > 1
@@ -114,7 +114,7 @@ def test_log_marathon_config():
 
     assert returncode == 0
     assert len(stdout.decode('utf-8').split('\n')) > 1
-    assert stderr == b''
+    assert b'The --ssh-config-file flag is deprecated.' in stderr
 
 
 def test_log_marathon():

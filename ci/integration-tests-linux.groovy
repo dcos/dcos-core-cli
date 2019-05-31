@@ -45,7 +45,6 @@ pipeline {
           sh '''
             bash -exc " \
               export DCOS_EXPERIMENTAL=1; \
-              env; \
               mkdir -p build/linux; \
               make plugin; \
               cd scripts; \

@@ -92,13 +92,11 @@ func Logger() *logrus.Logger {
 		Hooks:     make(logrus.LevelHooks),
 	}
 	verbosity, _ := os.LookupEnv("DCOS_VERBOSITY")
-	if verbosity != "0" {
-		os.Setenv("DCOS_DEBUG", "1")
-	}
 	if verbosity == "1" {
 		logger.SetLevel(logrus.InfoLevel)
 	} else if verbosity == "2" {
 		logger.SetLevel(logrus.DebugLevel)
+		os.Setenv("DCOS_DEBUG", "1")
 	}
 	return logger
 }

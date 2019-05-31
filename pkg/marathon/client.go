@@ -1,8 +1,6 @@
 package marathon
 
 import (
-	"os"
-
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	marathon "github.com/gambol99/go-marathon"
@@ -29,10 +27,6 @@ func NewClient(ctx api.Context) (*Client, error) {
 	config := marathon.NewDefaultConfig()
 	config.URL = baseURL
 	config.HTTPClient = dcosClient
-	verbosity, _ := os.LookupEnv("DCOS_VERBOSITY")
-	if verbosity != "0" {
-		config.LogOutput = ctx.Out()
-	}
 
 	client, err := marathon.NewClient(config)
 	if err != nil {
