@@ -66,9 +66,9 @@ func NewHTTPClient(baseURL string) *http.Client {
 	if tlsInsecure == "1" {
 		tls.Insecure = true
 	} else {
-		tlsCAPath, _ := os.LookupEnv("DCOS_TLS_CA_PATH")
-		if tlsCAPath != "" {
-			rootCAsPEM, err := ioutil.ReadFile(tlsCAPath)
+		tls.RootCAsPath, _ = os.LookupEnv("DCOS_TLS_CA_PATH")
+		if tls.RootCAsPath != "" {
+			rootCAsPEM, err := ioutil.ReadFile(tls.RootCAsPath)
 			if err == nil {
 				certPool := x509.NewCertPool()
 				if certPool.AppendCertsFromPEM(rootCAsPEM) {
@@ -96,6 +96,7 @@ func Logger() *logrus.Logger {
 		logger.SetLevel(logrus.InfoLevel)
 	} else if verbosity == "2" {
 		logger.SetLevel(logrus.DebugLevel)
+		os.Setenv("DCOS_DEBUG", "1")
 	}
 	return logger
 }

@@ -40,7 +40,7 @@ def get_services(expected_count=None, args=[]):
     """
 
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'service', '--json'] + args)
+        ['dcos', 'service', 'list', '--json'] + args)
 
     assert returncode == 0
     assert stderr == b''

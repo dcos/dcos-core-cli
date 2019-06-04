@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/logs"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	"github.com/dcos/dcos-core-cli/pkg/networking"
@@ -20,19 +21,28 @@ type ipsResult struct {
 func newCmdServiceLog(ctx api.Context) *cobra.Command {
 	var follow bool
 	var lines int
-	var file, output string
+	var file, output, sshConfig string
 
 	cmd := &cobra.Command{
 		Use:   "log <service-name> [file]",
 		Short: "Print logs for DC/OS services",
 		Args:  cobra.RangeArgs(1, 2),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
+			if !ok && sshConfig != "" {
+				ctx.Deprecated("The --ssh-config-file flag is deprecated.")
+			}
+
 			switch len(args) {
 			case 1:
 				file = "stdout"
 			case 2:
+				if args[0] == "marathon" {
+					return fmt.Errorf("the <file> argument is invalid for marathon")
+				}
 				file = args[1]
 			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			marathonClient, err := marathon.NewClient(ctx)
@@ -81,8 +91,8 @@ func newCmdServiceLog(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&follow, "follow", false, "Dynamically update the log")
 	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines. 10 is the default")
 	cmd.Flags().StringVarP(&output, "output", "o", "short", "Format log message output")
+	cmd.Flags().StringVar(&sshConfig, "ssh-config-file", "", "Path to SSH configuration file. This is deprecated")
 	cmd.Flags().String("user", "", "The SSH user for Marathon")
-	cmd.Flags().String("ssh-config-file", "", "Path to SSH configuration file. This is deprecated")
 	return cmd
 }
 

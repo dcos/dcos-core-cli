@@ -33,7 +33,7 @@ description = "Install and manage DC/OS software packages"
 
 [[commands]]
 name = "service"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "Manage DC/OS services"
 
 [[commands]]
