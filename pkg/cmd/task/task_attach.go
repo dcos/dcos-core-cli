@@ -63,19 +63,8 @@ func newCmdTaskAttach(ctx api.Context) *cobra.Command {
 
 			// In the Python implementation we take the first status but the last one makes more sense.
 			cid := task.Statuses[len(task.Statuses)-1].ContainerStatus.ContainerID
-			nestedContainer := lib.ContainerID{
-				Value:  b.String(),
-				Parent: cid,
-			}
-
 			client := mesos.NewClient(pluginutil.HTTPClient(""))
-			// Creates the nested container where commands will be run.
-			err = client.LaunchNestedContainer(task.AgentID.Value, nestedContainer)
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return client.NewbieAttachContainerOutput(task.AgentID.Value, *cid)
 		},
 	}
 	cmd.Flags().BoolVar(&noStdin, "--no-stdin", false, "Do not attach the stdin of the CLI to the task")

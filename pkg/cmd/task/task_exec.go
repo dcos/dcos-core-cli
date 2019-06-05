@@ -52,8 +52,8 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 
 			// Random string.
 			rand.Seed(time.Now().UnixNano())
-			chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ" +
-				"abcdefghijklmnopqrstuvwxyzåäö" +
+			chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+				"abcdefghijklmnopqrstuvwxyz" +
 				"0123456789")
 			length := 8
 			var b strings.Builder
@@ -74,7 +74,6 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Hello")
 			return client.TaskAttachExec(task.AgentID.Value, nestedContainer, args[1], args[1:], false, false)
 		},
 	}
