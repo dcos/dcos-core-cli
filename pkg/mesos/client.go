@@ -2,17 +2,25 @@ package mesos
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/golang/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
+	"github.com/mesos/mesos-go/api/v1/lib/agent"
+	"github.com/mesos/mesos-go/api/v1/lib/agent/calls"
+	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
+	"github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent"
 	"github.com/mesos/mesos-go/api/v1/lib/master"
+	"github.com/mesos/mesos-go/api/v1/lib/recordio"
 )
 
 // Client is a Mesos client for DC/OS.
@@ -149,6 +157,131 @@ func (c *Client) Leader() (*Master, error) {
 		return &hosts[0], err
 	default:
 		return nil, httpResponseToError(resp)
+	}
+}
+
+// AttachContainerInput attaches the local stdin to the container.
+func (c *Client) AttachContainerInput(agentID string, containerID mesos.ContainerID, errCh chan error) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	var winCh <-chan mesos.TTYInfo_WindowSize
+	standardRoundTripper := pluginutil.NewHTTPClient("").Transport
+	mesosRoundTripper := httpcli.RoundTripper(standardRoundTripper)
+	mesosDoFunc := httpcli.With(mesosRoundTripper)
+	mesosCLI := httpcli.New(httpcli.Endpoint(fmt.Sprintf("%s/slave/%s/api/v1", c.http.BaseURL().String(), agentID)), httpcli.Do(mesosDoFunc))
+	cli := httpagent.NewSender(mesosCLI.Send)
+	var aciCh = make(chan *agent.Call, 1)            // must be buffered to avoid blocking below
+	aciCh <- calls.AttachContainerInput(containerID) // very first input message MUST be this
+	go func() {
+		defer cancel()
+		acif := calls.FromChan(aciCh)
+
+		// blocking call, hence the goroutine; Send only returns when the input stream is severed
+		err := calls.SendNoData(ctx, cli, acif)
+		if err != nil && err != io.EOF {
+			errCh <- err
+		}
+	}()
+
+	go func(ctx context.Context, stdin io.Reader, winCh <-chan mesos.TTYInfo_WindowSize, aciCh chan<- *agent.Call) {
+		defer close(aciCh)
+
+		input := make(chan []byte)
+		go func() {
+			defer close(input)
+			escape := []byte{0x10, 0x11} // CTRL-P, CTRL-Q
+			var last byte
+			for {
+				buf := make([]byte, 512)
+				n, err := stdin.Read(buf)
+				if n > 0 {
+					if (last == escape[0] && buf[0] == escape[1]) || bytes.Index(buf, escape) > -1 {
+						errCh <- nil
+					}
+					buf = buf[:n]
+					last = buf[n-1]
+					select {
+					case input <- buf:
+					case <-ctx.Done():
+						errCh <- nil
+					}
+				}
+				if err != nil {
+					errCh <- err
+				}
+			}
+		}()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case data, ok := <-input:
+				if !ok {
+					return
+				}
+				c := calls.AttachContainerInputData(data)
+				select {
+				case aciCh <- c:
+				case <-ctx.Done():
+					return
+				}
+			case ws := <-winCh:
+				c := calls.AttachContainerInputTTY(&mesos.TTYInfo{WindowSize: &ws})
+				select {
+				case aciCh <- c:
+				case <-ctx.Done():
+					return
+				}
+			}
+		}
+	}(ctx, os.Stdin, winCh, aciCh)
+}
+
+// AttachContainerOutput attaches the container output to stdin and stderr.
+func (c *Client) AttachContainerOutput(agentID string, containerID mesos.ContainerID, errCh chan error) {
+	body := agent.Call{
+		Type: agent.Call_ATTACH_CONTAINER_OUTPUT,
+		AttachContainerOutput: &agent.Call_AttachContainerOutput{
+			ContainerID: containerID,
+		},
+	}
+	reqBody, err := json.Marshal(&body)
+	if err != nil {
+		errCh <- err
+	}
+
+	resp, err := c.http.Post(fmt.Sprintf("/slave/%s/api/v1", agentID), "application/json", bytes.NewBuffer(reqBody), httpclient.Header("Accept", "application/recordio"), httpclient.Header("Message-Accept", "application/json"))
+	if err != nil {
+		errCh <- err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		r := recordio.NewReader(resp.Body)
+		for {
+			data, err := r.ReadFrame()
+			if err != nil {
+				errCh <- err
+			}
+			var pio agent.ProcessIO
+			json.Unmarshal(data, &pio)
+			switch pio.GetType() {
+			case agent.ProcessIO_DATA:
+				data := pio.GetData()
+				switch data.GetType() {
+				case agent.ProcessIO_Data_STDOUT:
+					os.Stdout.Write(data.GetData())
+				case agent.ProcessIO_Data_STDERR:
+					os.Stderr.Write(data.GetData())
+				default:
+					errCh <- nil
+				}
+			}
+		}
+	case 503:
+		errCh <- fmt.Errorf("could not connect to the leading mesos master")
+	default:
+		errCh <- httpResponseToError(resp)
 	}
 }
 

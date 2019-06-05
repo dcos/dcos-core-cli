@@ -32,6 +32,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.Flags().Bool("completed", false, "Print completed tasks")
 
 	cmd.AddCommand(
+		newCmdTaskAttach(ctx),
 		newCmdTaskList(ctx),
 		newCmdTaskLog(ctx),
 		newCmdTaskLs(ctx),
