@@ -29,9 +29,9 @@ func NewDCOSCommand(ctx api.Context) *cobra.Command {
 	)
 
 	// This follows the CLI design guidelines for help formatting.
-	cmd.SetUsageTemplate(`Usage:{{if .Runnable}}
-  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
-  {{.CommandPath}} [command]{{end}}{{if .HasExample}}
+	cmd.SetUsageTemplate(`Usage:{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{else if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasExample}}
 
 Examples:
 {{.Example}}{{end}}{{if .HasAvailableSubCommands}}
