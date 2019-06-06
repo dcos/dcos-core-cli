@@ -19,6 +19,13 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "job",
 		Short: "Deploy and manage jobs in DC/OS",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return cmd.Help()
+			}
+			fmt.Fprintln(ctx.ErrOut(), cmd.UsageString())
+			return fmt.Errorf("unknown command %s", args[0])
+		},
 	}
 
 	cmd.AddCommand(
