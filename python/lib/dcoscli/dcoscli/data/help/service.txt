@@ -1,7 +1,6 @@
 Manage DC/OS services
 
 Usage:
-  dcos service [flags]
   dcos service [command]
 
 Commands:

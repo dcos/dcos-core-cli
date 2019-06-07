@@ -1,7 +1,6 @@
 Display DC/OS node information
 
 Usage:
-  dcos node [flags]
   dcos node [command]
 
 Commands:
