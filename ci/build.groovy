@@ -78,7 +78,7 @@ pipeline {
         stage('Build Windows binary') {
           agent {
             node {
-              label 'windows'
+              label 'winpy37'
               customWorkspace 'C:\\windows\\workspace'
             }
           }

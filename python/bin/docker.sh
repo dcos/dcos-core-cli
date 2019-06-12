@@ -15,7 +15,7 @@ source ${CURRDIR}/common.sh
                      -e TOX=${TOX_DOCKER} \
                      -w /dcos-cli \
                      -u $(id -u ${USER}):$(id -g ${USER}) \
-                     python:3.5"}
+                     python:3.7"}
 
 for target in "${@}"; do
     ${DOCKER_RUN} make ${target}

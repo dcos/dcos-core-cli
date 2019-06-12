@@ -16,8 +16,8 @@ if [ ! -d "${BUILDDIR}/${VENV}" ]; then
 
     : "${DCOS_EXPERIMENTAL:=""}"
     if [ "${DCOS_EXPERIMENTAL}" = "" ]; then
-      if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "5" ]; then
-          echo "Cannot find supported python version 3.5. Exiting..."
+      if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "7" ]; then
+          echo "Cannot find supported python version 3.7. Exiting..."
           exit 1
       fi
     fi

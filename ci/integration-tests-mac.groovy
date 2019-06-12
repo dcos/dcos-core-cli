@@ -47,7 +47,7 @@ pipeline {
               mkdir -p build/darwin; \
               make plugin; \
               cd scripts; \
-              python3 -m venv env; \
+              python3.7 -m venv env; \
               source env/bin/activate; \
               export LC_ALL=en_US.UTF-8; \
               export PYTHONIOENCODING=utf-8; \
