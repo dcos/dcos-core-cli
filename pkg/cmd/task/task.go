@@ -115,13 +115,16 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 
 		for _, a := range agents {
 			if a.AgentInfo.ID.Value == agentID {
+
 				// PID format: Host@IP:Port
-				s1 := strings.Split(a.GetPID(), "@")
-				s2 := strings.Split(s1[1], ":")
-				url := fmt.Sprintf("http://%s:%s", s2[0], s2[1])
+				// TODO: AgentInfo provides a hostname and a port, investigate if they can be used instead.
+				ipPort := strings.Split(a.GetPID(), "@")
+				url := fmt.Sprintf("http://%s", ipPort)
 
 				return httpcli.New(
 					httpcli.Endpoint(url),
+
+					// Use JSON over protobuf to ease logging.
 					httpcli.Codec(codecs.ByMediaType[codecs.MediaTypeJSON]),
 				), nil
 			}
@@ -134,6 +137,8 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 	httpClient := httpcli.New(
 		httpcli.Endpoint(fmt.Sprintf("%s/slave/%s/api/v1", cluster.URL(), agentID)),
 		httpcli.Do(httpcli.With(httpcli.RoundTripper(rt))),
+
+		// Use JSON over protobuf to ease logging.
 		httpcli.Codec(codecs.ByMediaType[codecs.MediaTypeJSON]),
 	)
 	return httpClient, nil
