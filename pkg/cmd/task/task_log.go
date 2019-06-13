@@ -49,21 +49,34 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 
 			if len(tasks) == 0 {
 				return fmt.Errorf("no task ID found containing '%s'", args[0])
-			} else if len(tasks) > 1 {
-				return fmt.Errorf("found more than one task with the same name: %v", tasks)
 			}
 
-			logClient := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
-			if output != "short" {
-				output = "short"
-				ctx.Logger().Info(`Task logs don't support output options. Defaulting to "short"...`)
+			// Only one task matching or multiple tasks but no follow.
+			if len(tasks) == 1 || follow == false {
+				for _, task := range tasks {
+					if len(tasks) > 1 {
+						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task))
+					}
+					logClient := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
+					if output != "short" {
+						output = "short"
+						ctx.Logger().Info(`Task logs don't support output options. Defaulting to "short"...`)
+					}
+					opts := logs.Options{
+						Follow: follow,
+						Format: output,
+						Skip:   -1 * lines,
+					}
+					err = logClient.PrintTask(task, file, opts)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				// TODO (DCOS_OSS-5153): multiple followed tasks.
+				return fmt.Errorf("found more than one task with the same name, unable to follow them all: %v", tasks)
 			}
-			opts := logs.Options{
-				Follow: follow,
-				Format: output,
-				Skip:   -1 * lines,
-			}
-			return logClient.PrintTask(tasks[0], file, opts)
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "Print completed and in-progress tasks")
