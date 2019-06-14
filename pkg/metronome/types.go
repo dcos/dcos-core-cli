@@ -103,9 +103,10 @@ type JobHistory struct {
 }
 
 type runHistory struct {
-	ID         string `json:"id"`
-	CreatedAt  string `json:"createdAt"`
-	FinishedAt string `json:"finishedAt"`
+	ID         string   `json:"id"`
+	CreatedAt  string   `json:"createdAt"`
+	FinishedAt string   `json:"finishedAt"`
+	Tasks      []string `json:"tasks,omitempty"`
 }
 
 // JobHistorySummary contains statistics about past runs of a Job.
