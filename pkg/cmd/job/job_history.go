@@ -62,7 +62,8 @@ func newCmdJobHistory(ctx api.Context) *cobra.Command {
 			}
 
 			fmt.Fprintln(ctx.Out(), historyMessage(job, failures))
-			table := cli.NewTable(ctx.Out(), []string{"TASK ID", "STARTED", "FINISHED"})
+
+			table := cli.NewTable(ctx.Out(), []string{"RUN ID", "STARTED", "FINISHED"})
 			for _, run := range runs {
 				table.Append([]string{run.ID, run.CreatedAt, run.FinishedAt})
 			}
