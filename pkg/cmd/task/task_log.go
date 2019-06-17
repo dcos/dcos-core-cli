@@ -2,11 +2,9 @@ package task
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/logs"
-	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
@@ -30,32 +28,16 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mesosClient, err := mesos.NewClientWithContext(ctx)
+			tasks, err := findTasks(ctx, args[0])
 			if err != nil {
 				return err
-			}
-
-			allTasks, err := mesosClient.Tasks()
-			if err != nil {
-				return err
-			}
-
-			var tasks []string
-			for _, t := range allTasks {
-				if strings.Contains(t.TaskID.Value, args[0]) {
-					tasks = append(tasks, t.TaskID.Value)
-				}
-			}
-
-			if len(tasks) == 0 {
-				return fmt.Errorf("no task ID found containing '%s'", args[0])
 			}
 
 			// Only one task matching or multiple tasks but no follow.
 			if len(tasks) == 1 || follow == false {
 				for _, task := range tasks {
 					if len(tasks) > 1 {
-						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task))
+						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task.TaskID.Value))
 					}
 					logClient := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
 					if output != "short" {
@@ -67,16 +49,16 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 						Format: output,
 						Skip:   -1 * lines,
 					}
-					err = logClient.PrintTask(task, file, opts)
-					if err != nil {
-						return err
-					}
+					return logClient.PrintTask(task.TaskID.Value, file, opts)
 				}
-			} else {
-				// TODO (DCOS_OSS-5153): multiple followed tasks.
-				return fmt.Errorf("found more than one task with the same name, unable to follow them all: %v", tasks)
 			}
-			return nil
+
+			// TODO (DCOS_OSS-5153): multiple followed tasks.
+			var taskNames []string
+			for _, task := range tasks {
+				taskNames = append(taskNames, task.TaskID.Value)
+			}
+			return fmt.Errorf("found more than one task with the same name, unable to follow them all: %v", taskNames)
 		},
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "Print completed and in-progress tasks")
