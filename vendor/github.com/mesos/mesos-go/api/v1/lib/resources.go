@@ -11,6 +11,14 @@ import (
 
 const DefaultRole = "*"
 
+var (
+	// CapabilityReservationRefinement should be set to "1" for frameworks that opt-in to RESERVATION_REFINEMENT.
+	// This is a string so that it can be set to something else at link time.
+	CapabilityReservationRefinement string = ""
+)
+
+func IsCapabilityReservationRefinementEnabled() bool { return CapabilityReservationRefinement == "1" }
+
 type (
 	Resources         []Resource
 	resourceErrorType int
@@ -288,8 +296,10 @@ func (resources Resources) Format(options ...func(*ResourcesFormatOptions)) stri
 				switch s.GetType() {
 				case Resource_DiskInfo_Source_BLOCK:
 					buf.WriteString("BLOCK")
-					if id, profile := s.GetID(), s.GetProfile(); id != "" || profile != "" {
+					if id, profile, vendor := s.GetID(), s.GetProfile(), s.GetVendor(); id != "" || profile != "" || vendor != "" {
 						buf.WriteByte('(')
+						buf.WriteString(vendor)
+						buf.WriteByte(',')
 						buf.WriteString(id)
 						buf.WriteByte(',')
 						buf.WriteString(profile)
@@ -297,8 +307,10 @@ func (resources Resources) Format(options ...func(*ResourcesFormatOptions)) stri
 					}
 				case Resource_DiskInfo_Source_RAW:
 					buf.WriteString("RAW")
-					if id, profile := s.GetID(), s.GetProfile(); id != "" || profile != "" {
+					if id, profile, vendor := s.GetID(), s.GetProfile(), s.GetVendor(); id != "" || profile != "" || vendor != "" {
 						buf.WriteByte('(')
+						buf.WriteString(vendor)
+						buf.WriteByte(',')
 						buf.WriteString(id)
 						buf.WriteByte(',')
 						buf.WriteString(profile)
@@ -306,8 +318,10 @@ func (resources Resources) Format(options ...func(*ResourcesFormatOptions)) stri
 					}
 				case Resource_DiskInfo_Source_PATH:
 					buf.WriteString("PATH")
-					if id, profile := s.GetID(), s.GetProfile(); id != "" || profile != "" {
+					if id, profile, vendor := s.GetID(), s.GetProfile(), s.GetVendor(); id != "" || profile != "" || vendor != "" {
 						buf.WriteByte('(')
+						buf.WriteString(vendor)
+						buf.WriteByte(',')
 						buf.WriteString(id)
 						buf.WriteByte(',')
 						buf.WriteString(profile)
@@ -318,8 +332,10 @@ func (resources Resources) Format(options ...func(*ResourcesFormatOptions)) stri
 					}
 				case Resource_DiskInfo_Source_MOUNT:
 					buf.WriteString("MOUNT")
-					if id, profile := s.GetID(), s.GetProfile(); id != "" || profile != "" {
+					if id, profile, vendor := s.GetID(), s.GetProfile(), s.GetVendor(); id != "" || profile != "" || vendor != "" {
 						buf.WriteByte('(')
+						buf.WriteString(vendor)
+						buf.WriteByte(',')
 						buf.WriteString(id)
 						buf.WriteByte(',')
 						buf.WriteString(profile)
@@ -661,6 +677,9 @@ func (left *Resource_DiskInfo) Equivalent(right *Resource_DiskInfo) bool {
 		if aa, bb := a.GetProfile(), b.GetProfile(); aa != bb {
 			return false
 		}
+		if aa, bb := a.GetVendor(), b.GetVendor(); aa != bb {
+			return false
+		}
 		if aa, bb := a.GetMetadata(), b.GetMetadata(); (aa == nil) != (bb == nil) {
 			return false
 		} else if !labelList(aa.GetLabels()).Equivalent(labelList(bb.GetLabels())) {
@@ -739,14 +758,19 @@ func (left *Resource) Addable(right Resource) bool {
 		return true
 	}
 	if left.GetName() != right.GetName() ||
-		left.GetType() != right.GetType() ||
-		left.GetRole() != right.GetRole() {
+		left.GetType() != right.GetType() {
+		return false
+	}
+	if !IsCapabilityReservationRefinementEnabled() && left.GetRole() != right.GetRole() {
 		return false
 	}
 
 	if a, b := left.GetShared(), right.GetShared(); (a == nil) != (b == nil) {
 		// shared has no fields
 		return false
+	} else if a != nil {
+		// For shared resources, they can be added only if left == right.
+		return left.Equivalent(right)
 	}
 
 	if a, b := left.GetAllocationInfo(), right.GetAllocationInfo(); !a.Equivalent(b) {
@@ -783,7 +807,7 @@ func (left *Resource) Addable(right Resource) bool {
 			return false
 		case Resource_DiskInfo_Source_RAW:
 			// We can only add resources representing 'RAW' disks if
-			// they have no identity or are identical.
+			// they have no identity.
 			if ls.GetID() != "" {
 				return false
 			}
@@ -821,13 +845,17 @@ func (left *Resource) Addable(right Resource) bool {
 // contain "right".
 func (left *Resource) Subtractable(right Resource) bool {
 	if left.GetName() != right.GetName() ||
-		left.GetType() != right.GetType() ||
-		left.GetRole() != right.GetRole() {
+		left.GetType() != right.GetType() {
+		return false
+	}
+	if !IsCapabilityReservationRefinementEnabled() && left.GetRole() != right.GetRole() {
 		return false
 	}
 	if a, b := left.GetShared(), right.GetShared(); (a == nil) != (b == nil) {
 		// shared has no fields
 		return false
+	} else if a != nil {
+		return left.Equivalent(right)
 	}
 
 	if a, b := left.GetAllocationInfo(), right.GetAllocationInfo(); !a.Equivalent(b) {

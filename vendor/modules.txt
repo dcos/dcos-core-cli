@@ -1,3 +1,6 @@
+# github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
+github.com/Azure/go-ansiterm/winterm
+github.com/Azure/go-ansiterm
 # github.com/VividCortex/ewma v1.1.1
 github.com/VividCortex/ewma
 # github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6
@@ -25,13 +28,26 @@ github.com/dcos/dcos-cli/pkg/internal/cosmos
 github.com/dcos/dcos-cli/pkg/mesos
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
+# github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
+github.com/docker/docker/pkg/term
+github.com/docker/docker/pkg/term/windows
 # github.com/donovanhide/eventsource v0.0.0-20171031113327-3ed64d21fb0b
 github.com/donovanhide/eventsource
 # github.com/gambol99/go-marathon v0.7.1
 github.com/gambol99/go-marathon
+# github.com/gobwas/glob v0.2.3
+github.com/gobwas/glob
+github.com/gobwas/glob/compiler
+github.com/gobwas/glob/syntax
+github.com/gobwas/glob/match
+github.com/gobwas/glob/syntax/ast
+github.com/gobwas/glob/util/runes
+github.com/gobwas/glob/syntax/lexer
+github.com/gobwas/glob/util/strings
 # github.com/gogo/protobuf v1.2.1
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
@@ -45,15 +61,26 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.4
 github.com/mattn/go-runewidth
-# github.com/mesos/mesos-go v0.0.8
+# github.com/mesos/mesos-go v0.0.10-0.20190613181932-61cb21a976bd
 github.com/mesos/mesos-go/api/v1/lib
+github.com/mesos/mesos-go/api/v1/lib/encoding/codecs
+github.com/mesos/mesos-go/api/v1/lib/httpcli
+github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent
+github.com/mesos/mesos-go/api/v1/lib/agent
+github.com/mesos/mesos-go/api/v1/lib/agent/calls
 github.com/mesos/mesos-go/api/v1/lib/master
 github.com/mesos/mesos-go/api/v1/lib/encoding
 github.com/mesos/mesos-go/api/v1/lib/roles
+github.com/mesos/mesos-go/api/v1/lib/encoding/json
+github.com/mesos/mesos-go/api/v1/lib/encoding/proto
+github.com/mesos/mesos-go/api/v1/lib/client
+github.com/mesos/mesos-go/api/v1/lib/debug
+github.com/mesos/mesos-go/api/v1/lib/encoding/framing
+github.com/mesos/mesos-go/api/v1/lib/httpcli/apierrors
+github.com/mesos/mesos-go/api/v1/lib/recordio
 github.com/mesos/mesos-go/api/v1/lib/allocator
 github.com/mesos/mesos-go/api/v1/lib/maintenance
 github.com/mesos/mesos-go/api/v1/lib/quota
-github.com/mesos/mesos-go/api/v1/lib/encoding/framing
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
 # github.com/olekukonko/tablewriter v0.0.1
