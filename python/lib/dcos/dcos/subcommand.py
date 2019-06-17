@@ -12,6 +12,7 @@ import zipfile
 
 from distutils.version import LooseVersion
 from urllib.parse import urlparse
+import toml
 
 from dcos import config, constants, http, util
 from dcos.errors import DCOSException
@@ -51,7 +52,7 @@ def command_executables(subcommand):
 
 
 def get_package_commands(package_name):
-    """List the real path(s) to executables for a specific dcos subcommand
+    """List the subcommands of a specific package.
 
     :param package_name: package name
     :type package_name: str
@@ -69,13 +70,20 @@ def get_package_commands(package_name):
                                "Scripts")
 
     executables = []
-    for filename in os.listdir(bin_dir):
-        path = os.path.join(bin_dir, filename)
+    plugin_toml = os.path.join(os.path.join(bin_dir, os.pardir), "plugin.toml")
+    if os.path.exists(plugin_toml):
+        with open(plugin_toml, "r", encoding="utf-8") as fp:
+            plugin = toml.load(fp)
+            for command in plugin["commands"]:
+                executables.append(command["name"])
+    else:
+        for filename in os.listdir(bin_dir):
+            path = os.path.join(bin_dir, filename)
 
-        if (filename.startswith(constants.DCOS_COMMAND_PREFIX) and
-                _is_executable(path)):
-
-            executables.append(path)
+            if (filename.startswith(constants.DCOS_COMMAND_PREFIX) and
+                    _is_executable(path)):
+                subcommand = filename[len(constants.DCOS_COMMAND_PREFIX):]
+                executables.append(subcommand)
 
     return executables
 
@@ -100,8 +108,24 @@ def list_paths():
     """
 
     subcommands = []
+
     for package in distributions():
-        subcommands += get_package_commands(package)
+        bin_dir = os.path.join(_package_dir(package),
+                               constants.DCOS_SUBCOMMAND_ENV_SUBDIR,
+                               "bin")
+
+        if not os.path.exists(bin_dir) and util.is_windows_platform():
+            bin_dir = os.path.join(_package_dir(package),
+                                   constants.DCOS_SUBCOMMAND_ENV_SUBDIR,
+                                   "Scripts")
+
+        executables = []
+        for filename in os.listdir(bin_dir):
+            path = os.path.join(bin_dir, filename)
+            if (filename.startswith(constants.DCOS_COMMAND_PREFIX) and
+                    _is_executable(path)):
+                executables.append(path)
+        subcommands += executables
 
     return subcommands
 
