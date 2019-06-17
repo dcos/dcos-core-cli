@@ -3,7 +3,6 @@ package task
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	lib "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -33,22 +31,9 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mesosClient, err := mesos.NewClientWithContext(ctx)
+			tasks, err := findTasks(ctx, args[0])
 			if err != nil {
 				return err
-			}
-
-			allTasks, err := mesosClient.Tasks()
-			if err != nil {
-				return err
-			}
-
-			taskExpr := regexp.MustCompile(args[0])
-			var tasks []lib.Task
-			for _, t := range allTasks {
-				if strings.Contains(t.TaskID.Value, args[0]) || taskExpr.MatchString(t.TaskID.Value) {
-					tasks = append(tasks, t)
-				}
 			}
 
 			var containerParentIDs []string
@@ -58,7 +43,7 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 					return fmt.Errorf("unable to find task '%s'", args[0])
 				}
 
-				containerID := t.Statuses[len(t.Statuses)-1].ContainerStatus.GetContainerID()
+				containerID := t.Statuses[0].ContainerStatus.GetContainerID()
 				if containerID.GetParent() == nil {
 					containerParentIDs = append(containerParentIDs, containerID.Value)
 				} else {
