@@ -389,8 +389,8 @@ def _install(package_name, package_version, options_path, cli,
         if new_commands:
             commands = ', '.join(new_commands)
             plural = "s" if len(new_commands) > 1 else ""
-            emitter.publish("New command{} available: {}".format(plural,
-                                                                 commands))
+            emitter.publish("New command{} available: dcos {}".format(
+                plural, commands))
 
     post_install_notes = pkg_json.get('postInstallNotes')
     if app and post_install_notes:
