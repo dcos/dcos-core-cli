@@ -5,15 +5,19 @@ import (
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent"
 	"github.com/spf13/cobra"
 )
 
-func newCmdTaskAttach(ctx api.Context) *cobra.Command {
-	var noStdin bool
+func newCmdTaskExec(ctx api.Context) *cobra.Command {
+	var interactive, tty bool
+	var user string
 
 	cmd := &cobra.Command{
-		Use: "attach",
+		Use:   "exec <task> <cmd> [<args>...]",
+		Short: "Launch a process (<cmd>) inside of a container for a task (<task>).",
+		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			task, err := findTask(ctx, args[0])
 			if err != nil {
@@ -31,16 +35,18 @@ func newCmdTaskAttach(ctx api.Context) *cobra.Command {
 				Stdin:       ctx.Input(),
 				Stdout:      ctx.Out(),
 				Stderr:      ctx.ErrOut(),
-				Interactive: !noStdin,
-				TTY:         true,
+				Interactive: interactive,
+				TTY:         tty,
+				User:        user,
 				Sender:      httpagent.NewSender(httpClient.Send),
+				Logger:      pluginutil.Logger(),
 			})
 
 			if err != nil {
 				return err
 			}
 
-			exitCode, err := taskIO.Attach()
+			exitCode, err := taskIO.Exec(args[1], args[2:]...)
 			if err != nil {
 				return err
 			}
@@ -49,7 +55,8 @@ func newCmdTaskAttach(ctx api.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&noStdin, "no-stdin", false, "Don't attach the stdin of the CLI to the task")
-
+	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Attach a STDIN stream to the remote command for an interactive session")
+	cmd.Flags().BoolVarP(&tty, "tty", "t", false, "Attach a tty to the remote stream.")
+	cmd.Flags().StringVarP(&user, "user", "u", "", "Run as the given user")
 	return cmd
 }

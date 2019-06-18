@@ -94,6 +94,8 @@ github.com/pquerna/ffjson/fflib/v1
 github.com/pquerna/ffjson/fflib/v1/internal
 # github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4
 github.com/r3labs/sse
+# github.com/satori/go.uuid v1.2.0
+github.com/satori/go.uuid
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.2.2

@@ -1,6 +1,6 @@
-# attach
+# dcos task attach
 
-The `dcos task attach` attaches the terminal standard streams to a running container.
+The `dcos task attach` command attaches the terminal standard streams to a running container.
 
 It is then able to stream the STDIN of the CLI process over to the container, as well as
 streaming the STDOUT/STDERR of the container back to the CLI process.

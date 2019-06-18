@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,11 +15,14 @@ import (
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
 	agentcalls "github.com/mesos/mesos-go/api/v1/lib/agent/calls"
+	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 var defaultHeartbeatInterval = 30 * time.Second
 var defaultEscapeSequence = []byte{0x10, 0x11} // CTRL-P, CTRL-Q
+var defaultTermValue = "xterm"                 // default value for the TERM env var
 
 // TaskIOOpts are options for a TaskIO.
 type TaskIOOpts struct {
@@ -27,9 +31,11 @@ type TaskIOOpts struct {
 	Stderr            io.Writer
 	Interactive       bool
 	TTY               bool
+	User              string
 	HeartbeatInterval time.Duration
 	EscapeSequence    []byte
 	Sender            agentcalls.Sender
+	Logger            *logrus.Logger
 }
 
 // TaskIO is an abstraction used to stream I/O between a running Mesos task and the local terminal.
@@ -61,6 +67,71 @@ func NewTaskIO(containerID mesos.ContainerID, opts TaskIOOpts) (*TaskIO, error) 
 		containerID: containerID,
 		opts:        opts,
 	}, nil
+}
+
+// Exec launches a nested task based on the given command and attaches the stdin/stdout/stderr of the CLI
+// to the STDIN/STDOUT/STDERR of the nested container.
+func (t *TaskIO) Exec(cmd string, args ...string) (int, error) {
+
+	// This cancellable context will be shared across the different HTTP calls,
+	// when any HTTP request finishes the context will be cancelled. We do not
+	// have a rety logic.
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
+
+	// Channel to receive errors from the LAUNCH_NESTED_CONTAINER_SESSION/ATTACH_CONTAINER_INPUT goroutines.
+	errCh := make(chan error, 2)
+	defer close(errCh)
+
+	// We use a WaitGroup and will wait for all HTTP connections to be closed before returning.
+	var wg sync.WaitGroup
+
+	// Channel to signal when the nested container is launched.
+	nestedContainerLaunched := make(chan struct{})
+
+	// Launch nested container session.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		err := t.launchNestedContainerSession(ctx, nestedContainerLaunched, cmd, args...)
+		if err != nil && ctx.Err() == nil {
+			errCh <- err
+		}
+	}()
+
+	// Wait for the nested container session to be launched.
+	<-nestedContainerLaunched
+
+	if t.opts.Interactive {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer cancel()
+
+			err := t.attachContainerInput(ctx)
+			if err != nil && ctx.Err() == nil {
+				errCh <- err
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		return 0, err
+	default:
+		if t.exitSequenceDetected {
+			return 0, nil
+		}
+		if t.terminationSignalDetected {
+			// TODO(bamarni): maybe exit with the signal value + 128
+			return 1, nil
+		} //
+		return t.waitContainer()
+	}
 }
 
 // Attach attaches the stdin/stdout/stderr of the CLI to the STDIN/STDOUT/STDERR of a running task.
@@ -120,52 +191,119 @@ func (t *TaskIO) Attach() (int, error) {
 		if t.terminationSignalDetected {
 			// TODO(bamarni): maybe exit with the signal value + 128
 			return 1, nil
-		}
+		} //
 		return t.waitContainer()
 	}
+}
+
+// launchNestedContainerSession launches a nested container session.
+func (t *TaskIO) launchNestedContainerSession(ctx context.Context, launched chan<- struct{}, cmd string, args ...string) error {
+	call := t.launchNestedContainerSessionCall(cmd, args...)
+
+	// Send returns immediately with a Response from which output may be decoded.
+	resp, err := t.opts.Sender.Send(ctx, agentcalls.NonStreaming(call))
+	if resp != nil {
+		defer resp.Close()
+	}
+	if err != nil {
+		return err
+	}
+	close(launched)
+
+	return t.forwardContainerOutput(resp)
+}
+
+// launchNestedContainerSessionCall returns the request payload for the LAUNCH_NESTED_CONTAINER_SESSION call.
+func (t *TaskIO) launchNestedContainerSessionCall(cmd string, args ...string) *agent.Call {
+
+	// Override the container ID with the current container ID as the parent, and generate
+	// a new UUID for the nested container used to run commands passed to `task exec`.
+	parentContainerID := t.containerID
+	t.containerID = mesos.ContainerID{
+		Parent: &parentContainerID,
+		Value:  uuid.NewV4().String(),
+	}
+
+	t.opts.Logger.Infof("Launching nested container with ID '%s'", t.containerID.Value)
+
+	cmdInfo := &mesos.CommandInfo{
+		Arguments: append([]string{cmd}, args...),
+	}
+
+	fullCmd := strings.Join(cmdInfo.Arguments, " ")
+	cmdInfo.Value = &fullCmd
+
+	shell := false
+	cmdInfo.Shell = &shell
+
+	if t.opts.User != "" {
+		cmdInfo.User = &t.opts.User
+	}
+
+	containerInfo := &mesos.ContainerInfo{
+		Type: mesos.ContainerInfo_MESOS.Enum(),
+	}
+
+	if t.opts.TTY {
+		containerInfo.TTYInfo = &mesos.TTYInfo{}
+
+		cmdInfo.Environment = &mesos.Environment{
+			Variables: []mesos.Environment_Variable{
+				{
+					Name:  "TERM",
+					Type:  mesos.Environment_Variable_VALUE.Enum(),
+					Value: &defaultTermValue,
+				},
+			},
+		}
+	}
+	return agentcalls.LaunchNestedContainerSession(t.containerID, cmdInfo, containerInfo)
 }
 
 // attachContainerInput streams the STDIN of the CLI to the remote container.
 // It also sends TTYInfo messages whenever the terminal is resized and
 // heartbeats messages every 30 seconds.
 func (t *TaskIO) attachContainerInput(ctx context.Context) error {
-	stdinFd, err := t.stdinFd()
-	if err != nil {
-		return err
-	}
-
-	if !terminal.IsTerminal(stdinFd) {
-		return fmt.Errorf("stdin is not a terminal")
-	}
-
-	// Set the terminal in raw mode and make sure it's restored
-	// to its previous state before the function returns.
-	oldState, err := terminal.MakeRaw(stdinFd)
-	if err != nil {
-		return err
-	}
-	defer terminal.Restore(stdinFd, oldState)
-
-	// Create a proxy reader for stdin which is able to detect the escape sequence.
-	t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
 
 	// Channels for window resize and termination signals.
 	ttyInfoCh := make(chan *mesos.TTYInfo, 2)
 	receivedTerminationSignal := make(chan struct{})
 
-	if runtime.GOOS != "windows" {
-		// To force a redraw of the remote terminal, we first resize it to 0 before setting it
-		// to the actual size of our local terminal. After that, all terminal resizing is handled
-		// in our SIGWINCH handler.
-		ttyInfoCh <- &mesos.TTYInfo{WindowSize: &mesos.TTYInfo_WindowSize{}}
-		ttyInfo, err := t.ttyInfo(stdinFd)
+	if t.opts.TTY {
+		stdinFd, err := t.stdinFd()
 		if err != nil {
 			return err
 		}
-		ttyInfoCh <- ttyInfo
-	}
 
-	go t.handleSignals(stdinFd, ttyInfoCh, receivedTerminationSignal)
+		if !terminal.IsTerminal(stdinFd) {
+			return fmt.Errorf("stdin is not a terminal")
+		}
+
+		// Create a proxy reader for stdin which is able to detect the escape sequence.
+		t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
+
+		// Set the terminal in raw mode and make sure it's restored
+		// to its previous state before the function returns.
+		oldState, err := terminal.MakeRaw(stdinFd)
+		if err != nil {
+			return err
+		}
+		defer terminal.Restore(stdinFd, oldState)
+
+		if runtime.GOOS != "windows" {
+			// To force a redraw of the remote terminal, we first resize it to 0 before setting it
+			// to the actual size of our local terminal. After that, all terminal resizing is handled
+			// in our SIGWINCH handler.
+			ttyInfoCh <- &mesos.TTYInfo{WindowSize: &mesos.TTYInfo_WindowSize{}}
+			ttyInfo, err := t.ttyInfo(stdinFd)
+			if err != nil {
+				return err
+			}
+			ttyInfoCh <- ttyInfo
+		}
+
+		go t.handleSignals(stdinFd, ttyInfoCh, receivedTerminationSignal)
+	}
 
 	// Must be buffered to avoid blocking below.
 	aciCh := make(chan *agent.Call, 1)
@@ -255,7 +393,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 	acif := agentcalls.FromChan(aciCh)
 
-	err = agentcalls.SendNoData(ctx, t.opts.Sender, acif)
+	err := agentcalls.SendNoData(ctx, t.opts.Sender, acif)
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -274,39 +412,7 @@ func (t *TaskIO) attachContainerOutput(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	forward := func(b []byte, out io.Writer) error {
-		n, err := out.Write(b)
-		if err == nil && len(b) != n {
-			err = io.ErrShortWrite
-		}
-		return err
-	}
-	for {
-		var pio agent.ProcessIO
-		err := resp.Decode(&pio)
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return err
-		}
-
-		switch pio.GetType() {
-		case agent.ProcessIO_DATA:
-			data := pio.GetData()
-			switch data.GetType() {
-			case agent.ProcessIO_Data_STDOUT:
-				if err := forward(data.GetData(), t.opts.Stdout); err != nil {
-					return err
-				}
-			case agent.ProcessIO_Data_STDERR:
-				if err := forward(data.GetData(), t.opts.Stderr); err != nil {
-					return err
-				}
-			}
-		}
-	}
+	return t.forwardContainerOutput(resp)
 }
 
 // waitContainer waits for the container to terminate and returns its exit code.
@@ -386,4 +492,42 @@ func (t *TaskIO) ttyInfo(fd int) (*mesos.TTYInfo, error) {
 		Rows:    uint32(h),
 		Columns: uint32(w),
 	}}, nil
+}
+
+// forwardContainerOutput forwards output of the LAUNCH_NESTED_CONTAINER_SESSION
+// or ATTACH_CONTAINER_OUTPUT responses to STDOUT/STDERR.
+func (t *TaskIO) forwardContainerOutput(resp mesos.Response) error {
+	forward := func(b []byte, out io.Writer) error {
+		n, err := out.Write(b)
+		if err == nil && len(b) != n {
+			err = io.ErrShortWrite
+		}
+		return err
+	}
+
+	for {
+		var pio agent.ProcessIO
+		err := resp.Decode(&pio)
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+
+		switch pio.GetType() {
+		case agent.ProcessIO_DATA:
+			data := pio.GetData()
+			switch data.GetType() {
+			case agent.ProcessIO_Data_STDOUT:
+				if err := forward(data.GetData(), t.opts.Stdout); err != nil {
+					return err
+				}
+			case agent.ProcessIO_Data_STDERR:
+				if err := forward(data.GetData(), t.opts.Stderr); err != nil {
+					return err
+				}
+			}
+		}
+	}
 }
