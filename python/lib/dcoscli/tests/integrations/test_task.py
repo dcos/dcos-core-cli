@@ -9,7 +9,7 @@ import time
 import pytest
 
 import dcos.util as util
-from dcos.util import create_schema
+from dcos.util import create_schema, tempdir
 
 from dcoscli.test.common import (assert_command, assert_lines,
                                  assert_lines_range, exec_command,
@@ -30,11 +30,13 @@ FOLLOW = 'tests/data/file/follow.json'
 TWO_TASKS = 'tests/data/file/two_tasks.json'
 TWO_TASKS_FOLLOW = 'tests/data/file/two_tasks_follow.json'
 LS = 'tests/data/tasks/ls-app.json'
+DOWNLOAD = 'tests/data/tasks/download-app.json'
 SH = 'tests/data/tasks/sh-app.json'
 CAT = 'tests/data/tasks/cat-app.json'
 HELLO_STDERR = 'tests/data/marathon/apps/hello-stderr.json'
 
 INIT_APPS = ((LS, 'ls-app'),
+             (DOWNLOAD, 'download-app'),
              (SH, 'sh-app'),
              (CAT, 'cat-app'),
              (SLEEP1, 'test-app1'),
@@ -294,6 +296,61 @@ def test_ls_completed():
 
     assert len(lines) == num_expected_lines
     assert re.match(ls_line, lines[0])
+
+
+@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
+def test_download_sandbox():
+    with tempdir() as tmp:
+
+        cwd = os.getcwd()
+        os.chdir(tmp)
+
+        returncode, stdout, stderr = exec_command(
+            ['dcos', 'task', 'download', 'download-app'])
+
+        assert returncode == 0
+        assert stderr == b''
+        assert os.path.exists(tmp + '/test')
+        assert os.path.exists(tmp + '/test/test1')
+
+        file = open(tmp + '/test/test1', 'r')
+        content = file.read(4)
+        assert content == 'test'
+
+        os.chdir(cwd)
+
+
+@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
+def test_download_sandbox_to_target():
+    with tempdir() as tmp:
+        targetdir = '--target-dir=' + tmp + '/sandbox'
+        returncode, stdout, stderr = exec_command(
+            ['dcos', 'task', 'download', 'download-app', targetdir])
+
+        assert returncode == 0
+        assert stderr == b''
+        assert os.path.exists(tmp + '/sandbox')
+
+
+@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
+def test_download_single_file():
+    with tempdir() as tmp:
+
+        cwd = os.getcwd()
+        os.chdir(tmp)
+
+        returncode, stdout, stderr = exec_command(
+            ['dcos', 'task', 'download', 'download-app', '/test/test1'])
+
+        assert returncode == 0
+        assert stderr == b''
+        assert os.path.exists(tmp + '/test1')
+
+        file = open(tmp + '/test1', 'r')
+        content = file.read(4)
+        assert content == 'test'
+
+        os.chdir(cwd)
 
 
 @pytest.mark.skipif(sys.platform == 'win32',

@@ -1,0 +1,7 @@
+{
+    "id": "download-app",
+    "cmd": "mkdir test && echo 'test' > test/test1 && echo 'test' test/test2 && sleep 1000",
+    "cpus": 0.1,
+    "mem": 32,
+    "instances": 1
+}

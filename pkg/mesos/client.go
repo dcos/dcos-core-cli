@@ -82,6 +82,26 @@ func (c *Client) Browse(agent string, path string) ([]File, error) {
 	}
 }
 
+// Download returns bytes read from a file in the sandbox of a task
+// at the location of filePath.
+func (c *Client) Download(agent string, filePath string) ([]byte, error) {
+	resp, err := c.http.Get("/agent/" + agent + "/files/download?path=" + filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
 // Frameworks returns the frameworks of the connected cluster.
 func (c *Client) Frameworks() ([]master.Response_GetFrameworks_Framework, error) {
 	body := master.Call{
