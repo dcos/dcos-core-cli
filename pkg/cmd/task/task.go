@@ -42,6 +42,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 
 	cmd.AddCommand(
 		newCmdTaskAttach(ctx),
+		newCmdTaskDownload(ctx),
 		newCmdTaskExec(ctx),
 		newCmdTaskList(ctx),
 		newCmdTaskLog(ctx),
