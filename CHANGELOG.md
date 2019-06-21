@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## Next
+## 1.14-patch.x
+
+* Features
+
+  * Add `dcos task download` to download task sandbox files
+  * Add a `--user` option to `dcos task exec`
+  * Add an `--all` option to `dcos node log`
+  * Add job task ID(s) when printing history with `dcos job history`
+
+## 1.13-patch.0
 
 * Features
 
