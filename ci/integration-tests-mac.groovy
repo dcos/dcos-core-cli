@@ -44,6 +44,7 @@ pipeline {
 
           sh '''
             bash -exc " \
+              export PYTHON=python3.7; \
               mkdir -p build/darwin; \
               make plugin; \
               cd scripts; \

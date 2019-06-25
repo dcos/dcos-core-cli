@@ -33,16 +33,18 @@ pipeline {
         stage('Build Linux binary') {
           agent {
             node {
-              label 'py35'
+              label 'mesos'
               customWorkspace '/workspace'
             }
           }
 
           steps {
+
             sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make binary"
+                docker run --rm -v $PWD:/usr/src -w /usr/src \
+                    python:3.7 bash -exc " \
+                      cd python/lib/dcoscli; \
+                      make binary"
             '''
 
             sh '''
@@ -61,6 +63,7 @@ pipeline {
           steps {
             sh '''
               bash -exc " \
+                export PYTHON=python3.7; \
                 cd python/lib/dcoscli; \
                 make binary"
             '''
@@ -110,25 +113,28 @@ pipeline {
         stage('Run Linux tests') {
           agent {
             node {
-              label 'py35'
+              label 'mesos'
               customWorkspace '/workspace'
             }
           }
 
           steps {
             sh '''
-              bash -exc " \
-                cd python/lib/dcos; \
-                make env; \
-                ./env/bin/tox -e py35-syntax; \
-                ./env/bin/tox -e py35-unit"
+              docker run --rm -v $PWD:/usr/src -w /usr/src \
+                python:3.7 bash -exc " \
+                  cd python/lib/dcos; \
+                  make env; \
+                  ./env/bin/tox -e py35-syntax; \
+                  ./env/bin/tox -e py35-unit"
             '''
 
             sh '''
-              bash -exc " \
-                cd python/lib/dcoscli; \
-                make env; \
-                ./env/bin/tox -e py35-syntax"
+              docker run --rm -v $PWD:/usr/src -w /usr/src \
+                python:3.7 bash -exc " \
+                  export PYTHON=python3.7; \
+                  cd python/lib/dcoscli; \
+                  make env; \
+                  ./env/bin/tox -e py35-syntax"
             '''
           }
         }
@@ -139,6 +145,7 @@ pipeline {
           steps {
             sh '''
               bash -exc " \
+                export PYTHON=python3.7; \
                 cd python/lib/dcos; \
                 make env; \
                 ./env/bin/tox -e py35-syntax; \
@@ -147,6 +154,7 @@ pipeline {
 
             sh '''
               bash -exc " \
+                export PYTHON=python3.7; \
                 cd python/lib/dcoscli; \
                 make env; \
                 ./env/bin/tox -e py35-syntax"
