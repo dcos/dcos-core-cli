@@ -20,6 +20,17 @@ def credentials = [
    passwordVariable: 'DCOS_PASSWORD']
 ]
 
+node('mesos-ubuntu') {
+    ws('/jenkins/workspace') {
+
+         dir("dcos-core-cli") {
+            checkout scm
+            sh 'wget https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/master/dcos.exe'
+            stash includes: 'dcos.exe', name: 'dcos-exe'
+        }
+    }
+}
+
 node('py36') {
     ws('/jenkins/workspace') {
 
@@ -62,6 +73,8 @@ node('py36') {
                         // There were a workaround for this issue in the licensing
                         // CLI tests, but it is not addressed in dcos e2e.
                         dir('dcos-core-cli') {
+                            unstash 'dcos-exe'
+
                             bat '''
                                 bash -exc " \
                                 export PYTHONIOENCODING=utf-8; \
@@ -69,15 +82,16 @@ node('py36') {
                                 export CLI_TEST_SSH_KEY_PATH=${DCOS_TEST_SSH_KEY_PATH}; \
                                 export CLI_TEST_MASTER_PROXY=true; \
                                 mkdir -p build/windows; \
+                                mv dcos.exe dist; \
+                                PATH=$PWD/dist:$PATH; \
                                 make python; \
                                 python scripts/plugin/package_plugin.py; \
+                                dcos cluster remove --all; \
+                                dcos cluster setup ${DCOS_TEST_URL} --insecure; \
+                                dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
                                 cd python/lib/dcoscli; \
-                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/0.7.x/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
-                                dist/dcos cluster remove --all; \
-                                dist/dcos cluster setup ${DCOS_TEST_URL} --insecure; \
-                                dist/dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
-                                PATH=$PWD/dist:$PATH; \
                                 make env; \
+                                rm -f ./env/Scripts/dcos.exe; \
                                 ./env/Scripts/tox -e py35-integration"
                             '''
                         }
