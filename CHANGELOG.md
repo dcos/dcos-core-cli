@@ -7,7 +7,7 @@
   * Add `dcos task download` to download task sandbox files
   * Add a `--user` option to `dcos task exec`
   * Add an `--all` option to `dcos node log`
-  * Add job task ID(s) when printing history with `dcos job history`
+  * Add job task ID(s) when printing history with `dcos job history --json`
 
 ## 1.13-patch.0
 
