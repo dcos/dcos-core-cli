@@ -58,7 +58,7 @@ node('py36') {
             print(master_ip)
 
             withEnv(["DCOS_TEST_URL=${master_ip}"]) {
-                node('winpy37') {
+                node('windows') {
                     ws('C:\\windows\\workspace') {
                         dir("dcos-core-cli") {
                             stage('Cleanup workspace') {
