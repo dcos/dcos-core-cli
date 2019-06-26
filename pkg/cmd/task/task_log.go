@@ -28,7 +28,13 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tasks, err := findTasks(ctx, args[0])
+			filters := taskFilters{
+				Active:    !completed,
+				Completed: all || completed,
+				ID:        args[0],
+			}
+
+			tasks, err := findTasks(ctx, filters)
 			if err != nil {
 				return err
 			}
@@ -43,7 +49,7 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 				var failed bool
 				for _, task := range tasks {
 					if len(tasks) > 1 {
-						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task.TaskID.Value))
+						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task.ID))
 					}
 					logClient := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
 					opts := logs.Options{
@@ -51,7 +57,7 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 						Format: output,
 						Skip:   -1 * lines,
 					}
-					err := logClient.PrintTask(task.TaskID.Value, file, opts)
+					err := logClient.PrintTask(task.ID, file, opts)
 					if err != nil {
 						failed = true
 						fmt.Fprintf(ctx.ErrOut(), "Error: %v\n", err)
@@ -88,7 +94,7 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 					if err != nil {
 						e <- err
 					}
-				}(task.TaskID.Value, lines, file, msgChan, errChan)
+				}(task.ID, lines, file, msgChan, errChan)
 			}
 
 			lastTask := ""

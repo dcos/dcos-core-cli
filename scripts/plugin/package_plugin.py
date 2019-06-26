@@ -38,7 +38,7 @@ description = "Manage DC/OS services"
 
 [[commands]]
 name = "task"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "Manage DC/OS tasks"
 '''
 

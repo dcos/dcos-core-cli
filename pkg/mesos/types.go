@@ -262,7 +262,14 @@ type TaskStatus struct {
 
 // ContainerStatus represents the status of a single container inside a task
 type ContainerStatus struct {
+	ContainerID  ContainerID   `json:"container_id"`
 	NetworkInfos []NetworkInfo `json:"network_infos"`
+}
+
+// ContainerID represents the ID of a container
+type ContainerID struct {
+	Value  string `json:"value"`
+	Parent string `json:"parent"`
 }
 
 // NetworkInfo represents information about the network of a container

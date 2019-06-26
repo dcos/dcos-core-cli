@@ -57,7 +57,7 @@ func (c *Client) Debug(agent string) (map[string]string, error) {
 
 		return debug, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -78,7 +78,7 @@ func (c *Client) Browse(agent string, path string) ([]File, error) {
 
 		return browse, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 
@@ -98,7 +98,7 @@ func (c *Client) Download(agent string, filePath string) ([]byte, error) {
 		}
 		return b, nil
 	default:
-		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+		return nil, httpResponseToError(resp)
 	}
 }
 

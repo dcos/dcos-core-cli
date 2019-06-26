@@ -9,7 +9,6 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/gobwas/glob"
-	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +25,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 				ctx.Deprecated("Getting the list of tasks from `dcos task` is deprecated. Please use `dcos task list`.")
 				listCmd := newCmdTaskList(ctx)
 				// Execute by default would use os.Args[1:], which is everything after `dcos ...`.
-				// We need all command line arguments after `dcos service ...`.
+				// We need all command line arguments after `dcos task ...`.
 				listCmd.SetArgs(ctx.Args()[2:])
 				listCmd.SilenceErrors = true
 				listCmd.SilenceUsage = true
@@ -51,8 +50,14 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
-func findTask(ctx api.Context, id string) (*mesosgo.Task, error) {
-	tasks, err := findTasks(ctx, id)
+type taskFilters struct {
+	Active    bool
+	Completed bool
+	ID        string
+}
+
+func findTask(ctx api.Context, filters taskFilters) (*mesos.Task, error) {
+	tasks, err := findTasks(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +65,7 @@ func findTask(ctx api.Context, id string) (*mesosgo.Task, error) {
 	if len(tasks) > 1 {
 		var names []string
 		for _, task := range tasks {
-			names = append(names, task.TaskID.Value)
+			names = append(names, task.ID)
 		}
 		return nil, fmt.Errorf("found more than one task with the same name: %v", names)
 	}
@@ -68,33 +73,50 @@ func findTask(ctx api.Context, id string) (*mesosgo.Task, error) {
 	return &tasks[0], nil
 }
 
-func findTasks(ctx api.Context, id string) ([]mesosgo.Task, error) {
+func findTasks(ctx api.Context, filters taskFilters) ([]mesos.Task, error) {
 	mesosClient, err := mesos.NewClientWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	allTasks, err := mesosClient.Tasks()
+	state, err := mesosClient.State()
 	if err != nil {
 		return nil, err
 	}
 
-	g, err := glob.Compile(id)
-	if err != nil {
-		return nil, err
-	}
-
-	var tasks []mesosgo.Task
-	for _, t := range allTasks {
-		if strings.Contains(t.TaskID.Value, id) || g.Match(t.TaskID.Value) {
-			tasks = append(tasks, t)
+	var g glob.Glob
+	if filters.ID != "" {
+		g, err = glob.Compile(filters.ID)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	if len(tasks) == 0 {
-		return nil, fmt.Errorf("no task ID found containing '%s'", id)
+	var tasks []mesos.Task
+	for _, f := range state.Frameworks {
+		for _, t := range f.Tasks {
+			if filters.Active && matchTask(t, filters.ID, g) {
+				tasks = append(tasks, t)
+			}
+		}
+		for _, t := range f.CompletedTasks {
+			if filters.Completed && matchTask(t, filters.ID, g) {
+				tasks = append(tasks, t)
+			}
+		}
+	}
+
+	if len(tasks) == 0 && filters.ID != "" {
+		return nil, fmt.Errorf("no task ID found containing '%s'", filters.ID)
 	}
 	return tasks, nil
+}
+
+func matchTask(task mesos.Task, id string, g glob.Glob) bool {
+	if id == "" {
+		return true
+	}
+	return strings.Contains(task.ID, id) || g.Match(task.ID)
 }
 
 func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {

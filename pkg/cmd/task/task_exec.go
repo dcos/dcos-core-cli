@@ -6,6 +6,7 @@ import (
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent"
 	"github.com/spf13/cobra"
 )
@@ -16,22 +17,29 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "exec [flags] <task> <cmd> [<args>...]",
-		Short: "Launch a process (<cmd>) inside of a container for a task (<task>).",
+		Short: "Launch a process inside of a container for a task",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			task, err := findTask(ctx, args[0])
+			filters := taskFilters{
+				Active: true,
+				ID:     args[0],
+			}
+
+			task, err := findTask(ctx, filters)
 			if err != nil {
 				return err
 			}
 
-			httpClient, err := mesosHTTPClient(ctx, task.AgentID.Value)
+			httpClient, err := mesosHTTPClient(ctx, task.SlaveID)
 			if err != nil {
 				return err
 			}
 
-			containerID := task.Statuses[0].ContainerStatus.ContainerID
+			containerID := mesosgo.ContainerID{
+				Value: task.Statuses[0].ContainerStatus.ContainerID.Value,
+			}
 
-			taskIO, err := mesos.NewTaskIO(*containerID, mesos.TaskIOOpts{
+			taskIO, err := mesos.NewTaskIO(containerID, mesos.TaskIOOpts{
 				Stdin:       ctx.Input(),
 				Stdout:      ctx.Out(),
 				Stderr:      ctx.ErrOut(),

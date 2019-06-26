@@ -2,6 +2,10 @@
 
 ## 1.14-patch.x
 
+* Breaking changes
+
+  * `dcos task ls` without any argument to get the list of all tasks files is not supported anymore.
+
 * Features
 
   * Add `dcos task download` to download task sandbox files
