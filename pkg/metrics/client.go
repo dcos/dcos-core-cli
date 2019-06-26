@@ -19,9 +19,9 @@ func NewClient(baseClient *httpclient.Client) *Client {
 	}
 }
 
-// Node returns the units of a certain node.
-func (c *Client) Node(mesosID string) (*Node, error) {
-	resp, err := c.http.Get(fmt.Sprintf("/system/v1/agent/%s/metrics/v0/node", mesosID))
+// Node returns the metrics of a certain node.
+func (c *Client) Node(agent string) (*Node, error) {
+	resp, err := c.http.Get(fmt.Sprintf("/system/v1/agent/%s/metrics/v0/node", agent))
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,50 @@ func (c *Client) Node(mesosID string) (*Node, error) {
 			return nil, err
 		}
 		return &node, nil
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
+// Task returns the metrics of a certain task.
+func (c *Client) Task(agent string, container string) (*Container, error) {
+	resp, err := c.http.Get(fmt.Sprintf("/system/v1/agent/%s/metrics/v0/containers/%s", agent, container))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		var container Container
+		err = json.NewDecoder(resp.Body).Decode(&container)
+		if err != nil {
+			return nil, err
+		}
+		return &container, nil
+	case 204:
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
+// App returns the metrics of a certain app.
+func (c *Client) App(agent string, container string) (*Container, error) {
+	resp, err := c.http.Get(fmt.Sprintf("/system/v1/agent/%s/metrics/v0/containers/%s/app", agent, container))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case 200:
+		var container Container
+		err = json.NewDecoder(resp.Body).Decode(&container)
+		if err != nil {
+			return nil, err
+		}
+		return &container, nil
+	case 204:
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
 	}
