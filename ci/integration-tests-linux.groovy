@@ -43,7 +43,7 @@ pipeline {
           unstash 'dcos-linux'
 
           sh '''
-            docker run --rm -v $PWD:/usr/src -w /usr/src \
+            docker run --rm -v $PWD:/usr/src -w /usr/src --env-file=<(env) \
               python:3.7 bash -exc " \
                 mkdir -p build/linux; \
                 make plugin; \
