@@ -1,6 +1,8 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/diagnostics"
@@ -15,18 +17,22 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		Use:   "node",
 		Short: "Display DC/OS node information",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
-			if !ok {
-				ctx.Deprecated("Getting the list of nodes from `dcos node` is deprecated. Please use `dcos node list`.")
-				listCmd := newCmdNodeList(ctx)
-				// Execute by default would use os.Args[1:], which is everything after `dcos ...`.
-				// We need all command line arguments after `dcos node ...`.
-				listCmd.SetArgs(ctx.Args()[2:])
-				listCmd.SilenceErrors = true
-				listCmd.SilenceUsage = true
-				return listCmd.Execute()
+			if len(args) == 0 {
+				_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
+				if !ok {
+					ctx.Deprecated("Getting the list of nodes from `dcos node` is deprecated. Please use `dcos node list`.")
+					listCmd := newCmdNodeList(ctx)
+					// Execute by default would use os.Args[1:], which is everything after `dcos ...`.
+					// We need all command line arguments after `dcos node ...`.
+					listCmd.SetArgs(ctx.Args()[2:])
+					listCmd.SilenceErrors = true
+					listCmd.SilenceUsage = true
+					return listCmd.Execute()
+				}
+				return cmd.Help()
 			}
-			return cmd.Help()
+			fmt.Fprintln(ctx.ErrOut(), cmd.UsageString())
+			return fmt.Errorf("unknown command %s", args[0])
 		},
 	}
 	cmd.Flags().Bool("json", false, "Print in json format")
