@@ -35,30 +35,76 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 
 			// Only one task matching or multiple tasks but no follow.
 			if len(tasks) == 1 || follow == false {
+				if output != "short" {
+					output = "short"
+					ctx.Logger().Info(`Task logs don't support output options. Defaulting to "short"...`)
+				}
+
+				var failed bool
 				for _, task := range tasks {
 					if len(tasks) > 1 {
 						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", task.TaskID.Value))
 					}
 					logClient := logs.NewClient(pluginutil.HTTPClient(""), ctx.Out())
-					if output != "short" {
-						output = "short"
-						ctx.Logger().Info(`Task logs don't support output options. Defaulting to "short"...`)
-					}
 					opts := logs.Options{
 						Follow: follow,
 						Format: output,
 						Skip:   -1 * lines,
 					}
-					return logClient.PrintTask(task.TaskID.Value, file, opts)
+					err := logClient.PrintTask(task.TaskID.Value, file, opts)
+					if err != nil {
+						failed = true
+						fmt.Fprintf(ctx.ErrOut(), "Error: %v\n", err)
+					}
 				}
+
+				if len(tasks) > 1 && failed {
+					return fmt.Errorf("could not log all matched tasks")
+				}
+				return nil
 			}
 
-			// TODO (DCOS_OSS-5153): multiple followed tasks.
-			var taskNames []string
-			for _, task := range tasks {
-				taskNames = append(taskNames, task.TaskID.Value)
+			// Follow multiple tasks.
+			if output != "cat" {
+				ctx.Logger().Info(`Task logs don't support output options. Defaulting to "cat"...`)
 			}
-			return fmt.Errorf("found more than one task with the same name, unable to follow them all: %v", taskNames)
+
+			// The channel receiving the content of the logs. Each task followed dumps its logs in it.
+			msgChan := make(chan taskData)
+			errChan := make(chan error)
+			for _, task := range tasks {
+				go func(taskID string, lines int, file string, c chan taskData, e chan error) {
+					taskOut := &taskWriter{
+						task:   taskID,
+						writer: c,
+					}
+					logClient := logs.NewClient(pluginutil.HTTPClient(""), taskOut)
+					opts := logs.Options{
+						Follow: true,
+						Format: "cat",
+						Skip:   -1 * lines,
+					}
+					err := logClient.FollowTask(taskID, file, false, opts)
+					if err != nil {
+						e <- err
+					}
+				}(task.TaskID.Value, lines, file, msgChan, errChan)
+			}
+
+			lastTask := ""
+			for {
+				select {
+				case newTaskMsg := <-msgChan:
+					// The new log line is coming from a task that is not the last one, print its ID.
+					if newTaskMsg.task != lastTask {
+						fmt.Fprintln(ctx.Out(), fmt.Sprintf("===> %s <===", newTaskMsg.task))
+						lastTask = newTaskMsg.task
+					}
+					fmt.Fprintln(ctx.Out(), string(newTaskMsg.data))
+				case err := <-errChan:
+					return err
+				}
+			}
 		},
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "Print completed and in-progress tasks")
@@ -67,4 +113,19 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines. 10 is the default")
 	cmd.Flags().StringVarP(&output, "output", "o", "short", "Format log message output")
 	return cmd
+}
+
+type taskData struct {
+	task string
+	data []byte
+}
+
+type taskWriter struct {
+	task   string
+	writer chan taskData
+}
+
+func (t *taskWriter) Write(data []byte) (n int, err error) {
+	t.writer <- taskData{t.task, data}
+	return len(data), nil
 }

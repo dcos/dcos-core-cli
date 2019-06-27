@@ -45,7 +45,7 @@ func NewClient(baseClient *httpclient.Client, out io.Writer) *Client {
 	return c
 }
 
-// PrintComponent prints a component logs.
+// PrintComponent prints a component's logs.
 func (c *Client) PrintComponent(route string, service string, opts Options) error {
 	requestFilters := ""
 	if len(opts.Filters) > 0 {
@@ -95,34 +95,13 @@ func (c *Client) PrintComponent(route string, service string, opts Options) erro
 	return nil
 }
 
-// PrintTask prints a tasks logs.
+// PrintTask prints a task's logs.
 func (c *Client) PrintTask(taskID string, file string, opts Options) error {
-	endpoint := fmt.Sprintf("/system/v1/logs/v2/task/%s/file/%s?cursor=END&skip=%d", taskID, file, opts.Skip)
 	if opts.Follow {
-		client := sse.NewClient(c.http.BaseURL().String() + endpoint)
-		client.Connection = c.http.BaseClient()
-		client.Headers["Authorization"] = c.http.Header().Get("Authorization")
-		client.Headers["User-Agent"] = c.http.Header().Get("User-Agent")
-
-		events := make(chan *sse.Event)
-		err := client.SubscribeChanRaw(events)
-		if err != nil {
-			return err
-		}
-		defer client.Unsubscribe(events)
-
-		for msg := range events {
-			if len(msg.Data) == 0 {
-				continue
-			}
-			err := c.printEntry(msg.Data, opts)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return c.FollowTask(taskID, file, true, opts)
 	}
 
+	endpoint := fmt.Sprintf("/system/v1/logs/v2/task/%s/file/%s?cursor=END&skip=%d", taskID, file, opts.Skip)
 	resp, err := c.http.Get(endpoint, httpclient.Header("Accept", "text/plain"))
 	if err != nil {
 		return err
@@ -141,6 +120,51 @@ func (c *Client) PrintTask(taskID string, file string, opts Options) error {
 		return err
 	}
 	fmt.Fprint(c.out, string(b))
+	return nil
+}
+
+// FollowTask follows a task's logs.
+func (c *Client) FollowTask(taskID string, file string, printLogs bool, opts Options) error {
+	endpoint := fmt.Sprintf("/system/v1/logs/v2/task/%s/file/%s?cursor=END&skip=%d", taskID, file, opts.Skip)
+
+	client := sse.NewClient(c.http.BaseURL().String() + endpoint)
+	client.Connection = c.http.BaseClient()
+	client.Headers["Authorization"] = c.http.Header().Get("Authorization")
+	client.Headers["User-Agent"] = c.http.Header().Get("User-Agent")
+
+	events := make(chan *sse.Event)
+	err := client.SubscribeChanRaw(events)
+	if err != nil {
+		return err
+	}
+	defer client.Unsubscribe(events)
+
+	for msg := range events {
+		if len(msg.Data) == 0 {
+			continue
+		}
+
+		if printLogs {
+			err = c.printEntry(msg.Data, opts)
+		} else {
+			err = c.dumpEntry(msg.Data)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Client) dumpEntry(rawEntry []byte) error {
+	var entry Entry
+	err := json.Unmarshal(rawEntry, &entry)
+	if err != nil {
+		return err
+	}
+	// TODO: there should be a well-defined API for following logs, eg. using a channel instead of an io.Writer.
+	fmt.Fprint(c.out, entry.Fields.Message)
 	return nil
 }
 
@@ -212,7 +236,7 @@ func (c *Client) resetColor() {
 
 func httpResponseToError(resp *http.Response) error {
 	if resp.StatusCode == 204 {
-		return fmt.Errorf("no logs found", resp.StatusCode)
+		return fmt.Errorf("no logs found")
 	}
 	if resp.StatusCode < 400 {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
