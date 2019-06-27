@@ -18,7 +18,7 @@ pipeline {
     }
 
     stage("Run Linux integration tests") {
-      agent { label 'py36' }
+      agent { label 'mesos' }
 
       steps {
         withCredentials([
@@ -43,18 +43,22 @@ pipeline {
           unstash 'dcos-linux'
 
           sh '''
-            bash -exc " \
-              export DCOS_EXPERIMENTAL=1; \
-              mkdir -p build/linux; \
-              make plugin; \
-              cd scripts; \
-              python3 -m venv env; \
-              source env/bin/activate; \
-              pip install --upgrade pip==18.1 setuptools; \
-              pip install -r requirements.txt; \
-              wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos; \
-              dcos cluster remove --all; \
-              ./run_integration_tests.py --e2e-backend=dcos_launch"
+            docker run --rm -v $PWD:/usr/src -w /usr/src \
+              -e DCOS_TEST_INSTALLER_URL \
+              -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+              -e DCOS_TEST_ADMIN_USERNAME -e DCOS_TEST_ADMIN_PASSWORD \
+              -e DCOS_TEST_LICENSE -e DCOS_TEST_SSH_KEY_PATH \
+              python:3.7 bash -exc " \
+                mkdir -p build/linux; \
+                make plugin; \
+                cd scripts; \
+                python3 -m venv env; \
+                source env/bin/activate; \
+                pip install --upgrade pip==18.1 setuptools; \
+                pip install -r requirements.txt; \
+                wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos; \
+                dcos cluster remove --all; \
+                ./run_integration_tests.py --e2e-backend=dcos_launch"
           '''
         }
       }
