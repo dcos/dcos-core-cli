@@ -16,9 +16,23 @@ if [ ! -d "${BUILDDIR}/${VENV}" ]; then
 
     : "${DCOS_EXPERIMENTAL:=""}"
     if [ "${DCOS_EXPERIMENTAL}" = "" ]; then
-      if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "5" ]; then
-          echo "Cannot find supported python version 3.5. Exiting..."
-          exit 1
+
+      # On Windows, our build scripts rely on virtualenv instead of venv.
+      # This highlighted issues when trying to upgrade to Python 3.7.
+      # Given that the issue solved by upgrading to Python 3.7 is UNIX specific
+      # (https://jira.mesosphere.com/browse/DCOS-52180), and that we'll have the Python
+      # codebase completely removed for DC/OS 1.15, we're sticking to Python 3.5 on Windows
+      # instead of taking more time to try to upgrade to Python 3.7.
+      if [ "$(uname)" = "Windows_NT" ]; then
+        if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "5" ]; then
+            echo "Cannot find supported python version 3.5. Exiting..."
+            exit 1
+        fi
+      else
+        if [ "${PYTHON_MAJOR}" != "3" ] || [ "${PYTHON_MINOR}" != "7" ]; then
+            echo "Cannot find supported python version 3.7. Exiting..."
+            exit 1
+        fi
       fi
     fi
     if [ "$(uname)" = "Windows_NT" ]; then
