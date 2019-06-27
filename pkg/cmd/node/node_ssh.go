@@ -131,6 +131,9 @@ func detectProxy(ctx api.Context, masterProxy bool, proxyIP string) (string, err
 
 	// masterProxy is true.
 	metadata, err := dcos.NewClient(pluginutil.HTTPClient("")).Metadata()
+	if err != nil {
+		return "", err
+	}
 	if metadata.PublicIPv4 == "" {
 		return "", fmt.Errorf(`cannot use "--master-proxy", failed to detect public IP for the master`)
 	}
