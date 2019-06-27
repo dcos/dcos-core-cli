@@ -17,7 +17,9 @@ _dcos_task() {
 
     local commands=(
     "attach"
+    "download"
     "exec"
+    "list"
     "log"
     "ls"
     "metrics"
@@ -52,9 +54,34 @@ _dcos_task_attach() {
     if [ -z "$command" ]; then
         case "$cur" in
             --*)
-                __dcos_handle_compreply "${flgs[@]}"
+                __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_task_ids
+                ;;
+        esac
+        return
+    fi
+}
+
+_dcos_task_download() {
+    local i command
+
+    if ! __dcos_default_command_parse; then
+        return
+    fi
+
+    local flags=(
+    "--target-dir="
+    )
+
+    if [ -z "$command" ]; then
+        case "$cur" in
+            --*)
+                __dcos_handle_compreply "${flags[@]}"
+                ;;
+            *)
+                __dcos_complete_task_ids
                 ;;
         esac
         return
@@ -71,6 +98,34 @@ _dcos_task_exec() {
     local flags=(
     "--interactive"
     "--tty"
+    "--user"
+    )
+
+    if [ -z "$command" ]; then
+        case "$cur" in
+            --*)
+                __dcos_handle_compreply "${flags[@]}"
+                ;;
+            *)
+                __dcos_complete_task_ids
+                ;;
+        esac
+        return
+    fi
+}
+
+_dcos_task_list() {
+    local i command
+
+    if ! __dcos_default_command_parse; then
+        return
+    fi
+
+    local flags=(
+    "--all"
+    "--completed"
+    "--json"
+    "--quiet"
     )
 
     if [ -z "$command" ]; then
@@ -105,6 +160,7 @@ _dcos_task_log() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_task_ids
                 ;;
         esac
         return
@@ -130,6 +186,7 @@ _dcos_task_ls() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_task_ids
                 ;;
         esac
         return
@@ -179,6 +236,7 @@ _dcos_task_metrics_details() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_task_ids
                 ;;
         esac
         return
@@ -202,10 +260,16 @@ _dcos_task_metrics_summary() {
                 __dcos_handle_compreply "${flags[@]}"
                 ;;
             *)
+                __dcos_complete_task_ids
                 ;;
         esac
         return
     fi
 
+}
+
+__dcos_complete_task_ids() {
+    while IFS=$'\n' read -r line; do task_ids+=("$line"); done < <(dcos task list --quiet 2> /dev/null)
+    __dcos_handle_compreply "${task_ids[@]}"
 }
 
