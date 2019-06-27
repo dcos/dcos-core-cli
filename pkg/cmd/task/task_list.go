@@ -48,7 +48,7 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 
 			if quietOutput {
 				for _, t := range tasks {
-					fmt.Fprintln(ctx.Out(), t.Name)
+					fmt.Fprintln(ctx.Out(), t.TaskID.Value)
 				}
 				return nil
 			}
