@@ -89,6 +89,7 @@ func download(c *mesos.Client, ctx api.Context, agentID, agentPath, targetDir, p
 	}
 
 	errors := make(chan error, len(files))
+	var matchCounter int
 	for _, file := range files {
 		matched, err := matchFile(base, filepath.Base(file.Path))
 		if err != nil {
@@ -97,6 +98,7 @@ func download(c *mesos.Client, ctx api.Context, agentID, agentPath, targetDir, p
 
 		if !matched {
 			errors <- nil
+			matchCounter++
 			continue
 		}
 
@@ -129,6 +131,10 @@ func download(c *mesos.Client, ctx api.Context, agentID, agentPath, targetDir, p
 			}
 			errors <- nil
 		}(file)
+	}
+
+	if matchCounter == len(files) {
+		return fmt.Errorf("no file or directory matched '%s'", pattern)
 	}
 
 	var failed bool

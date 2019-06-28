@@ -353,6 +353,15 @@ def test_download_single_file():
         os.chdir(cwd)
 
 
+@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
+def test_download_no_match():
+    returncode, _, stderr = exec_command(
+        ['dcos', 'task', 'download', 'download-app', 'blub'])
+
+    assert returncode == 1
+    assert stderr.startswith(b'Error: no file or directory matched')
+
+
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task exec' not supported on Windows")
 def test_exec_non_interactive():
