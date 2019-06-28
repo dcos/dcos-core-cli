@@ -22,7 +22,8 @@ func newCmdTaskDownload(ctx api.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "download <task-id> [<path>]",
-		Short: description,
+		Short: "Downloads files from the sandbox of a given task.",
+		Long:  description,
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			task, err := findTask(ctx, args[0])
