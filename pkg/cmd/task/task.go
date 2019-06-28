@@ -10,7 +10,6 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/gobwas/glob"
 	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
-	"github.com/mesos/mesos-go/api/v1/lib/encoding/codecs"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
 	"github.com/spf13/cobra"
 )
@@ -124,12 +123,7 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 				ipPort := strings.Split(a.GetPID(), "@")
 				url := fmt.Sprintf("http://%s", ipPort)
 
-				return httpcli.New(
-					httpcli.Endpoint(url),
-
-					// Use JSON over protobuf to ease logging.
-					httpcli.Codec(codecs.ByMediaType[codecs.MediaTypeJSON]),
-				), nil
+				return httpcli.New(httpcli.Endpoint(url)), nil
 			}
 		}
 		return nil, fmt.Errorf("Agent ID %s not found", agentID)
@@ -140,9 +134,6 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 	httpClient := httpcli.New(
 		httpcli.Endpoint(fmt.Sprintf("%s/slave/%s/api/v1", cluster.URL(), agentID)),
 		httpcli.Do(httpcli.With(httpcli.RoundTripper(rt))),
-
-		// Use JSON over protobuf to ease logging.
-		httpcli.Codec(codecs.ByMediaType[codecs.MediaTypeJSON]),
 	)
 	return httpClient, nil
 }

@@ -316,7 +316,12 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 		input := make(chan []byte)
 		go func() {
-			defer close(input)
+			defer func() {
+				// Push an empty string to indicate EOF to the server and close
+				// the input channel to signal that we are done processing input.
+				input <- []byte("")
+				close(input)
+			}()
 
 			for {
 				buf := make([]byte, 512) // not efficient to always do this
