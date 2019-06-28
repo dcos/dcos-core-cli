@@ -13,7 +13,7 @@ func newCmdTaskAttach(ctx api.Context) *cobra.Command {
 	var noStdin bool
 
 	cmd := &cobra.Command{
-		Use:   "attach",
+		Use:   "attach <task>",
 		Short: "Attach the CLI to the stdio of an already running task. Type the sequence CTRL-p CTRL-q to detach.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			task, err := findTask(ctx, args[0])

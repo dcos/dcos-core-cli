@@ -15,7 +15,7 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 	var user string
 
 	cmd := &cobra.Command{
-		Use:   "exec <task> <cmd> [<args>...]",
+		Use:   "exec [flags] <task> <cmd> [<args>...]",
 		Short: "Launch a process (<cmd>) inside of a container for a task (<task>).",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -58,5 +58,7 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Attach a STDIN stream to the remote command for an interactive session")
 	cmd.Flags().BoolVarP(&tty, "tty", "t", false, "Attach a tty to the remote stream.")
 	cmd.Flags().StringVarP(&user, "user", "u", "", "Run as the given user")
+	cmd.Flags().SetInterspersed(false)
+	cmd.DisableFlagsInUseLine = true
 	return cmd
 }
