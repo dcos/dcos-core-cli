@@ -26,6 +26,12 @@ func newCmdTaskLog(ctx api.Context) *cobra.Command {
 			case 2:
 				file = args[1]
 			}
+
+			// We support negative lines for backwards compatibility with the Python CLI.
+			// The underlying API takes negative numbers so some users may rely on this.
+			if lines < 0 {
+				lines *= -1
+			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filters := taskFilters{
