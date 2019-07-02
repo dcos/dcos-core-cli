@@ -268,8 +268,8 @@ type ContainerStatus struct {
 
 // ContainerID represents the ID of a container
 type ContainerID struct {
-	Value  string `json:"value"`
-	Parent string `json:"parent"`
+	Value  string       `json:"value"`
+	Parent *ContainerID `json:"parent"`
 }
 
 // NetworkInfo represents information about the network of a container

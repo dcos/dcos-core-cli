@@ -51,10 +51,10 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 				}
 
 				containerID := t.Statuses[0].ContainerStatus.ContainerID
-				if containerID.Parent == "" {
+				if containerID.Parent == nil {
 					containerParentIDs = append(containerParentIDs, containerID.Value)
 				} else {
-					containerParentIDs = append(containerParentIDs, containerID.Parent)
+					containerParentIDs = append(containerParentIDs, containerID.Parent.Value)
 				}
 
 				if t.ExecutorID != "" {
