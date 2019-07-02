@@ -211,6 +211,9 @@ func (c *Client) resetColor() {
 }
 
 func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode == 204 {
+		return fmt.Errorf("no logs found", resp.StatusCode)
+	}
 	if resp.StatusCode < 400 {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
