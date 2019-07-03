@@ -75,8 +75,16 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 				for _, a := range agents {
 					if a.AgentInfo.ID.GetValue() == t.SlaveID {
 						host = a.AgentInfo.Hostname
-						region = a.AgentInfo.Domain.FaultDomain.GetRegion().Name
-						zone = a.AgentInfo.Domain.FaultDomain.GetZone().Name
+						region = "N/A"
+						zone = "N/A"
+						if a.AgentInfo.Domain != nil && a.AgentInfo.Domain.FaultDomain != nil {
+							if a.AgentInfo.Domain.FaultDomain.GetRegion().Name != "" {
+								region = a.AgentInfo.Domain.FaultDomain.GetRegion().Name
+							}
+							if a.AgentInfo.Domain.FaultDomain.GetZone().Name != "" {
+								zone = a.AgentInfo.Domain.FaultDomain.GetZone().Name
+							}
+						}
 					}
 				}
 
