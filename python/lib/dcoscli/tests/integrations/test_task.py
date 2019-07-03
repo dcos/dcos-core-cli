@@ -132,6 +132,13 @@ def test_log_single_file():
 
 def test_log_task():
     with app(HELLO_STDERR, 'test-hello-stderr'):
+
+        # We've seen flakiness here where the command below doesn't return the
+        # expected "hello" line. This happens since the Go subcommand is much
+        # faster than the former Python one, so it is possible that
+        # "dcos task log" happens before the task writes to stderr.
+        time.sleep(5)
+
         returncode, stdout, stderr = exec_command(
             ['dcos', 'task', 'log', 'test-hello-stderr', 'stderr',
              '--lines=-1'])

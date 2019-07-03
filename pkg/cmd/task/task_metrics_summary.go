@@ -32,7 +32,7 @@ func newCmdTaskMetricsSummary(ctx api.Context) *cobra.Command {
 			containerID := status.ContainerStatus.ContainerID.Value
 
 			c := metrics.NewClient(pluginutil.HTTPClient(""))
-			taskMetrics, err := c.Task(task.AgentID, containerID)
+			taskMetrics, err := c.Task(task.SlaveID, containerID)
 			if err != nil {
 				return err
 			}

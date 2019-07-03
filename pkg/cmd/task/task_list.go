@@ -1,13 +1,12 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/cli"
+	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/spf13/cobra"
 )
 
@@ -24,40 +23,89 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 			}
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, cobraArgs []string) error {
-			exePath, err := os.Executable()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			filters := taskFilters{
+				Active:    !completed,
+				Completed: all || completed,
+			}
+			if len(args) == 1 {
+				filters.ID = args[0]
+			}
+
+			tasks, err := findTasks(ctx, filters)
+			if err != nil {
+				if jsonOutput {
+					// On JSON ouput, we print an empty array instead of erroring-out.
+					// This is mainly done for backwards compatibility with the Python CLI.
+					fmt.Println("[]")
+					return nil
+				}
+				return err
+			}
+
+			if jsonOutput {
+				enc := json.NewEncoder(ctx.Out())
+				enc.SetIndent("", "    ")
+				return enc.Encode(tasks)
+			}
+
+			if quietOutput {
+				for _, t := range tasks {
+					fmt.Fprintln(ctx.Out(), t.ID)
+				}
+				return nil
+			}
+
+			tableHeader := []string{"NAME", "HOST", "USER", "STATE", "ID", "AGENT ID", "REGION", "ZONE"}
+			table := cli.NewTable(ctx.Out(), tableHeader)
+
+			client, err := mesos.NewClientWithContext(ctx)
 			if err != nil {
 				return err
 			}
 
-			pyExePath := filepath.Join(filepath.Dir(exePath), "dcos_py")
-			if runtime.GOOS == "windows" {
-				pyExePath += ".exe"
+			agents, err := client.Agents()
+			if err != nil {
+				return err
 			}
 
-			args := []string{"task"}
-			if all {
-				args = append(args, "--all")
-			}
-			if jsonOutput {
-				args = append(args, "--json")
-			}
-			if completed {
-				args = append(args, "--completed")
-			}
-			if quietOutput {
-				args = append(args, "--quiet")
-			}
-			if len(cobraArgs) == 1 {
-				args = append(args, cobraArgs[0])
+			frameworks, err := client.Frameworks()
+			if err != nil {
+				return err
 			}
 
-			execCmd := exec.Command(pyExePath, args...)
-			execCmd.Stdout = ctx.Out()
-			execCmd.Stderr = ctx.ErrOut()
-			execCmd.Stdin = ctx.Input()
+			for _, t := range tasks {
+				var host, region, zone string
+				for _, a := range agents {
+					if a.AgentInfo.ID.GetValue() == t.SlaveID {
+						host = a.AgentInfo.Hostname
+						region = a.AgentInfo.Domain.FaultDomain.GetRegion().Name
+						zone = a.AgentInfo.Domain.FaultDomain.GetZone().Name
+					}
+				}
 
-			return execCmd.Run()
+				var user string
+				for _, f := range frameworks {
+					if f.FrameworkInfo.ID.GetValue() == t.FrameworkID {
+						user = f.FrameworkInfo.User
+					}
+				}
+
+				item := []string{
+					t.Name,
+					host,
+					user,
+					t.State,
+					t.ID,
+					t.SlaveID,
+					region,
+					zone,
+				}
+				table.Append(item)
+			}
+
+			table.Render()
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "Print completed and in-progress tasks")
