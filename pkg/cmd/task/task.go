@@ -92,7 +92,7 @@ func findTasks(ctx api.Context, filters taskFilters) ([]mesos.Task, error) {
 		}
 	}
 
-	var tasks []mesos.Task
+	tasks := []mesos.Task{}
 	for _, f := range state.Frameworks {
 		for _, t := range f.Tasks {
 			if filters.Active && matchTask(t, filters.ID, g) {
@@ -107,7 +107,7 @@ func findTasks(ctx api.Context, filters taskFilters) ([]mesos.Task, error) {
 	}
 
 	if len(tasks) == 0 && filters.ID != "" {
-		return nil, fmt.Errorf("no task ID found containing '%s'", filters.ID)
+		return tasks, fmt.Errorf("no task ID found containing '%s'", filters.ID)
 	}
 	return tasks, nil
 }
