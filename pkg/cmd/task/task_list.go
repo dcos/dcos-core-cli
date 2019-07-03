@@ -3,12 +3,10 @@ package task
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
-	lib "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +16,7 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Print the Mesos tasks in the cluster",
-		Args:  cobra.NoArgs,
+		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if all && completed {
 				return fmt.Errorf("cannot accept both options --all and --completed")
@@ -26,18 +24,23 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := mesos.NewClientWithContext(ctx)
-			if err != nil {
-				return err
+			filters := taskFilters{
+				Active:    !completed,
+				Completed: all || completed,
+			}
+			if len(args) == 1 {
+				filters.ID = args[0]
 			}
 
-			tasks, err := client.Tasks()
+			tasks, err := findTasks(ctx, filters)
 			if err != nil {
+				if jsonOutput {
+					// On JSON ouput, we print an empty array instead of erroring-out.
+					// This is mainly done for backwards compatibility with the Python CLI.
+					fmt.Println("[]")
+					return nil
+				}
 				return err
-			}
-
-			if !all {
-				tasks = filter(tasks, completed)
 			}
 
 			if jsonOutput {
@@ -48,13 +51,18 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 
 			if quietOutput {
 				for _, t := range tasks {
-					fmt.Fprintln(ctx.Out(), t.TaskID.Value)
+					fmt.Fprintln(ctx.Out(), t.ID)
 				}
 				return nil
 			}
 
 			tableHeader := []string{"NAME", "HOST", "USER", "STATE", "ID", "AGENT ID", "REGION", "ZONE"}
 			table := cli.NewTable(ctx.Out(), tableHeader)
+
+			client, err := mesos.NewClientWithContext(ctx)
+			if err != nil {
+				return err
+			}
 
 			agents, err := client.Agents()
 			if err != nil {
@@ -69,7 +77,7 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 			for _, t := range tasks {
 				var host, region, zone string
 				for _, a := range agents {
-					if a.AgentInfo.ID.GetValue() == t.AgentID.Value {
+					if a.AgentInfo.ID.GetValue() == t.SlaveID {
 						host = a.AgentInfo.Hostname
 						region = a.AgentInfo.Domain.FaultDomain.GetRegion().Name
 						zone = a.AgentInfo.Domain.FaultDomain.GetZone().Name
@@ -78,7 +86,7 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 
 				var user string
 				for _, f := range frameworks {
-					if f.FrameworkInfo.ID.GetValue() == t.FrameworkID.Value {
+					if f.FrameworkInfo.ID.GetValue() == t.FrameworkID {
 						user = f.FrameworkInfo.User
 					}
 				}
@@ -87,9 +95,9 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 					t.Name,
 					host,
 					user,
-					strings.TrimPrefix(t.State.String(), "TASK_"),
-					t.TaskID.Value,
-					t.AgentID.Value,
+					t.State,
+					t.ID,
+					t.SlaveID,
 					region,
 					zone,
 				}
@@ -105,26 +113,4 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&completed, "completed", false, "Print completed tasks")
 	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed services")
 	return cmd
-}
-
-func filter(tasks []lib.Task, completed bool) []lib.Task {
-	var completedTaskStates = map[string]bool{
-		lib.TaskState_name[int32(lib.TASK_FINISHED)]:         true,
-		lib.TaskState_name[int32(lib.TASK_KILLED)]:           true,
-		lib.TaskState_name[int32(lib.TASK_FAILED)]:           true,
-		lib.TaskState_name[int32(lib.TASK_LOST)]:             true,
-		lib.TaskState_name[int32(lib.TASK_ERROR)]:            true,
-		lib.TaskState_name[int32(lib.TASK_GONE)]:             true,
-		lib.TaskState_name[int32(lib.TASK_GONE_BY_OPERATOR)]: true,
-		lib.TaskState_name[int32(lib.TASK_DROPPED)]:          true,
-		lib.TaskState_name[int32(lib.TASK_UNREACHABLE)]:      true,
-		lib.TaskState_name[int32(lib.TASK_UNKNOWN)]:          true,
-	}
-	var result []lib.Task
-	for _, t := range tasks {
-		if completed == completedTaskStates[t.State.String()] {
-			result = append(result, t)
-		}
-	}
-	return result
 }

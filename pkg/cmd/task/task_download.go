@@ -12,7 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const description = `Downloads files from the sandbox of a given task.
+const description = `Download files from the sandbox of a given task
+
 The <path> argument can specify a pattern for a single or multiple files.
 If no <path> is provided, the entire sandbox will be downloaded.`
 
@@ -22,30 +23,35 @@ func newCmdTaskDownload(ctx api.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "download <task-id> [<path>]",
-		Short: "Downloads files from the sandbox of a given task.",
+		Short: "Download files from the sandbox of a given task",
 		Long:  description,
 		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			task, err := findTask(ctx, args[0])
+			filters := taskFilters{
+				Active:    true,
+				Completed: true,
+				ID:        args[0],
+			}
+
+			task, err := findTask(ctx, filters)
 			if err != nil {
 				return err
 			}
 
-			status := task.Statuses[0]
-			containerID := status.ContainerStatus.GetContainerID().Value
+			containerID := task.Statuses[0].ContainerStatus.ContainerID.Value
 
-			executorID := task.TaskID.Value
-			if task.ExecutorID != nil {
-				executorID = task.ExecutorID.Value
+			executorID := task.ID
+			if task.ExecutorID != "" {
+				executorID = task.ExecutorID
 			}
 
 			c := mesos.NewClient(pluginutil.HTTPClient(""))
-			paths, err := c.Debug(task.AgentID.Value)
+			paths, err := c.Debug(task.SlaveID)
 			if err != nil {
 				return err
 			}
 
-			path, err := getPath(paths, task.FrameworkID.Value, executorID, containerID)
+			path, err := getPath(paths, task.FrameworkID, executorID, containerID)
 			if err != nil {
 				return err
 			}
@@ -55,7 +61,7 @@ func newCmdTaskDownload(ctx api.Context) *cobra.Command {
 				pattern = args[1]
 			}
 
-			return download(c, ctx, task.AgentID.Value, path, targetDir, pattern)
+			return download(c, ctx, task.SlaveID, path, targetDir, pattern)
 		},
 	}
 

@@ -58,20 +58,16 @@ def teardown_module():
         remove_app(app_[1])
 
 
-def test_help():
-    with open('dcoscli/data/help/task.txt') as content:
-        assert_command(['dcos', 'task', '--help'],
-                       stdout=content.read().encode('utf-8'))
-
-
-def test_info():
-    stdout = b"Manage DC/OS tasks\n"
-    assert_command(['dcos', 'task', '--info'], stdout=stdout)
-
-
+# def test_help():
+#     with open('dcoscli/data/help/task.txt') as content:
+#         assert_command(['dcos', 'task', '--help'],
+#                        stdout=content.read().encode('utf-8'))
+#
+#
 def test_task():
     # test `dcos task` output
-    returncode, stdout, stderr = exec_command(['dcos', 'task', '--json'])
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'task', 'list', '--json'])
 
     assert returncode == 0
     assert stderr == b''
@@ -88,37 +84,40 @@ def test_task():
 
 
 def test_task_table():
-    assert_lines(['dcos', 'task'], NUM_TASKS + 1)
+    assert_lines(['dcos', 'task', 'list'], NUM_TASKS + 1)
 
 
 def test_task_completed():
     assert_lines(
-        ['dcos', 'task', '--completed', '--json', 'test-app-completed*'],
+        ['dcos', 'task', 'list',
+         '--completed', '--json', 'test-app-completed*'],
         1,
         greater_than=True)
 
 
 def test_task_all():
     assert_lines(
-        ['dcos', 'task', '--json', '*-app*'],
+        ['dcos', 'task', 'list', '--json', '*-app*'],
         NUM_TASKS,
         greater_than=True)
 
 
 def test_task_none():
-    assert_command(['dcos', 'task', 'bogus', '--json'],
+    assert_command(['dcos', 'task', 'list', 'bogus', '--json'],
                    stdout=b'[]\n')
 
 
 def test_filter():
-    assert_lines(['dcos', 'task', 'test-app2', '--json'], 1, greater_than=True)
+    assert_lines(['dcos', 'task', 'list', 'test-app2', '--json'],
+                 1,
+                 greater_than=True)
 
 
 def test_log_no_files():
     """ Tail stdout on nonexistant task """
     assert_command(['dcos', 'task', 'log', 'bogus'],
                    returncode=1,
-                   stderr=b'No matching tasks. Exiting.\n')
+                   stderr=b"Error: no task ID found containing 'bogus'\n")
 
 
 def test_log_single_file():
@@ -133,6 +132,13 @@ def test_log_single_file():
 
 def test_log_task():
     with app(HELLO_STDERR, 'test-hello-stderr'):
+
+        # We've seen flakiness here where the command below doesn't return the
+        # expected "hello" line. This happens since the Go subcommand is much
+        # faster than the former Python one, so it is possible that
+        # "dcos task log" happens before the task writes to stderr.
+        time.sleep(5)
+
         returncode, stdout, stderr = exec_command(
             ['dcos', 'task', 'log', 'test-hello-stderr', 'stderr',
              '--lines=-1'])
@@ -142,6 +148,7 @@ def test_log_task():
         assert stdout == b'hello\n'
 
 
+@pytest.mark.skip(reason="https://github.com/dcos/dcos-core-cli/pull/275")
 def test_log_missing_file():
     """ Tail a single file on a single task """
     returncode, stdout, stderr = exec_command(
@@ -154,10 +161,12 @@ def test_log_missing_file():
 
 def test_log_lines_invalid():
     """ Test invalid --lines value """
-    assert_command(['dcos', 'task', 'log', 'test-app1', '--lines=bogus'],
-                   stdout=b'',
-                   stderr=b'Error parsing string as int\n',
-                   returncode=1)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'task', 'log', 'test-app1', '--lines=bogus'])
+
+    assert returncode == 1
+    assert stdout == b''
+    assert stderr.startswith(b'Error: invalid argument "bogus" for "--lines"')
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -192,7 +201,8 @@ def test_log_completed():
 
     assert returncode == 1
     assert stdout == b''
-    assert stderr.startswith(b'No running tasks match ID [test-app-completed')
+    assert stderr.startswith(
+        b"Error: no task ID found containing 'test-app-completed1")
 
     returncode, stdout, stderr = exec_command(
         ['dcos', 'task', 'log', '--completed', task_id_completed, 'stderr'])
@@ -205,23 +215,6 @@ def test_log_completed():
     assert returncode == 0
     assert stderr == b''
     assert len(stdout.decode('utf-8').split('\n')) >= 3
-
-
-def test_ls_no_params():
-    returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', 'ls'])
-
-    assert returncode == 0
-    assert stderr == b''
-
-    ls_line = '.*stderr.*stdout.*'
-    lines = stdout.decode('utf-8').rstrip().split('\n')
-    num_expected_lines = NUM_TASKS * 2
-
-    assert len(lines) == num_expected_lines
-    for i in range(0, num_expected_lines, 2):
-        assert re.match('===>.*<===', lines[i])
-        assert re.match(ls_line, lines[i + 1])
 
 
 def test_ls():
@@ -265,10 +258,13 @@ def test_ls_path():
 
 
 def test_ls_bad_path():
-    assert_command(
-        ['dcos', 'task', 'ls', 'test-app1', 'bogus'],
-        stderr=b'Cannot access [bogus]: No such file or directory\n',
-        returncode=1)
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'task', 'ls', 'test-app1', 'bogus'])
+
+    assert returncode == 1
+    assert stderr == (b"Error: cannot access 'bogus':"
+                      b" no such file or directory\n")
+    assert stdout == b''
 
 
 def test_ls_completed():
@@ -281,7 +277,7 @@ def test_ls_completed():
     assert returncode == 1
     assert stdout == b''
 
-    err = b'Cannot find a task with ID containing "test-app-completed1'
+    err = b"Error: no task ID found containing 'test-app-completed1"
     assert stderr.startswith(err)
 
     returncode, stdout, stderr = exec_command(
@@ -443,7 +439,8 @@ def test_attach_no_tty():
     tty.setraw(master, when=termios.TCSANOW)
 
     stdout, stderr = proc.communicate()
-    assert stderr == b'Unable to attach to a task launched without a TTY.\n'
+    assert stderr == (b'Error: : I/O switchboard server '
+                      b'was disabled for this container\n')
 
     assert proc.wait() != 0
     master.close()
@@ -471,7 +468,7 @@ def _uninstall_sleep(app_id='test-app'):
 
 def _get_task_id(app_id):
     returncode, stdout, stderr = exec_command(
-        ['dcos', 'task', '--json', app_id])
+        ['dcos', 'task', 'list', '--json', app_id])
     assert returncode == 0
     tasks = json.loads(stdout.decode('utf-8'))
     assert len(tasks) == 1

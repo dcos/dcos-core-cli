@@ -20,21 +20,25 @@ func newCmdTaskMetricsSummary(ctx api.Context) *cobra.Command {
 		Short: "Print a table of the key metrics for a given task",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			task, err := findTask(ctx, args[0])
+			filters := taskFilters{
+				Active: true,
+				ID:     args[0],
+			}
+			task, err := findTask(ctx, filters)
 			if err != nil {
 				return err
 			}
 			status := task.Statuses[0]
-			containerID := status.ContainerStatus.GetContainerID().Value
+			containerID := status.ContainerStatus.ContainerID.Value
 
 			c := metrics.NewClient(pluginutil.HTTPClient(""))
-			taskMetrics, err := c.Task(task.AgentID.Value, containerID)
+			taskMetrics, err := c.Task(task.SlaveID, containerID)
 			if err != nil {
 				return err
 			}
 
 			if taskMetrics == nil {
-				return fmt.Errorf("No metrics found for task '%s'", task.TaskID.Value)
+				return fmt.Errorf("No metrics found for task '%s'", task.ID)
 			}
 
 			filteredDatapoints := []metrics.Datapoint{}

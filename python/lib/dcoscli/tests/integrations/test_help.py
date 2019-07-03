@@ -31,7 +31,7 @@ def test_help_service():
                        stdout=content.read().encode('utf-8'))
 
 
-def test_help_task():
-    with open('dcoscli/data/help/task.txt') as content:
-        assert_command(['dcos', 'help', 'task'],
-                       stdout=content.read().encode('utf-8'))
+# def test_help_task():
+#     with open('dcoscli/data/help/task.txt') as content:
+#         assert_command(['dcos', 'help', 'task'],
+#                        stdout=content.read().encode('utf-8'))

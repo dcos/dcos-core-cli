@@ -81,13 +81,13 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 			stateSummaryResult := <-stateSummaryRes
 			if stateSummaryResult.err != nil {
-				return err
+				return stateSummaryResult.err
 			}
 			stateSummary := stateSummaryResult.state
 
 			stateResult := <-stateRes
 			if stateResult.err != nil {
-				return err
+				return stateResult.err
 			}
 			state := stateResult.state
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
+	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
@@ -31,7 +32,13 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tasks, err := findTasks(ctx, args[0])
+			filters := taskFilters{
+				Active:    !completed,
+				Completed: all || completed,
+				ID:        args[0],
+			}
+
+			tasks, err := findTasks(ctx, filters)
 			if err != nil {
 				return err
 			}
@@ -43,41 +50,46 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 					return fmt.Errorf("unable to find task '%s'", args[0])
 				}
 
-				containerID := t.Statuses[0].ContainerStatus.GetContainerID()
-				if containerID.GetParent() == nil {
+				containerID := t.Statuses[0].ContainerStatus.ContainerID
+				if containerID.Parent == nil {
 					containerParentIDs = append(containerParentIDs, containerID.Value)
 				} else {
-					containerParentIDs = append(containerParentIDs, containerID.GetParent().Value)
+					containerParentIDs = append(containerParentIDs, containerID.Parent.Value)
 				}
 
-				if t.ExecutorID != nil {
-					executorIDs = append(executorIDs, (*t.ExecutorID).Value)
+				if t.ExecutorID != "" {
+					executorIDs = append(executorIDs, t.ExecutorID)
 				} else {
-					executorIDs = append(executorIDs, t.TaskID.Value)
+					executorIDs = append(executorIDs, t.ID)
 				}
 			}
 
 			var agentsPaths = map[string]map[string]string{}
 			client := mesos.NewClient(pluginutil.HTTPClient(""))
 			for _, t := range tasks {
-				if _, ok := agentsPaths[t.AgentID.Value]; !ok {
-					agentPaths, err := client.Debug(t.AgentID.Value)
+				if _, ok := agentsPaths[t.SlaveID]; !ok {
+					agentPaths, err := client.Debug(t.SlaveID)
 					if err != nil {
 						return err
 					}
-					agentsPaths[t.AgentID.Value] = agentPaths
+					agentsPaths[t.SlaveID] = agentPaths
 				}
 			}
 
 			for i, t := range tasks {
 				if len(tasks) > 1 {
-					fmt.Fprintln(ctx.Out(), "===> "+t.TaskID.Value+" <===")
+					fmt.Fprintln(ctx.Out(), "===> "+t.ID+" <===")
 				}
-				taskPath := "/frameworks/" + t.FrameworkID.Value + "/executors/" + executorIDs[i] + "/runs/" + containerParentIDs[i]
-				for key, value := range agentsPaths[t.AgentID.Value] {
+				taskPath := "/frameworks/" + t.FrameworkID + "/executors/" + executorIDs[i] + "/runs/" + containerParentIDs[i]
+				for key, value := range agentsPaths[t.SlaveID] {
 					if strings.HasSuffix(key, taskPath) {
-						ls, err := client.Browse(t.AgentID.Value, value+"/"+path)
+						ls, err := client.Browse(t.SlaveID, value+"/"+path)
 						if err != nil {
+							if httpErr, ok := err.(*httpclient.HTTPError); ok {
+								if httpErr.Response.StatusCode == 404 {
+									return fmt.Errorf("cannot access '%s': no such file or directory", path)
+								}
+							}
 							return err
 						}
 
@@ -98,10 +110,11 @@ func newCmdTaskLs(ctx api.Context) *cobra.Command {
 							}
 							table.Render()
 						} else {
-							for _, el := range ls {
-								fmt.Print(filepath.Base(el.Path) + "  ")
+							var entries []string
+							for _, entry := range ls {
+								entries = append(entries, filepath.Base(entry.Path))
 							}
-							fmt.Print("\n")
+							fmt.Println(strings.Join(entries, "  "))
 						}
 					}
 				}

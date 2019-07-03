@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -39,9 +38,28 @@ type TaskIOOpts struct {
 }
 
 // TaskIO is an abstraction used to stream I/O between a running Mesos task and the local terminal.
+//
+// A TaskIO object can only be used for a single streaming session (through Attach or Exec),
+// for subsequent streaming sessions one should instanciate new TaskIO objects.
 type TaskIO struct {
-	containerID               mesos.ContainerID
-	opts                      TaskIOOpts
+	containerID mesos.ContainerID
+	opts        TaskIOOpts
+
+	// This channel is used to signal when we're attached to the container output.
+	outputAttached chan struct{}
+
+	// This cancellable context will be shared across the different HTTP calls,
+	// when any HTTP request finishes the context will be cancelled. We do not
+	// have a rety logic.
+	ctx        context.Context
+	cancelFunc context.CancelFunc
+
+	// Channel to receive errors from the different goroutines.
+	errCh chan error
+
+	// We use a WaitGroup and will wait for all HTTP connections to be closed before returning.
+	wg sync.WaitGroup
+
 	exitSequenceDetected      bool
 	terminationSignalDetected bool
 }
@@ -63,75 +81,41 @@ func NewTaskIO(containerID mesos.ContainerID, opts TaskIOOpts) (*TaskIO, error) 
 	if len(opts.EscapeSequence) == 0 {
 		opts.EscapeSequence = defaultEscapeSequence
 	}
+
+	ctx, cancel := context.WithCancel(context.TODO())
+
 	return &TaskIO{
-		containerID: containerID,
-		opts:        opts,
+		containerID:    containerID,
+		outputAttached: make(chan struct{}),
+		opts:           opts,
+		ctx:            ctx,
+		cancelFunc:     cancel,
+		errCh:          make(chan error, 2),
 	}, nil
 }
 
 // Exec launches a nested task based on the given command and attaches the stdin/stdout/stderr of the CLI
 // to the STDIN/STDOUT/STDERR of the nested container.
 func (t *TaskIO) Exec(cmd string, args ...string) (int, error) {
-
-	// This cancellable context will be shared across the different HTTP calls,
-	// when any HTTP request finishes the context will be cancelled. We do not
-	// have a rety logic.
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-
-	// Channel to receive errors from the LAUNCH_NESTED_CONTAINER_SESSION/ATTACH_CONTAINER_INPUT goroutines.
-	errCh := make(chan error, 2)
-	defer close(errCh)
-
-	// We use a WaitGroup and will wait for all HTTP connections to be closed before returning.
-	var wg sync.WaitGroup
-
-	// Channel to signal when the nested container is launched.
-	nestedContainerLaunched := make(chan struct{})
+	defer t.cancelFunc()
+	defer close(t.errCh)
 
 	// Launch nested container session.
-	wg.Add(1)
+	t.wg.Add(1)
 	go func() {
-		defer wg.Done()
-		defer cancel()
+		defer t.wg.Done()
+		defer t.cancelFunc()
 
-		err := t.launchNestedContainerSession(ctx, nestedContainerLaunched, cmd, args...)
-		if err != nil && ctx.Err() == nil {
-			errCh <- err
+		err := t.launchNestedContainerSession(cmd, args...)
+		if err != nil && t.ctx.Err() == nil {
+			t.errCh <- err
 		}
 	}()
 
-	// Wait for the nested container session to be launched.
-	<-nestedContainerLaunched
-
 	if t.opts.Interactive {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer cancel()
-
-			err := t.attachContainerInput(ctx)
-			if err != nil && ctx.Err() == nil {
-				errCh <- err
-			}
-		}()
+		t.attachInput()
 	}
-
-	wg.Wait()
-
-	select {
-	case err := <-errCh:
-		return 0, err
-	default:
-		if t.exitSequenceDetected {
-			return 0, nil
-		}
-		if t.terminationSignalDetected {
-			// TODO(bamarni): maybe exit with the signal value + 128
-			return 1, nil
-		} //
-		return t.waitContainer()
-	}
+	return t.wait()
 }
 
 // Attach attaches the stdin/stdout/stderr of the CLI to the STDIN/STDOUT/STDERR of a running task.
@@ -139,76 +123,41 @@ func (t *TaskIO) Exec(cmd string, args ...string) (int, error) {
 // As of now, we can only attach to tasks launched with a remote TTY already set up for them.
 // If we try to attach to a task that was launched without a remote TTY attached, an error is returned.
 func (t *TaskIO) Attach() (int, error) {
-
-	// This cancellable context will be shared across the different HTTP calls,
-	// when any HTTP request finishes the context will be cancelled. We do not
-	// have a rety logic.
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-
-	// Channel to receive errors from the ATTACH_CONTAINER_INPUT/ATTACH_CONTAINER_OUTPUT goroutines.
-	errCh := make(chan error, 2)
-	defer close(errCh)
-
-	// We use a WaitGroup and will wait for all HTTP connections to be closed before returning.
-	var wg sync.WaitGroup
-
-	// When the input is interactive, attach to the container input.
-	if t.opts.Interactive {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer cancel()
-
-			err := t.attachContainerInput(ctx)
-			if err != nil && ctx.Err() == nil {
-				errCh <- err
-			}
-		}()
-	}
+	defer t.cancelFunc()
+	defer close(t.errCh)
 
 	// Attach container outputs to the CLI stdout/stderr.
-	wg.Add(1)
+	t.wg.Add(1)
 	go func() {
-		defer wg.Done()
-		defer cancel()
+		defer t.wg.Done()
+		defer t.cancelFunc()
 
-		err := t.attachContainerOutput(ctx)
-		if err != nil && ctx.Err() == nil {
-			errCh <- err
+		err := t.attachContainerOutput()
+		if err != nil && t.ctx.Err() == nil {
+			t.errCh <- err
 		}
 	}()
 
-	wg.Wait()
-
-	select {
-	case err := <-errCh:
-		return 0, err
-	default:
-		if t.exitSequenceDetected {
-			return 0, nil
-		}
-		if t.terminationSignalDetected {
-			// TODO(bamarni): maybe exit with the signal value + 128
-			return 1, nil
-		} //
-		return t.waitContainer()
+	if t.opts.Interactive {
+		t.attachInput()
 	}
+	return t.wait()
 }
 
 // launchNestedContainerSession launches a nested container session.
-func (t *TaskIO) launchNestedContainerSession(ctx context.Context, launched chan<- struct{}, cmd string, args ...string) error {
+func (t *TaskIO) launchNestedContainerSession(cmd string, args ...string) error {
 	call := t.launchNestedContainerSessionCall(cmd, args...)
 
 	// Send returns immediately with a Response from which output may be decoded.
-	resp, err := t.opts.Sender.Send(ctx, agentcalls.NonStreaming(call))
+	resp, err := t.opts.Sender.Send(t.ctx, agentcalls.NonStreaming(call))
 	if resp != nil {
 		defer resp.Close()
 	}
 	if err != nil {
+		close(t.outputAttached)
 		return err
 	}
-	close(launched)
+	close(t.outputAttached)
 
 	return t.forwardContainerOutput(resp)
 }
@@ -226,15 +175,13 @@ func (t *TaskIO) launchNestedContainerSessionCall(cmd string, args ...string) *a
 
 	t.opts.Logger.Infof("Launching nested container with ID '%s'", t.containerID.Value)
 
-	cmdInfo := &mesos.CommandInfo{
-		Arguments: append([]string{cmd}, args...),
-	}
-
-	fullCmd := strings.Join(cmdInfo.Arguments, " ")
-	cmdInfo.Value = &fullCmd
-
 	shell := false
-	cmdInfo.Shell = &shell
+
+	cmdInfo := &mesos.CommandInfo{
+		Value:     &cmd,
+		Arguments: append([]string{cmd}, args...),
+		Shell:     &shell,
+	}
 
 	if t.opts.User != "" {
 		cmdInfo.User = &t.opts.User
@@ -260,10 +207,26 @@ func (t *TaskIO) launchNestedContainerSessionCall(cmd string, args ...string) *a
 	return agentcalls.LaunchNestedContainerSession(t.containerID, cmdInfo, containerInfo)
 }
 
+// attachInput handles the attachContainerInput call in a goroutine once the container output is attached.
+func (t *TaskIO) attachInput() {
+	t.wg.Add(1)
+	go func() {
+		defer t.wg.Done()
+		// Wait for the output to be attached before attaching the input.
+		<-t.outputAttached
+
+		err := t.attachContainerInput()
+		if err != nil && t.ctx.Err() == nil {
+			t.cancelFunc()
+			t.errCh <- err
+		}
+	}()
+}
+
 // attachContainerInput streams the STDIN of the CLI to the remote container.
 // It also sends TTYInfo messages whenever the terminal is resized and
 // heartbeats messages every 30 seconds.
-func (t *TaskIO) attachContainerInput(ctx context.Context) error {
+func (t *TaskIO) attachContainerInput() error {
 
 	// Channels for window resize and termination signals.
 	ttyInfoCh := make(chan *mesos.TTYInfo, 2)
@@ -324,16 +287,19 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 			}()
 
 			for {
-				buf := make([]byte, 512) // not efficient to always do this
+				// TODO(bamarni): investigate on why "test_task:test_attach" fails if the buffer size below
+				// is greater than 1, this might be an issue with the term package or the way we use it.
+				buf := make([]byte, 1)
 				n, err := t.opts.Stdin.Read(buf)
 				if _, ok := err.(term.EscapeError); ok {
+					t.cancelFunc()
 					t.exitSequenceDetected = true
 					return
 				}
 				if n > 0 {
 					select {
 					case input <- buf[:n]:
-					case <-ctx.Done():
+					case <-t.ctx.Done():
 						return
 					}
 				}
@@ -351,7 +317,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 		for {
 			select {
-			case <-ctx.Done():
+			case <-t.ctx.Done():
 				return
 
 			case <-receivedTerminationSignal:
@@ -365,7 +331,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 				select {
 				case aciCh <- c:
-				case <-ctx.Done():
+				case <-t.ctx.Done():
 					return
 				}
 
@@ -377,7 +343,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 				select {
 				case aciCh <- c:
-				case <-ctx.Done():
+				case <-t.ctx.Done():
 					return
 				}
 
@@ -389,7 +355,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 				})
 				select {
 				case aciCh <- c:
-				case <-ctx.Done():
+				case <-t.ctx.Done():
 					return
 				}
 			}
@@ -398,7 +364,7 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 
 	acif := agentcalls.FromChan(aciCh)
 
-	err := agentcalls.SendNoData(ctx, t.opts.Sender, acif)
+	err := agentcalls.SendNoData(t.ctx, t.opts.Sender, acif)
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -406,18 +372,40 @@ func (t *TaskIO) attachContainerInput(ctx context.Context) error {
 }
 
 // attachContainerOutput attaches the CLI output to container stdout/stderr.
-func (t *TaskIO) attachContainerOutput(ctx context.Context) error {
+func (t *TaskIO) attachContainerOutput() error {
 
 	// Send returns immediately with a Response from which output may be decoded.
 	call := agentcalls.NonStreaming(agentcalls.AttachContainerOutput(t.containerID))
-	resp, err := t.opts.Sender.Send(ctx, call)
+	resp, err := t.opts.Sender.Send(t.ctx, call)
 	if resp != nil {
 		defer resp.Close()
 	}
 	if err != nil {
+		close(t.outputAttached)
 		return err
 	}
+	close(t.outputAttached)
+
 	return t.forwardContainerOutput(resp)
+}
+
+// wait waits for the streaming session to terminate and returns the appropriate exit code.
+func (t *TaskIO) wait() (int, error) {
+	t.wg.Wait()
+
+	select {
+	case err := <-t.errCh:
+		return 0, err
+	default:
+		if t.exitSequenceDetected {
+			return 0, nil
+		}
+		if t.terminationSignalDetected {
+			// TODO(bamarni): maybe exit with the signal value + 128
+			return 1, nil
+		}
+		return t.waitContainer()
+	}
 }
 
 // waitContainer waits for the container to terminate and returns its exit code.
