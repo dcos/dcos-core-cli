@@ -34,13 +34,9 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 
 			tasks, err := findTasks(ctx, filters)
 			if err != nil {
-				if jsonOutput {
-					// On JSON ouput, we print an empty array instead of erroring-out.
-					// This is mainly done for backwards compatibility with the Python CLI.
-					fmt.Println("[]")
-					return nil
+				if !jsonOutput {
+					return err
 				}
-				return err
 			}
 
 			if jsonOutput {
