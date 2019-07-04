@@ -95,16 +95,32 @@ def test_task_completed():
         greater_than=True)
 
 
-def test_task_all():
+def test_task_list_all():
     assert_lines(
         ['dcos', 'task', 'list', '--json', '*-app*'],
         NUM_TASKS,
         greater_than=True)
 
 
-def test_task_none():
+def test_task_list_none():
     assert_command(['dcos', 'task', 'list', 'bogus', '--json'],
                    stdout=b'[]\n')
+
+
+def test_task_list_filter_agent_id():
+    returncode, stdout, _ = exec_command(
+        ['dcos', 'task', 'list', 'test-app2', '--json'])
+    assert returncode == 0
+    agent = json.loads(stdout.decode('utf-8'))[0]['slave_id']
+
+    returncode, stdout, _ = exec_command(
+        ['dcos', 'task', 'list', 'test-app2', '--json', '--agent-id', agent])
+    assert returncode == 0
+
+    tasks = json.loads(stdout.decode('utf-8'))
+    assert len(tasks) > 0
+    for t in tasks:
+        assert t['slave_id'] == agent
 
 
 def test_filter():

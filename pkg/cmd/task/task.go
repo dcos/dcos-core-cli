@@ -56,6 +56,7 @@ type taskFilters struct {
 	Active    bool
 	Completed bool
 	ID        string
+	Agent     string
 }
 
 func findTask(ctx api.Context, filters taskFilters) (*mesos.Task, error) {
@@ -97,28 +98,39 @@ func findTasks(ctx api.Context, filters taskFilters) ([]mesos.Task, error) {
 	tasks := []mesos.Task{}
 	for _, f := range state.Frameworks {
 		for _, t := range f.Tasks {
-			if filters.Active && matchTask(t, filters.ID, g) {
+			if filters.Active && matchTask(t, filters, g) {
 				tasks = append(tasks, t)
 			}
 		}
 		for _, t := range f.CompletedTasks {
-			if filters.Completed && matchTask(t, filters.ID, g) {
+			if filters.Completed && matchTask(t, filters, g) {
 				tasks = append(tasks, t)
 			}
 		}
 	}
 
-	if len(tasks) == 0 && filters.ID != "" {
-		return tasks, fmt.Errorf("no task ID found containing '%s'", filters.ID)
+	if len(tasks) == 0 {
+		if filters.ID != "" && filters.Agent != "" {
+			return tasks, fmt.Errorf("no task ID found containing '%s' in agent '%s'", filters.ID, filters.Agent)
+		}
+		if filters.ID != "" {
+			return tasks, fmt.Errorf("no task ID found containing '%s'", filters.ID)
+		}
+		if filters.Agent != "" {
+			return tasks, fmt.Errorf("no task found in agent '%s'", filters.Agent)
+		}
 	}
 	return tasks, nil
 }
 
-func matchTask(task mesos.Task, id string, g glob.Glob) bool {
-	if id == "" {
+func matchTask(task mesos.Task, filters taskFilters, g glob.Glob) bool {
+	if filters.Agent != "" && task.SlaveID != filters.Agent {
+		return false
+	}
+	if filters.ID == "" {
 		return true
 	}
-	return strings.Contains(task.ID, id) || g.Match(task.ID)
+	return strings.Contains(task.ID, filters.ID) || g.Match(task.ID)
 }
 
 func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
