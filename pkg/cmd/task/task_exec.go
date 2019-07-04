@@ -39,6 +39,12 @@ func newCmdTaskExec(ctx api.Context) *cobra.Command {
 				Value: task.Statuses[0].ContainerStatus.ContainerID.Value,
 			}
 
+			if task.Statuses[0].ContainerStatus.ContainerID.Parent != nil {
+				containerID.Parent = &mesosgo.ContainerID{
+					Value: task.Statuses[0].ContainerStatus.ContainerID.Parent.Value,
+				}
+			}
+
 			taskIO, err := mesos.NewTaskIO(containerID, mesos.TaskIOOpts{
 				Stdin:       ctx.Input(),
 				Stdout:      ctx.Out(),
