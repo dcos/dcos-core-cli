@@ -9,7 +9,9 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/gobwas/glob"
+	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
+	"github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent"
 	"github.com/spf13/cobra"
 )
 
@@ -158,4 +160,42 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 		httpcli.Do(httpcli.With(httpcli.RoundTripper(rt))),
 	)
 	return httpClient, nil
+}
+
+func newTaskIO(ctx api.Context, id string, interactive bool, tty bool, user string) (*mesos.TaskIO, error) {
+	filters := taskFilters{
+		Active: true,
+		ID:     id,
+	}
+
+	task, err := findTask(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	httpClient, err := mesosHTTPClient(ctx, task.SlaveID)
+	if err != nil {
+		return nil, err
+	}
+
+	containerID := mesosgo.ContainerID{
+		Value: task.Statuses[0].ContainerStatus.ContainerID.Value,
+	}
+
+	if task.Statuses[0].ContainerStatus.ContainerID.Parent != nil {
+		containerID.Parent = &mesosgo.ContainerID{
+			Value: task.Statuses[0].ContainerStatus.ContainerID.Parent.Value,
+		}
+	}
+
+	return mesos.NewTaskIO(containerID, mesos.TaskIOOpts{
+		Stdin:       ctx.Input(),
+		Stdout:      ctx.Out(),
+		Stderr:      ctx.ErrOut(),
+		Interactive: interactive,
+		TTY:         tty,
+		User:        user,
+		Sender:      httpagent.NewSender(httpClient.Send),
+		Logger:      pluginutil.Logger(),
+	})
 }
