@@ -12,9 +12,10 @@ import (
 
 func newCmdTaskList(ctx api.Context) *cobra.Command {
 	var all, jsonOutput, completed, quietOutput bool
+	var agentID string
 
 	cmd := &cobra.Command{
-		Use:   "list",
+		Use:   "list [filter]",
 		Short: "Print the Mesos tasks in the cluster",
 		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -27,6 +28,7 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 			filters := taskFilters{
 				Active:    !completed,
 				Completed: all || completed,
+				Agent:     agentID,
 			}
 			if len(args) == 1 {
 				filters.ID = args[0]
@@ -116,5 +118,6 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	cmd.Flags().BoolVar(&completed, "completed", false, "Print completed tasks")
 	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only IDs of listed services")
+	cmd.Flags().StringVar(&agentID, "agent-id", "", "List tasks of a given agent")
 	return cmd
 }
