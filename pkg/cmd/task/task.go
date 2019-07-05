@@ -68,6 +68,9 @@ func findTask(ctx api.Context, filters taskFilters) (*mesos.Task, error) {
 	if len(tasks) > 1 {
 		var names []string
 		for _, task := range tasks {
+			if task.ID == filters.ID {
+				return &task, nil
+			}
 			names = append(names, task.ID)
 		}
 		return nil, fmt.Errorf("found more than one task with the same name: %v", names)
