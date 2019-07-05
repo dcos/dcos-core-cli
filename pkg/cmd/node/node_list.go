@@ -123,6 +123,11 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 				nodes = append(nodes, s)
 
+				// Additional information, only for non JSON output.
+				if val, ok := s.Attributes["public_ip"].(string); ok && val == "true" {
+					s.Type = "agent (public)"
+				}
+
 				tableItem := []string{s.Hostname, s.IP(), strings.Join(s.PublicIPs, ", "), s.ID, s.Type, s.Region, s.Zone}
 				for _, field := range fields {
 					tableItem = append(tableItem, nodeExtraField(s, strings.Split(field, ".")))
