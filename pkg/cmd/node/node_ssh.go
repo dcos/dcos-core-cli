@@ -52,7 +52,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 				}
 				err = initialSSHClient.Run([]string{"bash", "-c", "'true'"})
 				if err != nil {
-					fmt.Fprintf(ctx.ErrOut(), "Error: %v\n", err)
+					ctx.Logger().Debug(err)
 				}
 				clientOpts.SSHOptions = append([]string{"StrictHostKeyChecking=no"}, clientOpts.SSHOptions...)
 			}
