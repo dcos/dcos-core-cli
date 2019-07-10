@@ -15,10 +15,10 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	var leader, masterProxy bool
 	var mesosID, proxyIP, privateIP string
 
-	clientOpts:= sshclient.ClientOpts{
-		Input:      ctx.Input(),
-		Out:        ctx.Out(),
-		ErrOut:     ctx.ErrOut(),
+	clientOpts := sshclient.ClientOpts{
+		Input:  ctx.Input(),
+		Out:    ctx.Out(),
+		ErrOut: ctx.ErrOut(),
 	}
 
 	cmd := &cobra.Command{
@@ -26,6 +26,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 		Short: "Establish an SSH connection to the master or agent nodes of your DC/OS cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
+
 			clientOpts.Host, err = detectHost(ctx, leader, mesosID, privateIP)
 			if err != nil {
 				return err
@@ -34,6 +35,26 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 			clientOpts.Proxy, err = detectProxy(ctx, masterProxy, proxyIP)
 			if err != nil {
 				return err
+			}
+
+			if masterProxy {
+				initialClientOpts := sshclient.ClientOpts{
+					Input:  ctx.Input(),
+					Out:    ctx.Out(),
+					ErrOut: ctx.ErrOut(),
+				}
+
+				initialClientOpts.User = clientOpts.User
+				initialClientOpts.Host = clientOpts.Proxy
+				initialSSHClient, err := sshclient.NewClient(initialClientOpts, pluginutil.Logger())
+				if err != nil {
+					return err
+				}
+				err = initialSSHClient.Run([]string{"bash", "-c", "'true'"})
+				if err != nil {
+					fmt.Fprintf(ctx.ErrOut(), "Error: %v\n", err)
+				}
+				clientOpts.SSHOptions = append([]string{"StrictHostKeyChecking=no"}, clientOpts.SSHOptions...)
 			}
 
 			sshClient, err := sshclient.NewClient(clientOpts, pluginutil.Logger())
@@ -61,6 +82,8 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	cmd.Flags().StringVar(&clientOpts.Config, "config-file", "", "Path to SSH configuration file")
 	cmd.Flags().StringArrayVar(&clientOpts.SSHOptions, "option", nil, "The SSH options")
 
+	cmd.Flags().SetInterspersed(false)
+	cmd.DisableFlagsInUseLine = true
 	return cmd
 }
 

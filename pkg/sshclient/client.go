@@ -78,10 +78,6 @@ func (c *Client) configureDestination() {
 		} else {
 			c.args = append(c.args, c.opts.Proxy)
 		}
-
-		for _, option := range c.opts.SSHOptions {
-			c.args = append(c.args, "-o", option)
-		}
 	}
 
 	if c.opts.Config == "" {
@@ -93,12 +89,6 @@ func (c *Client) configureDestination() {
 
 // Run adds the optional remote command and starts the SSH session.
 func (c *Client) Run(command []string) error {
-	// Escape remote commands to execute them on the target remote.
-	if len(command) > 0 {
-		command = append([]string{"'"}, command...)
-		command = append(command, "'")
-	}
-
 	args := append(c.args, command...)
 	cmd := exec.Command(c.opts.BinaryPath, args...)
 	c.logger.Debugf("Running: %v\n", cmd.Args)
