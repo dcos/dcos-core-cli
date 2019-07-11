@@ -77,7 +77,7 @@ func (c *Client) configureDestination() {
 		}
 
 		c.args = append(c.args, "-J")
-		c.args = append(c.args, c.opts.Proxy)
+		c.args = append(c.args, c.opts.User+"@"+c.opts.Proxy)
 	}
 
 	c.args = append(c.args, c.opts.Host)
