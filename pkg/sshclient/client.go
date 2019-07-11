@@ -49,6 +49,7 @@ func NewClient(opts ClientOpts, logger *logrus.Logger) (*Client, error) {
 
 	c := &Client{opts: opts}
 	c.logger = logger
+	c.args = append(c.args, "-l", c.opts.User)
 	c.configureSSHOptions()
 	c.configureDestination()
 
@@ -70,17 +71,8 @@ func (c *Client) configureDestination() {
 	c.args = append(c.args, "-t")
 	if c.opts.Proxy != "" {
 		c.logger.Debugf("Using %s as a proxy node\n", c.opts.Proxy)
-
-		if c.opts.Config == "" {
-			c.args = append(c.args, "-l", c.opts.User)
-		}
-
-		for _, option := range c.opts.SSHOptions {
-			c.args = append(c.args, "-o", option)
-		}
-
 		c.args = append(c.args, "-J")
-		c.args = append(c.args, c.opts.Proxy)
+		c.args = append(c.args, c.opts.User+"@"+c.opts.Proxy)
 	}
 
 	c.args = append(c.args, c.opts.Host)

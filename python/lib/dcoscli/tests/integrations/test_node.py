@@ -254,14 +254,6 @@ def test_node_ssh_slave_with_private_ip():
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='No pseudo terminal on windows')
-def test_node_ssh_option():
-    stdout, stderr, _ = _node_ssh_output(
-        ['--leader', '--option', 'Protocol=0'])
-    assert b'ignoring bad proto spec' in stderr
-
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason='No pseudo terminal on windows')
 def test_node_ssh_config_file():
     stdout, stderr, _ = _node_ssh_output(
         ['--leader', '--config-file', 'tests/data/node/ssh_config'])

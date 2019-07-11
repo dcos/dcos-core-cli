@@ -37,15 +37,28 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			if masterProxy {
+			// The initial client is here for backward compatibility.
+			// If a user runs `dcos node ssh ipa --master-proxy`
+			skipInitialClient := false
+			if masterProxy == false {
+				skipInitialClient = true
+			} else {
+				for _, sshOption := range clientOpts.SSHOptions {
+					if sshOption == "StrictHostKeyChecking=no" {
+						skipInitialClient = true
+					}
+				}
+			}
+
+			if skipInitialClient == false {
 				initialClientOpts := sshclient.ClientOpts{
 					Input:  ctx.Input(),
 					Out:    ctx.Out(),
 					ErrOut: ctx.ErrOut(),
+					User:   clientOpts.User,
+					Host:   clientOpts.Proxy,
 				}
 
-				initialClientOpts.User = clientOpts.User
-				initialClientOpts.Host = clientOpts.Proxy
 				for _, sshOption := range clientOpts.SSHOptions {
 					if sshOption == "StrictHostKeyChecking=no" {
 						initialClientOpts.SSHOptions = []string{"StrictHostKeyChecking=no"}
