@@ -37,15 +37,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			strictHostKeyChecking := true
-			for _, sshOption := range clientOpts.SSHOptions {
-				if sshOption == "StrictHostKeyChecking=no" {
-					strictHostKeyChecking = false
-				}
-			}
-
-			if strictHostKeyChecking && masterProxy {
-				fmt.Println("YOLO")
+			if masterProxy {
 				initialClientOpts := sshclient.ClientOpts{
 					Input:  ctx.Input(),
 					Out:    ctx.Out(),
@@ -54,6 +46,11 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 
 				initialClientOpts.User = clientOpts.User
 				initialClientOpts.Host = clientOpts.Proxy
+				for _, sshOption := range clientOpts.SSHOptions {
+					if sshOption == "StrictHostKeyChecking=no" {
+						initialClientOpts.SSHOptions = []string{"StrictHostKeyChecking=no"}
+					}
+				}
 				initialSSHClient, err := sshclient.NewClient(initialClientOpts, pluginutil.Logger())
 				if err != nil {
 					return err
