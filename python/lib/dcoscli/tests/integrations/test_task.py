@@ -310,7 +310,6 @@ def test_ls_completed():
     assert re.match(ls_line, lines[0])
 
 
-@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
 def test_download_sandbox():
     with tempdir() as tmp:
 
@@ -332,7 +331,6 @@ def test_download_sandbox():
         os.chdir(cwd)
 
 
-@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
 def test_download_sandbox_to_target():
     with tempdir() as tmp:
         targetdir = '--target-dir=' + tmp + '/sandbox'
@@ -344,7 +342,6 @@ def test_download_sandbox_to_target():
         assert os.path.exists(tmp + '/sandbox')
 
 
-@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
 def test_download_single_file():
     with tempdir() as tmp:
 
@@ -365,7 +362,6 @@ def test_download_single_file():
         os.chdir(cwd)
 
 
-@pytest.mark.skipif(True, reason='`dcos task download needs to be enabled')
 def test_download_no_match():
     returncode, _, stderr = exec_command(
         ['dcos', 'task', 'download', 'download-app', 'blub'])
