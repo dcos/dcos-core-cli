@@ -26,7 +26,6 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 		Short: "Establish an SSH connection to the master or agent nodes of your DC/OS cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-
 			clientOpts.Host, err = detectHost(ctx, leader, mesosID, privateIP)
 			if err != nil {
 				return err
@@ -37,15 +36,19 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 				return err
 			}
 
+			// We use ProxyJump instead of agent forwarding when using the master as a proxy since DC/OS 1.14.
+			// This results in more prompts regarding the addition of hosts to the list of known hosts.
+			// To keep the user experience similar to what it was before, we use an initial client where a prompt
+			// might be shown and then add `StrictHostKeyChecking=no` to the SSH call the user wants to make.
 			if masterProxy {
 				initialClientOpts := sshclient.ClientOpts{
 					Input:  ctx.Input(),
 					Out:    ctx.Out(),
 					ErrOut: ctx.ErrOut(),
+					User:   clientOpts.User,
+					Host:   clientOpts.Proxy,
 				}
 
-				initialClientOpts.User = clientOpts.User
-				initialClientOpts.Host = clientOpts.Proxy
 				for _, sshOption := range clientOpts.SSHOptions {
 					if sshOption == "StrictHostKeyChecking=no" {
 						initialClientOpts.SSHOptions = []string{"StrictHostKeyChecking=no"}
