@@ -351,7 +351,8 @@ def _node_ssh_output(args):
 
     if os.environ.get('CLI_TEST_SSH_USER') and \
             not any("--user" in a for a in args):
-        args.extend(['--user', os.environ.get('CLI_TEST_SSH_USER')])
+        args.insert(0, os.environ.get('CLI_TEST_SSH_USER'))
+        args.insert(0, '--user')
 
     if os.environ.get('CLI_TEST_MASTER_PROXY') and \
             '--master-proxy' not in args:
