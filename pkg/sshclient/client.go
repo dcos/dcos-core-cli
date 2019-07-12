@@ -28,13 +28,6 @@ type ClientOpts struct {
 	Host       string
 }
 
-// -A	Enables forwarding of the authentication agent connection.
-// -t	Force pseudo-terminal allocation. Used to execute arbitrary screen-based programs on a remote machine.
-var baseArgs = []string{
-	"-A",
-	"-t",
-}
-
 // NewClient creates a new client to start a SSH session.
 func NewClient(opts ClientOpts, logger *logrus.Logger) (*Client, error) {
 	if opts.BinaryPath == "" {
@@ -56,6 +49,7 @@ func NewClient(opts ClientOpts, logger *logrus.Logger) (*Client, error) {
 
 	c := &Client{opts: opts}
 	c.logger = logger
+	c.args = append(c.args, "-l", c.opts.User)
 	c.configureSSHOptions()
 	c.configureDestination()
 
@@ -74,37 +68,23 @@ func (c *Client) configureSSHOptions() {
 
 func (c *Client) configureDestination() {
 	c.logger.Debugf("Trying to establish connection to %s\n", c.opts.Host)
+	c.args = append(c.args, "-t")
 	if c.opts.Proxy != "" {
 		c.logger.Debugf("Using %s as a proxy node\n", c.opts.Proxy)
-		c.args = append(c.args, baseArgs...)
-
-		if c.opts.Config == "" {
-			c.args = append(c.args, "-l", c.opts.User)
-		}
-
-		c.args = append(c.args, c.opts.Proxy)
-		c.args = append(c.args, "ssh")
 
 		for _, option := range c.opts.SSHOptions {
 			c.args = append(c.args, "-o", option)
 		}
-		if c.opts.Config == "" {
-			c.args = append(c.args, "-l", c.opts.User)
-		}
+
+		c.args = append(c.args, "-J")
+		c.args = append(c.args, c.opts.User+"@"+c.opts.Proxy)
 	}
 
-	c.args = append(c.args, baseArgs...)
 	c.args = append(c.args, c.opts.Host)
 }
 
 // Run adds the optional remote command and starts the SSH session.
 func (c *Client) Run(command []string) error {
-	// Escape remote commands to execute them on the target remote.
-	if len(command) > 0 {
-		command = append([]string{"'"}, command...)
-		command = append(command, "'")
-	}
-
 	args := append(c.args, command...)
 	cmd := exec.Command(c.opts.BinaryPath, args...)
 	c.logger.Debugf("Running: %v\n", cmd.Args)

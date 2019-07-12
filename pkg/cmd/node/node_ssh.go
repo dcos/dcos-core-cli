@@ -15,10 +15,10 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	var leader, masterProxy bool
 	var mesosID, proxyIP, privateIP string
 
-	clientOpts:= sshclient.ClientOpts{
-		Input:      ctx.Input(),
-		Out:        ctx.Out(),
-		ErrOut:     ctx.ErrOut(),
+	clientOpts := sshclient.ClientOpts{
+		Input:  ctx.Input(),
+		Out:    ctx.Out(),
+		ErrOut: ctx.ErrOut(),
 	}
 
 	cmd := &cobra.Command{
@@ -34,6 +34,35 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 			clientOpts.Proxy, err = detectProxy(ctx, masterProxy, proxyIP)
 			if err != nil {
 				return err
+			}
+
+			// We use ProxyJump instead of agent forwarding when using the master as a proxy since DC/OS 1.14.
+			// This results in more prompts regarding the addition of hosts to the list of known hosts.
+			// To keep the user experience similar to what it was before, we use an initial client where a prompt
+			// might be shown and then add `StrictHostKeyChecking=no` to the SSH call the user wants to make.
+			if masterProxy {
+				initialClientOpts := sshclient.ClientOpts{
+					Input:  ctx.Input(),
+					Out:    ctx.Out(),
+					ErrOut: ctx.ErrOut(),
+					User:   clientOpts.User,
+					Host:   clientOpts.Proxy,
+				}
+
+				for _, sshOption := range clientOpts.SSHOptions {
+					if sshOption == "StrictHostKeyChecking=no" {
+						initialClientOpts.SSHOptions = []string{"StrictHostKeyChecking=no"}
+					}
+				}
+				initialSSHClient, err := sshclient.NewClient(initialClientOpts, pluginutil.Logger())
+				if err != nil {
+					return err
+				}
+				err = initialSSHClient.Run([]string{"bash", "-c", "'true'"})
+				if err != nil {
+					ctx.Logger().Debug(err)
+				}
+				clientOpts.SSHOptions = append([]string{"StrictHostKeyChecking=no"}, clientOpts.SSHOptions...)
 			}
 
 			sshClient, err := sshclient.NewClient(clientOpts, pluginutil.Logger())
@@ -61,6 +90,8 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	cmd.Flags().StringVar(&clientOpts.Config, "config-file", "", "Path to SSH configuration file")
 	cmd.Flags().StringArrayVar(&clientOpts.SSHOptions, "option", nil, "The SSH options")
 
+	cmd.Flags().SetInterspersed(false)
+	cmd.DisableFlagsInUseLine = true
 	return cmd
 }
 

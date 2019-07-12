@@ -252,8 +252,7 @@ def test_node_ssh_slave_with_private_ip():
     _node_ssh(['--private-ip={}'.format(slave_ip), '--master-proxy'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason='No pseudo terminal on windows')
+@pytest.mark.skipif(True, reason='Skipped since we use ssh -J instead of -A')
 def test_node_ssh_option():
     stdout, stderr, _ = _node_ssh_output(
         ['--leader', '--option', 'Protocol=0'])
@@ -359,7 +358,8 @@ def _node_ssh_output(args):
 
     if os.environ.get('CLI_TEST_SSH_USER') and \
             not any("--user" in a for a in args):
-        args.extend(['--user', os.environ.get('CLI_TEST_SSH_USER')])
+        args.insert(0, os.environ.get('CLI_TEST_SSH_USER'))
+        args.insert(0, '--user')
 
     if os.environ.get('CLI_TEST_MASTER_PROXY') and \
             '--master-proxy' not in args:
