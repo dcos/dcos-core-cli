@@ -32,6 +32,11 @@ path = "bin/dcos_py{0}"
 description = "Install and manage DC/OS software packages"
 
 [[commands]]
+name = "quota"
+path = "bin/dcos{0}"
+description = "Manage DC/OS quotas"
+
+[[commands]]
 name = "service"
 path = "bin/dcos{0}"
 description = "Manage DC/OS services"
