@@ -287,9 +287,14 @@ func (t *TaskIO) attachContainerInput() error {
 			}()
 
 			for {
-				// TODO(bamarni): investigate on why "test_task:test_attach" fails if the buffer size below
-				// is greater than 1, this might be an issue with the term package or the way we use it.
-				buf := make([]byte, 1)
+				bufLen := 512
+				if t.opts.TTY {
+					// TODO(bamarni): investigate on why "test_task:test_attach" fails if the buffer size below
+					// is greater than 1, this looks like an issue with the term package we're using, which doesn't
+					// work properly when reading more than 1 char at a time.
+					bufLen = 1
+				}
+				buf := make([]byte, bufLen)
 				n, err := t.opts.Stdin.Read(buf)
 				if _, ok := err.(term.EscapeError); ok {
 					t.cancelFunc()
