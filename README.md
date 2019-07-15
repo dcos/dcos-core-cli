@@ -217,9 +217,7 @@ run:
 ### Releasing
 
 Releasing a new version of the DC/OS CLI is only possible through an
-[automated TeamCity
-build](https://teamcity.mesosphere.io/viewType.html?buildTypeId=DcosIo_DcosCli_Release)
-which is triggered automatically when a new tag is added.
+automated Jenkins which is triggered automatically when a new tag is added.
 
 The tag is used as the version number and must adhere to the
 conventional [PEP-440 version
