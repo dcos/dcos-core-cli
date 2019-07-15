@@ -48,7 +48,7 @@ pipeline {
               -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
               -e DCOS_TEST_ADMIN_USERNAME -e DCOS_TEST_ADMIN_PASSWORD \
               -e DCOS_TEST_LICENSE -e DCOS_TEST_SSH_KEY_PATH \
-              python:3.7 bash -exc " \
+              python:3.7-stretch bash -exc " \
                 mkdir -p build/linux; \
                 make plugin; \
                 cd scripts; \
