@@ -39,13 +39,16 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	cmd.Flags().StringArray("field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
 
 	cmd.AddCommand(
+		newCmdNodeDeactivate(ctx),
 		newCmdNodeDecommission(ctx),
 		newCmdNodeDiagnostics(ctx),
 		newCmdNodeDNS(ctx),
+		newCmdNodeDrain(ctx),
 		newCmdNodeList(ctx),
 		newCmdNodeListComponents(ctx),
 		newCmdNodeLog(ctx),
 		newCmdNodeMetrics(ctx),
+		newCmdNodeReactivate(ctx),
 		newCmdNodeSSH(ctx),
 	)
 	return cmd
