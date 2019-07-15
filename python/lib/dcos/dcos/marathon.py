@@ -268,7 +268,7 @@ class Client(object):
 
         return self._update('apps', app_id, payload, force)
 
-    def update_group(self, group_id, payload, force=False):
+    def update_group(self, group_id, payload, force=False, enforce_role=False):
         """Update a group.
 
         :param group_id: the group id
@@ -277,6 +277,8 @@ class Client(object):
         :type payload: dict
         :param force: whether to override running deployments
         :type force: bool
+        :param enforce_role: whether to enforce the role change
+        :type enforce_role: bool
         :returns: the resulting deployment ID
         :rtype: str
         """

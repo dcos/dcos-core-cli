@@ -160,7 +160,8 @@ def _cmds():
 
         cmds.Command(
             hierarchy=['marathon', 'group', 'update'],
-            arg_keys=['<group-id>', '<properties>', '--force'],
+            arg_keys=['<group-id>', '<properties>', '--force',
+                      '--enforceRole'],
             function=subcommand.group_update),
 
         cmds.Command(
@@ -569,7 +570,7 @@ class MarathonSubcommand(object):
         emitter.publish(app)
         return 0
 
-    def group_update(self, group_id, properties, force):
+    def group_update(self, group_id, properties, force, enforce_role):
         """
         :param group_id: the id of the group
         :type group_id: str
@@ -577,6 +578,8 @@ class MarathonSubcommand(object):
         :type properties: [str]
         :param force: whether to override running deployments
         :type force: bool
+        :param enforce_role: whether to enforce the role change
+        :type enforce_role: bool
         :returns: process return code
         :rtype: int
         """
@@ -588,7 +591,8 @@ class MarathonSubcommand(object):
 
         resource = self._resource_reader.\
             get_resource_from_properties(properties)
-        deployment = client.update_group(group_id, resource, force)
+        deployment = client.update_group(
+            group_id, resource, force, enforce_role)
 
         emitter.publish('Created deployment {}'.format(deployment))
         return 0
