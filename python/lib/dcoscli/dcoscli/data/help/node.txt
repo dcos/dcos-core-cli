@@ -4,12 +4,16 @@ Usage:
   dcos node [command]
 
 Commands:
+  deactivate
+      Deactivate a node
   decommission
       Mark an agent as gone
   diagnostics
       Use diagnostics bundles
   dns
       Return the IP address(es) corresponding to a given hostname
+  drain
+      Drain a node so that its tasks get rescheduled
   list
       Show all nodes in the cluster
   list-components
@@ -18,6 +22,8 @@ Commands:
       Print logs for the leading master node or agent nodes
   metrics
       Display the metrics of a node
+  reactivate
+      Reactivate a drained/deactivated node
   ssh
       Establish an SSH connection to the master or agent nodes of your DC/OS cluster
 
