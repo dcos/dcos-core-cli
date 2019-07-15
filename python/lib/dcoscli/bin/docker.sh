@@ -15,6 +15,6 @@ source ${CURRDIR}/common.sh
                -e TOX=${TOX_DOCKER} \
                -w /dcos-cli/python/lib/dcoscli \
                -u $(id -u ${USER}):$(id -g ${USER}) \
-               python:3.7"}
+               python:3.7-stretch"}
 
 source ${BASEDIR}/../../bin/docker.sh

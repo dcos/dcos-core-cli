@@ -42,7 +42,7 @@ pipeline {
 
             sh '''
                 docker run --rm -v $PWD:/usr/src -w /usr/src \
-                    python:3.7 bash -exc " \
+                    python:3.7-stretch bash -exc " \
                       cd python/lib/dcoscli; \
                       make binary"
             '''
@@ -121,7 +121,7 @@ pipeline {
           steps {
             sh '''
               docker run --rm -v $PWD:/usr/src -w /usr/src \
-                python:3.7 bash -exc " \
+                python:3.7-stretch bash -exc " \
                   cd python/lib/dcos; \
                   make env; \
                   ./env/bin/tox -e py35-syntax; \
@@ -130,7 +130,7 @@ pipeline {
 
             sh '''
               docker run --rm -v $PWD:/usr/src -w /usr/src \
-                python:3.7 bash -exc " \
+                python:3.7-stretch bash -exc " \
                   export PYTHON=python3.7; \
                   cd python/lib/dcoscli; \
                   make env; \
