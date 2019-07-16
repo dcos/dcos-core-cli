@@ -61,9 +61,8 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.4
 github.com/mattn/go-runewidth
-# github.com/mesos/mesos-go v0.0.10-0.20190613181932-61cb21a976bd
+# github.com/mesos/mesos-go v0.0.10
 github.com/mesos/mesos-go/api/v1/lib
-github.com/mesos/mesos-go/api/v1/lib/encoding/codecs
 github.com/mesos/mesos-go/api/v1/lib/httpcli
 github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent
 github.com/mesos/mesos-go/api/v1/lib/agent
@@ -71,16 +70,17 @@ github.com/mesos/mesos-go/api/v1/lib/agent/calls
 github.com/mesos/mesos-go/api/v1/lib/master
 github.com/mesos/mesos-go/api/v1/lib/encoding
 github.com/mesos/mesos-go/api/v1/lib/roles
-github.com/mesos/mesos-go/api/v1/lib/encoding/json
-github.com/mesos/mesos-go/api/v1/lib/encoding/proto
 github.com/mesos/mesos-go/api/v1/lib/client
 github.com/mesos/mesos-go/api/v1/lib/debug
+github.com/mesos/mesos-go/api/v1/lib/encoding/codecs
 github.com/mesos/mesos-go/api/v1/lib/encoding/framing
 github.com/mesos/mesos-go/api/v1/lib/httpcli/apierrors
 github.com/mesos/mesos-go/api/v1/lib/recordio
 github.com/mesos/mesos-go/api/v1/lib/allocator
 github.com/mesos/mesos-go/api/v1/lib/maintenance
 github.com/mesos/mesos-go/api/v1/lib/quota
+github.com/mesos/mesos-go/api/v1/lib/encoding/json
+github.com/mesos/mesos-go/api/v1/lib/encoding/proto
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
 # github.com/olekukonko/tablewriter v0.0.1
