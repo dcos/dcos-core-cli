@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mesos/mesos-go v0.0.10-0.20190613181932-61cb21a976bd
+	github.com/mesos/mesos-go v0.0.10
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
