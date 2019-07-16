@@ -9036,6 +9036,21 @@ func (mj *Response_GetAgent) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteByte(',')
 		}
 	}
+	if mj.DrainConfig != nil {
+		if true {
+			buf.WriteString(`"drain_config":`)
+
+			{
+
+				err = mj.DrainConfig.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
+	}
 	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
@@ -9046,9 +9061,13 @@ const (
 	ffj_t_Response_GetAgentno_such_key
 
 	ffj_t_Response_GetAgent_AgentInfo
+
+	ffj_t_Response_GetAgent_DrainConfig
 )
 
 var ffj_key_Response_GetAgent_AgentInfo = []byte("agent_info")
+
+var ffj_key_Response_GetAgent_DrainConfig = []byte("drain_config")
 
 func (uj *Response_GetAgent) UnmarshalJSON(input []byte) error {
 	fs := fflib.NewFFLexer(input)
@@ -9117,6 +9136,20 @@ mainparse:
 						goto mainparse
 					}
 
+				case 'd':
+
+					if bytes.Equal(ffj_key_Response_GetAgent_DrainConfig, kn) {
+						currentKey = ffj_t_Response_GetAgent_DrainConfig
+						state = fflib.FFParse_want_colon
+						goto mainparse
+					}
+
+				}
+
+				if fflib.AsciiEqualFold(ffj_key_Response_GetAgent_DrainConfig, kn) {
+					currentKey = ffj_t_Response_GetAgent_DrainConfig
+					state = fflib.FFParse_want_colon
+					goto mainparse
 				}
 
 				if fflib.AsciiEqualFold(ffj_key_Response_GetAgent_AgentInfo, kn) {
@@ -9144,6 +9177,9 @@ mainparse:
 
 				case ffj_t_Response_GetAgent_AgentInfo:
 					goto handle_AgentInfo
+
+				case ffj_t_Response_GetAgent_DrainConfig:
+					goto handle_DrainConfig
 
 				case ffj_t_Response_GetAgentno_such_key:
 					err = fs.SkipField(tok)
@@ -9177,6 +9213,33 @@ handle_AgentInfo:
 		}
 
 		err = uj.AgentInfo.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
+		if err != nil {
+			return err
+		}
+		state = fflib.FFParse_after_value
+	}
+
+	state = fflib.FFParse_after_value
+	goto mainparse
+
+handle_DrainConfig:
+
+	/* handler: uj.DrainConfig type=mesos.DrainConfig kind=struct quoted=false*/
+
+	{
+		if tok == fflib.FFTok_null {
+
+			uj.DrainConfig = nil
+
+			state = fflib.FFParse_after_value
+			goto mainparse
+		}
+
+		if uj.DrainConfig == nil {
+			uj.DrainConfig = new(mesos.DrainConfig)
+		}
+
+		err = uj.DrainConfig.UnmarshalJSONFFLexer(fs, fflib.FFParse_want_key)
 		if err != nil {
 			return err
 		}
@@ -14248,7 +14311,7 @@ func (mj *Response_ReadFile) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	_ = obj
 	_ = err
 	buf.WriteString(`{ "size":`)
-	fflib.FormatBits2(buf, uint64(mj.Size), 10, false)
+	fflib.FormatBits2(buf, uint64(mj.Size_), 10, false)
 	buf.WriteByte(',')
 	if len(mj.Data) != 0 {
 		buf.WriteString(`"data":`)
@@ -14274,12 +14337,12 @@ const (
 	ffj_t_Response_ReadFilebase = iota
 	ffj_t_Response_ReadFileno_such_key
 
-	ffj_t_Response_ReadFile_Size
+	ffj_t_Response_ReadFile_Size_
 
 	ffj_t_Response_ReadFile_Data
 )
 
-var ffj_key_Response_ReadFile_Size = []byte("size")
+var ffj_key_Response_ReadFile_Size_ = []byte("size")
 
 var ffj_key_Response_ReadFile_Data = []byte("data")
 
@@ -14352,8 +14415,8 @@ mainparse:
 
 				case 's':
 
-					if bytes.Equal(ffj_key_Response_ReadFile_Size, kn) {
-						currentKey = ffj_t_Response_ReadFile_Size
+					if bytes.Equal(ffj_key_Response_ReadFile_Size_, kn) {
+						currentKey = ffj_t_Response_ReadFile_Size_
 						state = fflib.FFParse_want_colon
 						goto mainparse
 					}
@@ -14366,8 +14429,8 @@ mainparse:
 					goto mainparse
 				}
 
-				if fflib.EqualFoldRight(ffj_key_Response_ReadFile_Size, kn) {
-					currentKey = ffj_t_Response_ReadFile_Size
+				if fflib.EqualFoldRight(ffj_key_Response_ReadFile_Size_, kn) {
+					currentKey = ffj_t_Response_ReadFile_Size_
 					state = fflib.FFParse_want_colon
 					goto mainparse
 				}
@@ -14389,8 +14452,8 @@ mainparse:
 			if tok == fflib.FFTok_left_brace || tok == fflib.FFTok_left_bracket || tok == fflib.FFTok_integer || tok == fflib.FFTok_double || tok == fflib.FFTok_string || tok == fflib.FFTok_bool || tok == fflib.FFTok_null {
 				switch currentKey {
 
-				case ffj_t_Response_ReadFile_Size:
-					goto handle_Size
+				case ffj_t_Response_ReadFile_Size_:
+					goto handle_Size_
 
 				case ffj_t_Response_ReadFile_Data:
 					goto handle_Data
@@ -14409,9 +14472,9 @@ mainparse:
 		}
 	}
 
-handle_Size:
+handle_Size_:
 
-	/* handler: uj.Size type=uint64 kind=uint64 quoted=false*/
+	/* handler: uj.Size_ type=uint64 kind=uint64 quoted=false*/
 
 	{
 		if tok != fflib.FFTok_integer && tok != fflib.FFTok_null {
@@ -14431,7 +14494,7 @@ handle_Size:
 				return fs.WrapErr(err)
 			}
 
-			uj.Size = uint64(tval)
+			uj.Size_ = uint64(tval)
 
 		}
 	}
