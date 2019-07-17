@@ -7,7 +7,7 @@ github.com/VividCortex/ewma
 github.com/antihax/optional
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/dcos/client-go v0.0.0-20190528123231-5653a253b84e
+# github.com/dcos/client-go v0.0.0-20190717125539-7798cf162a1a
 github.com/dcos/client-go/dcos
 # github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80
 github.com/dcos/dcos-cli/api

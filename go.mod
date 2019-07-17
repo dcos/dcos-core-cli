@@ -2,7 +2,7 @@ module github.com/dcos/dcos-core-cli
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/dcos/client-go v0.0.0-20190528123231-5653a253b84e
+	github.com/dcos/client-go v0.0.0-20190717125539-7798cf162a1a
 	github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80
 	github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
 	github.com/gambol99/go-marathon v0.7.1

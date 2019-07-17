@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/dcos/client-go/dcos"
@@ -79,9 +80,11 @@ func NewHTTPClient(baseURL string) *http.Client {
 	}
 	dcosConfig.SetTLS(tls)
 
-	client := dcos.NewHTTPClient(dcosConfig)
-	client.Transport.(*dcos.DefaultTransport).Logger = Logger()
-	return client
+	transport := dcos.NewDefaultTransport(dcosConfig)
+	// TODO: add the version in the user agent.
+	transport.UserAgent = "dcos-core-cli " + runtime.GOOS
+	transport.Logger = Logger()
+	return &http.Client{Transport: transport}
 }
 
 // Logger returns a logger for a given plugin runtime.
@@ -96,7 +99,6 @@ func Logger() *logrus.Logger {
 		logger.SetLevel(logrus.InfoLevel)
 	} else if verbosity == "2" {
 		logger.SetLevel(logrus.DebugLevel)
-		os.Setenv("DCOS_DEBUG", "1")
 	}
 	return logger
 }

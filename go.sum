@@ -21,8 +21,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dcos/client-go v0.0.0-20190418124828-a5c3660ae957 h1:cSXScdOP3VTlXQtG1PefluLn/C94mlKwrRIHHV8QQIk=
 github.com/dcos/client-go v0.0.0-20190418124828-a5c3660ae957/go.mod h1:dyBl1aNzJ19ktYyJ7trgCrwz0sBzDwaDkKR2mnXqFgU=
-github.com/dcos/client-go v0.0.0-20190528123231-5653a253b84e h1:+cKZStiPkEC6s77To70Wlk75BCHvxOGalz5bpbJSn2E=
-github.com/dcos/client-go v0.0.0-20190528123231-5653a253b84e/go.mod h1:wDbV2eOyjoUmqPZ9cxE5VCc/YIPvriRYWWnYnF5bRoA=
+github.com/dcos/client-go v0.0.0-20190717120032-a00e5ea0eded h1:hjNdeqUCyiIf0zwWjhc6JG+ca1jXg4n5c4Z+wzOOHKU=
+github.com/dcos/client-go v0.0.0-20190717120032-a00e5ea0eded/go.mod h1:wDbV2eOyjoUmqPZ9cxE5VCc/YIPvriRYWWnYnF5bRoA=
+github.com/dcos/client-go v0.0.0-20190717125539-7798cf162a1a h1:D8hIFFzRkeqqDj0n2bjrVz/yqswltHJksG1ttsf+Bt8=
+github.com/dcos/client-go v0.0.0-20190717125539-7798cf162a1a/go.mod h1:wDbV2eOyjoUmqPZ9cxE5VCc/YIPvriRYWWnYnF5bRoA=
 github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80 h1:MVB4ba2IjXm1b+3BgRD4VAU7tfxk9neaRHgZk7DUgnA=
 github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80/go.mod h1:2lBhxwqSkrbilc+Z5VMDkPb3Q6s33GFxltAYiswpIis=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
@@ -115,12 +117,6 @@ github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hd
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-runewidth v0.0.4 h1:2BvfKmzob6Bmd4YsL0zygOqfdFnK7GR4QL06Do4/p7Y=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
-github.com/mesos/mesos-go v0.0.10-0.20190613181932-61cb21a976bd h1:C0jUEfxcK3EbTsbATJOhkWUqf5RVHH+I7OUWZAGlKPQ=
-github.com/mesos/mesos-go v0.0.10-0.20190613181932-61cb21a976bd/go.mod h1:kPYCMQ9gsOXVAle1OsoY4I1+9kPu8GHkf88aV59fDr4=
-github.com/mesos/mesos-go v0.0.10 h1:+M/7Zlkvw4MolkLvXHfj6hkDsLLHOOU54CmOkOUaNBc=
-github.com/mesos/mesos-go v0.0.10/go.mod h1:kPYCMQ9gsOXVAle1OsoY4I1+9kPu8GHkf88aV59fDr4=
-github.com/mesos/mesos-go v0.0.11-0.20190716141852-c9c573f8a2e0 h1:VrdJb74C6/teGBxwN96hZ2MA97GJau/DmBIxgQcfJ68=
-github.com/mesos/mesos-go v0.0.11-0.20190716141852-c9c573f8a2e0/go.mod h1:kPYCMQ9gsOXVAle1OsoY4I1+9kPu8GHkf88aV59fDr4=
 github.com/mesos/mesos-go v0.0.11-0.20190717023829-56ac038085ac h1:Psyp4ihyc+sazWXeR4Wo2Sbcemgym+z0sOIDdhOFAXo=
 github.com/mesos/mesos-go v0.0.11-0.20190717023829-56ac038085ac/go.mod h1:kPYCMQ9gsOXVAle1OsoY4I1+9kPu8GHkf88aV59fDr4=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
