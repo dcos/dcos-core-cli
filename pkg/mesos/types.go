@@ -74,6 +74,7 @@ type Slave struct {
 	Type                string                 `json:"type"`
 	Version             string                 `json:"version"`
 	Zone                string                 `json:"zone"`
+	Status              string                 `json:"status"`
 }
 
 // IP returns the IP of a slave parsed from its PID.

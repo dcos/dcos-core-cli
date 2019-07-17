@@ -13,6 +13,7 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/networking"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	"github.com/mesos/mesos-go/api/v1/lib/master"
 	"github.com/spf13/cobra"
 )
 
@@ -26,11 +27,17 @@ type stateSummaryResult struct {
 	err   error
 }
 
+type agentsResult struct {
+	agents []master.Response_GetAgents_Agent
+	err    error
+}
+
 type ipsResult map[string][]string
 
 func newCmdNodeList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 	var fields []string
+	var mesosID string
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Show all nodes in the cluster",
@@ -72,10 +79,22 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 				ipsRes <- ips
 			}()
 
+			agentsRes := make(chan agentsResult)
+			go func() {
+				agents, err := client.Agents()
+				agentsRes <- agentsResult{agents, err}
+			}()
+
 			masters, err := mesosDNSClient().Masters()
 			if err != nil {
 				return err
 			}
+
+			agentsResult := <-agentsRes
+			if agentsResult.err != nil {
+				return agentsResult.err
+			}
+			agents := agentsResult.agents
 
 			ips := <-ipsRes
 
@@ -94,7 +113,7 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			// In order to create a nodes json object that contains masters and agents
 			// we need a slice of interface{} that is able to contain both node types.
 			nodes := make([]interface{}, 0)
-			tableHeader := []string{"HOSTNAME", "IP", "PUBLIC IP(S)", "ID", "TYPE", "REGION", "ZONE"}
+			tableHeader := []string{"HOSTNAME", "IP", "PUBLIC IP(S)", "ID", "TYPE", "STATUS", "REGION", "ZONE"}
 			for _, field := range fields {
 				tableHeader = append(tableHeader, field)
 			}
@@ -102,37 +121,45 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 			slaves := state.Slaves
 			for _, s := range slaves {
-				s.Type = "agent"
-				s.Region = s.Domain.FaultDomain.Region.Name
-				s.Zone = s.Domain.FaultDomain.Zone.Name
-				s.PublicIPs = ips[s.IP()]
+				if mesosID == "" || mesosID == s.ID {
+					s.Type = "agent"
+					s.Region = s.Domain.FaultDomain.Region.Name
+					s.Zone = s.Domain.FaultDomain.Zone.Name
+					s.PublicIPs = ips[s.IP()]
 
-				for _, sSummary := range stateSummary.Slaves {
-					if sSummary.ID == s.ID {
-						s.TaskError = sSummary.TaskError
-						s.TaskFailed = sSummary.TaskFailed
-						s.TaskFinished = sSummary.TaskFinished
-						s.TaskKilled = sSummary.TaskKilled
-						s.TaskKilling = sSummary.TaskKilling
-						s.TaskLost = sSummary.TaskLost
-						s.TaskRunning = sSummary.TaskRunning
-						s.TaskStaging = sSummary.TaskStaging
-						s.TaskStarting = sSummary.TaskStarting
+					for _, sSummary := range stateSummary.Slaves {
+						if sSummary.ID == s.ID {
+							s.TaskError = sSummary.TaskError
+							s.TaskFailed = sSummary.TaskFailed
+							s.TaskFinished = sSummary.TaskFinished
+							s.TaskKilled = sSummary.TaskKilled
+							s.TaskKilling = sSummary.TaskKilling
+							s.TaskLost = sSummary.TaskLost
+							s.TaskRunning = sSummary.TaskRunning
+							s.TaskStaging = sSummary.TaskStaging
+							s.TaskStarting = sSummary.TaskStarting
+						}
 					}
-				}
 
-				nodes = append(nodes, s)
+					for _, agent := range agents {
+						if agent.AgentInfo.ID.Value == s.ID {
+							s.Status = agent.GetDrainInfo().GetState().String()
+						}
+					}
 
-				// Additional information, only for non JSON output.
-				if val, ok := s.Attributes["public_ip"].(string); ok && val == "true" {
-					s.Type = "agent (public)"
-				}
+					nodes = append(nodes, s)
 
-				tableItem := []string{s.Hostname, s.IP(), strings.Join(s.PublicIPs, ", "), s.ID, s.Type, s.Region, s.Zone}
-				for _, field := range fields {
-					tableItem = append(tableItem, nodeExtraField(s, strings.Split(field, ".")))
+					// Additional information, only for non JSON output.
+					if val, ok := s.Attributes["public_ip"].(string); ok && val == "true" {
+						s.Type = "agent (public)"
+					}
+
+					tableItem := []string{s.Hostname, s.IP(), strings.Join(s.PublicIPs, ", "), s.ID, s.Type, s.Status, s.Region, s.Zone}
+					for _, field := range fields {
+						tableItem = append(tableItem, nodeExtraField(s, strings.Split(field, ".")))
+					}
+					table.Append(tableItem)
 				}
-				table.Append(tableItem)
 			}
 
 			for _, m := range masters {
@@ -151,21 +178,24 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 					m.ID, m.PID, m.Version = state.ID, state.PID, state.Version
 				}
 
-				nodes = append(nodes, m)
+				if mesosID == "" || mesosID == m.ID {
+					nodes = append(nodes, m)
 
-				tableItem := []string{
-					m.Host,
-					m.IP,
-					strings.Join(m.PublicIPs, ", "),
-					tablewriter.ConditionString(m.ID != "", m.ID, "N/A"),
-					m.Type,
-					tablewriter.ConditionString(m.Region != "", m.Region, "N/A"),
-					tablewriter.ConditionString(m.Zone != "", m.Zone, "N/A"),
+					tableItem := []string{
+						m.Host,
+						m.IP,
+						strings.Join(m.PublicIPs, ", "),
+						tablewriter.ConditionString(m.ID != "", m.ID, "N/A"),
+						m.Type,
+						"",
+						tablewriter.ConditionString(m.Region != "", m.Region, "N/A"),
+						tablewriter.ConditionString(m.Zone != "", m.Zone, "N/A"),
+					}
+					for _, field := range fields {
+						tableItem = append(tableItem, nodeExtraField(m, strings.Split(field, ".")))
+					}
+					table.Append(tableItem)
 				}
-				for _, field := range fields {
-					tableItem = append(tableItem, nodeExtraField(m, strings.Split(field, ".")))
-				}
-				table.Append(tableItem)
 			}
 
 			if jsonOutput {
@@ -181,6 +211,7 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	cmd.Flags().StringArrayVar(&fields, "field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
+	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "Only display the information concerning a node with a specific Mesos ID")
 	return cmd
 }
 
