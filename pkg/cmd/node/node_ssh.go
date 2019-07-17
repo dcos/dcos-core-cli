@@ -15,10 +15,10 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	var leader, masterProxy bool
 	var mesosID, proxyIP, privateIP string
 
-	clientOpts:= sshclient.ClientOpts{
-		Input:      ctx.Input(),
-		Out:        ctx.Out(),
-		ErrOut:     ctx.ErrOut(),
+	clientOpts := sshclient.ClientOpts{
+		Input:  ctx.Input(),
+		Out:    ctx.Out(),
+		ErrOut: ctx.ErrOut(),
 	}
 
 	cmd := &cobra.Command{
@@ -54,7 +54,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&leader, "leader", false, "SSH into the leading master")
 	cmd.Flags().BoolVar(&masterProxy, "master-proxy", false, "Proxy the SSH connection through a master node")
-	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The agent ID of a node")
+	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "The Mesos ID of a node")
 	cmd.Flags().StringVar(&proxyIP, "proxy-ip", "", "Proxy the SSH connection through a different IP address")
 	cmd.Flags().StringVar(&privateIP, "private-ip", "", "Agent node with the provided private IP")
 	cmd.Flags().StringVar(&clientOpts.User, "user", defUser, "The SSH user")

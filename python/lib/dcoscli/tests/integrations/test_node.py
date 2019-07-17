@@ -56,7 +56,7 @@ def test_node_table_field_option():
     lines = stdout.decode('utf-8').splitlines()
     assert len(lines) > 2
     assert lines[0].split() == ["HOSTNAME", "IP", "PUBLIC", "IP(S)", "ID",
-                                "TYPE", "REGION", "ZONE", "USED",
+                                "TYPE", "STATUS", "REGION", "ZONE", "USED",
                                 "RESOURCES", "DISK"]
     assert stdout.decode('utf-8').count("agent (public)") == 1
 
@@ -70,7 +70,8 @@ def test_node_table_uppercase_field_option():
     lines = stdout.decode('utf-8').splitlines()
     assert len(lines) > 2
     assert lines[0].split() == ["HOSTNAME", "IP", "PUBLIC", "IP(S)", "ID",
-                                "TYPE", "REGION", "ZONE", "TASK", "RUNNING"]
+                                "TYPE", "STATUS", "REGION", "ZONE", "TASK",
+                                "RUNNING"]
 
 
 def test_node_log_empty():
