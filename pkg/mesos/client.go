@@ -354,6 +354,34 @@ func (c *Client) DeactivateAgent(agentID string) error {
 	}
 }
 
+// ReactivateAgent reactivates an agent.
+func (c *Client) ReactivateAgent(agentID string) error {
+	body := master.Call{
+		Type: master.Call_REACTIVATE_AGENT,
+		ReactivateAgent: &master.Call_ReactivateAgent{
+			AgentID: mesos.AgentID{Value: agentID},
+		},
+	}
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+		return err
+	}
+	resp, err := c.http.Post("/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
+		return fmt.Errorf("could not reactivate agent '%s'", agentID)
+	default:
+		return httpResponseToError(resp)
+	}
+}
+
 // TeardownFramework teardowns a framework.
 func (c *Client) TeardownFramework(frameworkID string) error {
 	body := master.Call{
