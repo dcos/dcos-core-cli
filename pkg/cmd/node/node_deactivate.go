@@ -1,8 +1,6 @@
 package node
 
 import (
-	"fmt"
-
 	"github.com/dcos/dcos-cli/api"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +11,11 @@ func newCmdNodeDeactivate(ctx api.Context) *cobra.Command {
 		Short: "Deactivate a node",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("not implemented yet")
+			c, err := mesosClient(ctx)
+			if err != nil {
+				return err
+			}
+			return c.DeactivateAgent(args[0])
 		},
 	}
 	return cmd
