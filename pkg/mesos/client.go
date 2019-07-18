@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	google_protobuf "github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/master"
@@ -377,6 +379,47 @@ func (c *Client) ReactivateAgent(agentID string) error {
 		return nil
 	case 404:
 		return fmt.Errorf("could not reactivate agent '%s'", agentID)
+	default:
+		return httpResponseToError(resp)
+	}
+}
+
+// DrainAgent drains an agent.
+func (c *Client) DrainAgent(agentID string, gracePeriod time.Duration, markGone bool) error {
+	body := master.Call{
+		Type: master.Call_DRAIN_AGENT,
+		DrainAgent: &master.Call_DrainAgent{
+			AgentID:  mesos.AgentID{Value: agentID},
+			MarkGone: &markGone,
+		},
+	}
+
+	if gracePeriod != 0 {
+		// As done in github.com/gogo/protobuf/types/duration.go.
+		nanos := gracePeriod.Nanoseconds()
+		secs := nanos / 1e9
+		nanos -= secs * 1e9
+		body.DrainAgent.MaxGracePeriod = &google_protobuf.Duration{
+			Seconds: secs,
+			Nanos:   int32(nanos),
+		}
+	}
+
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+		return err
+	}
+	resp, err := c.http.Post("/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
+		return fmt.Errorf("could not drain agent '%s'", agentID)
 	default:
 		return httpResponseToError(resp)
 	}
