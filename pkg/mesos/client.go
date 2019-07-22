@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/master"
+	"github.com/mesos/mesos-go/api/v1/lib/quota"
 )
 
 // Client is a Mesos client for DC/OS.
@@ -420,6 +421,126 @@ func (c *Client) DrainAgent(agentID string, gracePeriod time.Duration, markGone 
 		return nil
 	case 404:
 		return fmt.Errorf("could not drain agent '%s'", agentID)
+	default:
+		return httpResponseToError(resp)
+	}
+}
+
+// Quota returns a quota.
+func (c *Client) Quota() (*master.Response_GetQuota, error) {
+	body := master.Call{
+		Type: master.Call_GET_QUOTA,
+	}
+	reqBody, err := proto.Marshal(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.http.Post("/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+		httpclient.Header("Accept", "application/x-protobuf"))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var response master.Response
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		err = proto.Unmarshal(bodyBytes, &response)
+		return response.GetQuota, err
+	case 503:
+		return nil, fmt.Errorf("could not connect to the leading mesos master")
+	default:
+		return nil, httpResponseToError(resp)
+	}
+}
+
+// Roles returns a stripped down mesos/roles containg quota information.
+func (c *Client) Roles() (*Roles, error) {
+	resp, err := c.http.Get("/roles")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var roles Roles
+		err = json.NewDecoder(resp.Body).Decode(&roles)
+		return &roles, err
+	case 503:
+		return nil, fmt.Errorf("could not connect to the leading mesos master")
+	default:
+		return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+	}
+}
+
+// UpdateQuota updates a quota.
+func (c *Client) UpdateQuota(name string, cpu float64, mem float64, force bool) error {
+	config := quota.QuotaConfig{
+		Role: name,
+		Guarantees: map[string]mesos.Value_Scalar{
+			"cpus": mesos.Value_Scalar{Value: cpu},
+			"mem":  mesos.Value_Scalar{Value: mem},
+		},
+	}
+	body := master.Call{
+		Type: master.Call_UPDATE_QUOTA,
+		UpdateQuota: &master.Call_UpdateQuota{
+			Force:        &force,
+			QuotaConfigs: []quota.QuotaConfig{config},
+		},
+	}
+
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(body); err != nil {
+		return err
+	}
+	resp, err := c.http.Post("/api/v1", "application/json", &reqBody, httpclient.FailOnErrStatus(false))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 404:
+		return fmt.Errorf("could not set quota '%s'", name)
+	default:
+		return httpResponseToError(resp)
+	}
+}
+
+// DeleteQuota deletes a quota.
+func (c *Client) DeleteQuota(quota string) error {
+	body := master.Call{
+		Type: master.Call_REMOVE_QUOTA,
+		RemoveQuota: &master.Call_RemoveQuota{
+			Role: quota,
+		},
+	}
+	reqBody, err := proto.Marshal(&body)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.http.Post("/api/v1", "application/x-protobuf", bytes.NewBuffer(reqBody),
+		httpclient.Header("Accept", "application/x-protobuf"))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 503:
+		return fmt.Errorf("could not connect to the leading mesos master")
 	default:
 		return httpResponseToError(resp)
 	}

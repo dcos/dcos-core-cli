@@ -283,3 +283,18 @@ type NetworkInfo struct {
 type IPAddress struct {
 	IPAddress string `json:"ip_address"`
 }
+
+// Roles represents a stripped down representation of mesos/roles
+type Roles struct {
+	Roles []struct {
+		Quota Quota `json:"quota"`
+	} `json:"roles"`
+}
+
+// Quota represents a role's quota
+type Quota struct {
+	Role      string                 `json:"role"`
+	Consumed  map[string]interface{} `json:"consumed"`
+	Guarantee map[string]interface{} `json:"guarantee"`
+	Limit     map[string]interface{} `json:"limit"`
+}
