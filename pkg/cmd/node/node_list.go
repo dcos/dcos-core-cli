@@ -143,7 +143,15 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 					for _, agent := range agents {
 						if agent.AgentInfo.ID.Value == s.ID {
-							s.Status = agent.GetDrainInfo().GetState().String()
+							status := agent.GetDrainInfo().GetState().String()
+							if status == "UNKNOWN" {
+								if agent.GetDeactivated() {
+									status = "DEACTIVATED"
+								} else if agent.GetActive() {
+									status = "ACTIVE"
+								}
+							}
+							s.Status = status
 						}
 					}
 
