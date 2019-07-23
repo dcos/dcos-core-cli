@@ -4,60 +4,60 @@ from dcos import jsonitem
 from dcos.errors import DCOSException
 
 
-@pytest.fixture(params=range(6))
+@pytest.fixture(params=[
+    '{"key":value}',
+    'this is a string',
+    '4.5',
+    '4',
+    'true',
+    '[1,2,3]',
+])
 def bad_object(request):
-    return [
-        '{"key":value}',
-        'this is a string',
-        '4.5',
-        '4',
-        'true',
-        '[1,2,3]',
-    ][request.param]
+    return request.param
 
 
-@pytest.fixture(params=range(4))
+@pytest.fixture(params=[
+    'this is a string',
+    'true',
+    '{"key":"value"}',
+    '[1,2,3]',
+])
 def bad_number(request):
-    return [
-        'this is a string',
-        'true',
-        '{"key":"value"}',
-        '[1,2,3]',
-    ][request.param]
+    return request.param
 
 
-@pytest.fixture(params=range(5))
+@pytest.fixture(params=[
+    'this is a string',
+    'true',
+    '{"key":"value"}',
+    '45.0',
+    '[1,2,3]',
+])
 def bad_integer(request):
-    return [
-        'this is a string',
-        'true',
-        '{"key":"value"}',
-        '45.0',
-        '[1,2,3]',
-    ][request.param]
+    return request.param
 
 
-@pytest.fixture(params=range(5))
+@pytest.fixture(params=[
+    'this is a string',
+    '45',
+    '{"key":"value"}',
+    '45.0',
+    '[1,2,3]',
+])
 def bad_boolean(request):
-    return [
-        'this is a string',
-        '45',
-        '{"key":"value"}',
-        '45.0',
-        '[1,2,3]',
-    ][request.param]
+    return request.param
 
 
-@pytest.fixture(params=range(6))
+@pytest.fixture(params=[
+    'this is a string',
+    '45',
+    '{"key":"value"}',
+    '45.0',
+    'true',
+    '[1,2,3',
+])
 def bad_array(request):
-    return [
-        'this is a string',
-        '45',
-        '{"key":"value"}',
-        '45.0',
-        'true',
-        '[1,2,3',
-    ][request.param]
+    return request.param
 
 
 @pytest.fixture(params=[
@@ -82,37 +82,37 @@ def jsonitem_tuple(request):
     return request.param
 
 
-@pytest.fixture(params=range(13))
+@pytest.fixture(params=[
+    ('string=null', ('"string"', None)),
+    ('string="this is a string with ="',
+        ('"string"', 'this is a string with =')),
+    ("string='this is a string with ='",
+        ('"string"', 'this is a string with =')),
+    ('object=null', ('"object"', None)),
+    ("""object='{"key":"value"}'""", ('"object"', {'key': 'value'})),
+    ('number=null', ('"number"', None)),
+    ('number=4.2', ('"number"', 4.2)),
+    ('integer=null', ('"integer"', None)),
+    ('integer=42', ('"integer"', 42)),
+    ('boolean=null', ('"boolean"', None)),
+    ('boolean=true', ('"boolean"', True)),
+    ('array=null', ('"array"', None)),
+    ("array='[1,2,3]'", ('"array"', [1, 2, 3])),
+])
 def parse_tuple(request):
-    return [
-        ('string=null', ('"string"', None)),
-        ('string="this is a string with ="',
-         ('"string"', 'this is a string with =')),
-        ("string='this is a string with ='",
-         ('"string"', 'this is a string with =')),
-        ('object=null', ('"object"', None)),
-        ("""object='{"key":"value"}'""", ('"object"', {'key': 'value'})),
-        ('number=null', ('"number"', None)),
-        ('number=4.2', ('"number"', 4.2)),
-        ('integer=null', ('"integer"', None)),
-        ('integer=42', ('"integer"', 42)),
-        ('boolean=null', ('"boolean"', None)),
-        ('boolean=true', ('"boolean"', True)),
-        ('array=null', ('"array"', None)),
-        ("array='[1,2,3]'", ('"array"', [1, 2, 3])),
-    ][request.param]
+    return request.param
 
 
-@pytest.fixture(params=range(6))
+@pytest.fixture(params=[
+    "====",
+    "no equals",
+    "object=[]",
+    "something=cool",
+    "integer=",
+    "integer=45.0",
+])
 def bad_parse(request):
-    return [
-        "====",
-        "no equals",
-        "object=[]",
-        "something=cool",
-        "integer=",
-        "integer=45.0",
-    ][request.param]
+    return request.param
 
 
 @pytest.fixture
@@ -212,6 +212,10 @@ def test_find_parser(schema, jsonitem_tuple):
 def test_parse_json_item(schema, parse_tuple):
     arg, result = parse_tuple
     assert jsonitem.parse_json_item(arg, schema) == result
+
+
+def test_parse_json_string_item_without_schema():
+    assert jsonitem.parse_json_item("string=val", None) == ('"string"', "val")
 
 
 def test_parse_bad_json_item(schema, bad_parse):
