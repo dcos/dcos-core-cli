@@ -9,7 +9,7 @@ import (
 
 func newCmdQuotaUpdate(ctx api.Context) *cobra.Command {
 	var force bool
-	var cpu, mem float64
+	var cpu, disk, gpu, mem float64
 
 	cmd := &cobra.Command{
 		Use:   "update <group>",
@@ -21,7 +21,9 @@ func newCmdQuotaUpdate(ctx api.Context) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&force, "force", false, "Force the quota creation")
-	cmd.Flags().Float64Var(&cpu, "cpu", 1.0, "Amount of CPU for the quota's guarantee")
-	cmd.Flags().Float64Var(&mem, "mem", 1.0, "Amount of memory (in MB) for the quota's guarantee")
+	cmd.Flags().Float64Var(&cpu, "cpu", 0.0, "Number of CPUs for the quota's guarantee")
+	cmd.Flags().Float64Var(&disk, "disk", 0.0, "Amount of disk (in MB) for the quota's guarantee")
+	cmd.Flags().Float64Var(&gpu, "gpu", 0.0, "Number of GPUs for the quota's guarantee")
+	cmd.Flags().Float64Var(&mem, "mem", 0.0, "Amount of memory (in MB) for the quota's guarantee")
 	return cmd
 }

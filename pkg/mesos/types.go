@@ -294,7 +294,7 @@ type Roles struct {
 // Quota represents a role's quota
 type Quota struct {
 	Role      string                 `json:"role"`
-	Consumed  map[string]interface{} `json:"consumed"`
-	Guarantee map[string]interface{} `json:"guarantee"`
-	Limit     map[string]interface{} `json:"limit"`
+	Consumed  map[string]interface{} `json:"consumed,omitempty"`
+	Guarantee map[string]interface{} `json:"guarantee,omitempty"`
+	Limit     map[string]interface{} `json:"limit,omitempty"`
 }

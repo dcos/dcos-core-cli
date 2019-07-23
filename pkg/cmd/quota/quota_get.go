@@ -1,6 +1,7 @@
 package quota
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -10,13 +11,14 @@ import (
 )
 
 type resource struct {
-	consumed  string
-	guarantee string
-	limit     string
+	consumed string
+	limit    string
 }
 
 func newCmdQuotaGet(ctx api.Context) *cobra.Command {
-	return &cobra.Command{
+	var jsonOutput bool
+
+	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get a quota",
 		Args:  cobra.ExactArgs(1),
@@ -37,18 +39,31 @@ func newCmdQuotaGet(ctx api.Context) *cobra.Command {
 
 			for _, role := range roles.Roles {
 				if role.Quota.Role == args[0] {
+					if jsonOutput {
+						enc := json.NewEncoder(ctx.Out())
+						enc.SetIndent("", "    ")
+						return enc.Encode(role.Quota)
+					}
 					for resName, resLimit := range role.Quota.Limit {
 						resourceNames = append(resourceNames, resName)
 						var res resource
 						res.consumed = formatValue(role.Quota.Consumed[resName], resName)
-						res.guarantee = formatValue(role.Quota.Guarantee[resName], resName)
 						res.limit = formatValue(resLimit, resName)
+
+						if res.consumed != "-" && res.limit != "-" {
+							if consumed, ok := role.Quota.Consumed[resName].(float64); ok {
+								if limit, ok := role.Quota.Limit[resName].(float64); ok {
+									res.consumed = fmt.Sprintf("%.2f%%", consumed*100/limit)
+								}
+							}
+						}
 						resources[resName] = res
 					}
 				}
 			}
 
-			tableHeader := []string{"RESOURCE", "CONSUMPTION", "GUARANTEE", "LIMIT"}
+			// Not exposing the guarantees yet as it's not displayed in the DC/OS UI.
+			tableHeader := []string{"RESOURCE", "CONSUMPTION", "LIMIT"}
 			table := cli.NewTable(ctx.Out(), tableHeader)
 
 			sort.Strings(resourceNames)
@@ -56,7 +71,6 @@ func newCmdQuotaGet(ctx api.Context) *cobra.Command {
 				tableItem := []string{
 					name,
 					resources[name].consumed,
-					resources[name].guarantee,
 					resources[name].limit,
 				}
 				table.Append(tableItem)
@@ -66,6 +80,8 @@ func newCmdQuotaGet(ctx api.Context) *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	return cmd
 }
 
 func formatValue(val interface{}, name string) string {

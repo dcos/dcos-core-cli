@@ -27,6 +27,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		newCmdQuotaCreate(ctx),
 		newCmdQuotaDelete(ctx),
 		newCmdQuotaGet(ctx),
+		newCmdQuotaList(ctx),
 		newCmdQuotaUpdate(ctx),
 	)
 
