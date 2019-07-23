@@ -94,7 +94,10 @@ class ValueTypeParser(object):
 
         if self.schema['type'] == 'string':
             if self.schema.get('format') == 'uri':
-                return _parse_url(value)
+                try:
+                    return _parse_url(value)
+                except DCOSException:
+                    return "https://" + value
             else:
                 return _parse_string(value)
         elif self.schema['type'] == 'object':
@@ -281,12 +284,5 @@ def _parse_url(value):
         value, re.IGNORECASE)
 
     if value_regex is None:
-        scheme_match = re.match(scheme_pattern, value, re.IGNORECASE)
-        if scheme_match is None:
-            logger.debug("Defaulting URL to https scheme")
-            return "https://" + value
-        else:
-            raise DCOSException(
-                'Unable to parse {!r} as a url'.format(value))
-    else:
-        return value
+        raise DCOSException('Unable to parse {!r} as a url'.format(value))
+    return value
