@@ -10,6 +10,8 @@ Commands:
       Delete a quota
   get
       Get a quota
+  list
+      List quotas
   update
       Update a quota
 
