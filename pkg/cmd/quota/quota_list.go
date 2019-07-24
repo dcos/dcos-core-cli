@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/spf13/cobra"
 )
@@ -17,21 +18,42 @@ func newCmdQuotaList(ctx api.Context) *cobra.Command {
 		Short: "List quotas",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := mesosClient(ctx)
+			marathonClient, err := marathon.NewClient(ctx)
 			if err != nil {
 				return err
 			}
 
-			roles, err := c.Roles()
+			mesosClient, err := mesos.NewClientWithContext(ctx)
 			if err != nil {
 				return err
 			}
 
-			allRoles := roles.Roles
+			groupsRes := make(chan groupsResult)
+			go func() {
+				groups, err := marathonClient.GroupNames()
+				groupsRes <- groupsResult{groups, err}
+			}()
+
+			rolesRes := make(chan rolesResult)
+			go func() {
+				roles, err := mesosClient.Roles()
+				rolesRes <- rolesResult{roles, err}
+			}()
+
+			rolesResult := <-rolesRes
+			if rolesResult.err != nil {
+				return rolesResult.err
+			}
+
+			groupsResult := <-groupsRes
+			if groupsResult.err != nil {
+				return groupsResult.err
+			}
+
 			quotas := []mesos.Quota{}
 
-			for _, role := range allRoles {
-				if role.Quota.Role != "" {
+			for _, role := range rolesResult.roles.Roles {
+				if role.Quota.Role != "" && groupsResult.groups[role.Quota.Role] {
 					quotas = append(quotas, role.Quota)
 				}
 			}

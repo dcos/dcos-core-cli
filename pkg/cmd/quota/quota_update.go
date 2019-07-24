@@ -1,9 +1,8 @@
 package quota
 
 import (
-	"fmt"
-
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/spf13/cobra"
 )
 
@@ -16,14 +15,19 @@ func newCmdQuotaUpdate(ctx api.Context) *cobra.Command {
 		Short: "Update a quota",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("not implemented yet")
+			mesosClient, err := mesos.NewClientWithContext(ctx)
+			if err != nil {
+				return err
+			}
+
+			return mesosClient.UpdateQuota(args[0], cpu, disk, gpu, mem, force)
 		},
 	}
 
 	cmd.Flags().BoolVar(&force, "force", false, "Force the quota creation")
-	cmd.Flags().Float64Var(&cpu, "cpu", 0.0, "Number of CPUs for the quota's guarantee")
-	cmd.Flags().Float64Var(&disk, "disk", 0.0, "Amount of disk (in MB) for the quota's guarantee")
-	cmd.Flags().Float64Var(&gpu, "gpu", 0.0, "Number of GPUs for the quota's guarantee")
-	cmd.Flags().Float64Var(&mem, "mem", 0.0, "Amount of memory (in MB) for the quota's guarantee")
+	cmd.Flags().Float64Var(&cpu, "cpu", 0.0, "Number of CPUs for the quota's limit")
+	cmd.Flags().Float64Var(&disk, "disk", 0.0, "Amount of disk (in MB) for the quota's limit")
+	cmd.Flags().Float64Var(&gpu, "gpu", 0.0, "Number of GPUs for the quota's limit")
+	cmd.Flags().Float64Var(&mem, "mem", 0.0, "Amount of memory (in MB) for the quota's limit")
 	return cmd
 }

@@ -481,23 +481,23 @@ func (c *Client) Roles() (*Roles, error) {
 
 // UpdateQuota updates a quota.
 func (c *Client) UpdateQuota(name string, cpu float64, disk float64, gpu float64, mem float64, force bool) error {
-	guarantees := map[string]mesos.Value_Scalar{}
+	limits := map[string]mesos.Value_Scalar{}
 	if cpu > 0 {
-		guarantees["cpus"] = mesos.Value_Scalar{Value: cpu}
+		limits["cpus"] = mesos.Value_Scalar{Value: cpu}
 	}
 	if disk > 0 {
-		guarantees["disk"] = mesos.Value_Scalar{Value: disk}
+		limits["disk"] = mesos.Value_Scalar{Value: disk}
 	}
 	if gpu > 0 {
-		guarantees["gpus"] = mesos.Value_Scalar{Value: gpu}
+		limits["gpus"] = mesos.Value_Scalar{Value: gpu}
 	}
 	if mem > 0 {
-		guarantees["mem"] = mesos.Value_Scalar{Value: mem}
+		limits["mem"] = mesos.Value_Scalar{Value: mem}
 	}
 
 	config := quota.QuotaConfig{
-		Role:       name,
-		Guarantees: guarantees,
+		Role:   name,
+		Limits: limits,
 	}
 	body := master.Call{
 		Type: master.Call_UPDATE_QUOTA,

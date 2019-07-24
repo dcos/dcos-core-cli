@@ -6,6 +6,7 @@ import (
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	"github.com/mesos/mesos-go/api/v1/lib/master"
 	"github.com/spf13/cobra"
 )
 
@@ -45,4 +46,19 @@ func mesosClient(ctx api.Context) (*mesos.Client, error) {
 		baseURL = cluster.URL() + "/mesos"
 	}
 	return mesos.NewClient(pluginutil.HTTPClient(baseURL)), nil
+}
+
+type groupsResult struct {
+	groups map[string]bool
+	err    error
+}
+
+type quotaResult struct {
+	quota *master.Response_GetQuota
+	err   error
+}
+
+type rolesResult struct {
+	roles *mesos.Roles
+	err   error
 }
