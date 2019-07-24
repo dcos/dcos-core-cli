@@ -30,7 +30,7 @@ func newCmdQuotaList(ctx api.Context) *cobra.Command {
 
 			groupsRes := make(chan groupsResult)
 			go func() {
-				groups, err := marathonClient.GroupNames()
+				groups, err := marathonClient.GroupsAsQuotas()
 				groupsRes <- groupsResult{groups, err}
 			}()
 

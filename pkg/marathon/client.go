@@ -3,6 +3,7 @@ package marathon
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
@@ -40,8 +41,8 @@ func NewClient(ctx api.Context) (*Client, error) {
 	return &Client{API: client, baseURL: baseURL}, nil
 }
 
-// GroupNames returns the Marathon groups' names.
-func (c *Client) GroupNames() (map[string]bool, error) {
+// GroupsAsQuotas returns the Marathon groups' names as quotas.
+func (c *Client) GroupsAsQuotas() (map[string]bool, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/groups")
 	if err != nil {
@@ -58,7 +59,7 @@ func (c *Client) GroupNames() (map[string]bool, error) {
 		}
 
 		for _, group := range groups.Groups {
-			groupsMap[group.ID] = true
+			groupsMap[strings.Replace(group.ID, "/", "", 1)] = true
 		}
 		return groupsMap, nil
 	default:

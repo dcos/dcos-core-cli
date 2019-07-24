@@ -30,7 +30,7 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 
 			groupsRes := make(chan groupsResult)
 			go func() {
-				groups, err := marathonClient.GroupNames()
+				groups, err := marathonClient.GroupsAsQuotas()
 				groupsRes <- groupsResult{groups, err}
 			}()
 
@@ -51,7 +51,7 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 			}
 
 			if !groupsResult.groups[args[0]] {
-				return errors.New(args[0] + " is not an existing group")
+				return errors.New("/" + args[0] + " is not an existing group")
 			}
 
 			for _, quotaInfo := range quotaResult.quota.Status.Infos {
