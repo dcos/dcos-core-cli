@@ -1,6 +1,9 @@
 package marathon
 
 import (
+	"encoding/json"
+	"errors"
+
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	marathon "github.com/gambol99/go-marathon"
@@ -8,7 +11,8 @@ import (
 
 // Client to interact with the Marathon API.
 type Client struct {
-	API marathon.Marathon
+	API     marathon.Marathon
+	baseURL string
 }
 
 // NewClient creates a new HTTP wrapper client to talk to the Marathon service.
@@ -33,5 +37,32 @@ func NewClient(ctx api.Context) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{API: client}, nil
+	return &Client{API: client, baseURL: baseURL}, nil
+}
+
+// GroupNames returns the Marathon groups' names.
+func (c *Client) GroupNames() (map[string]bool, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/groups")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var groups Groups
+		groupsMap := make(map[string]bool)
+		if err := json.NewDecoder(resp.Body).Decode(&groups); err != nil {
+			return nil, err
+		}
+
+		for _, group := range groups.Groups {
+			groupsMap[group.ID] = true
+		}
+		return groupsMap, nil
+	default:
+		return nil, errors.New("unable to get groups")
+	}
+
 }
