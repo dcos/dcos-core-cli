@@ -25,6 +25,8 @@ node('py36') {
 
     dir("dcos-core-cli") {
         checkout scm
+        sh 'wget https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/master/dcos.exe'
+        stash includes: 'dcos.exe', name: 'dcos-exe'
     }
 
     stash includes: "dcos-core-cli/**", name: "dcos-core-cli"
@@ -57,6 +59,9 @@ node('py36') {
                         // https://mesosphere.slack.com/archives/C5U03P5T6/p1527867956000237
                         unstash "dcos-core-cli"
 
+                        // Cannot download files using HTTPS on windows.
+                        unstash "dcos-exe"
+
                         // The run_integration_tests.py script triggers
                         // `ImportError: No module named 'termios'` on Windows.
                         // There were a workaround for this issue in the licensing
@@ -72,12 +77,13 @@ node('py36') {
                                 make python; \
                                 python scripts/plugin/package_plugin.py; \
                                 cd python/lib/dcoscli; \
-                                python -c 'import urllib.request; urllib.request.urlretrieve(\\\"https://downloads.dcos.io/cli/testing/binaries/dcos/windows/x86-64/0.7.x/dcos.exe\\\", \\\"dist/dcos.exe\\\")'; \
-                                dist/dcos cluster remove --all; \
-                                dist/dcos cluster setup ${DCOS_TEST_URL} --insecure; \
-                                dist/dcos plugin add ../../../build/windows/dcos-core-cli.zip; \
-                                PATH=$PWD/dist:$PATH; \
                                 make env; \
+                                rm -f ./env/Scripts/dcos.exe; \
+                                mv ../../../dcos.exe dist; \
+                                PATH=$PWD/dist:$PATH; \
+                                dcos cluster remove --all; \
+                                dcos cluster setup ${DCOS_TEST_URL} --insecure; \
+                                dcos plugin add -u ../../../build/windows/dcos-core-cli.zip; \
                                 ./env/Scripts/tox -e py35-integration"
                             '''
                         }
