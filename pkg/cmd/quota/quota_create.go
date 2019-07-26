@@ -65,9 +65,9 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&force, "force", false, "Force the quota creation")
-	cmd.Flags().Float64Var(&cpu, "cpu", 0.0, "Number of CPUs for the quota's limit")
-	cmd.Flags().Float64Var(&disk, "disk", 0.0, "Amount of disk (in MiB) for the quota's limit")
-	cmd.Flags().Float64Var(&gpu, "gpu", 0.0, "Number of GPUs for the quota's limit")
-	cmd.Flags().Float64Var(&mem, "mem", 0.0, "Amount of memory (in MiB) for the quota's limit")
+	cmd.Flags().Float64Var(&cpu, "cpu", -1.0, "Number of CPUs for the quota's limit")
+	cmd.Flags().Float64Var(&disk, "disk", -1.0, "Amount of disk (in MiB) for the quota's limit")
+	cmd.Flags().Float64Var(&gpu, "gpu", -1.0, "Number of GPUs for the quota's limit")
+	cmd.Flags().Float64Var(&mem, "mem", -1.0, "Amount of memory (in MiB) for the quota's limit")
 	return cmd
 }

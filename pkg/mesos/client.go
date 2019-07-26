@@ -482,16 +482,16 @@ func (c *Client) Roles() (*Roles, error) {
 // UpdateQuota updates a quota.
 func (c *Client) UpdateQuota(name string, cpu float64, disk float64, gpu float64, mem float64, force bool) error {
 	limits := map[string]mesos.Value_Scalar{}
-	if cpu > 0 {
+	if cpu >= 0 {
 		limits["cpus"] = mesos.Value_Scalar{Value: cpu}
 	}
-	if disk > 0 {
+	if disk >= 0 {
 		limits["disk"] = mesos.Value_Scalar{Value: disk}
 	}
-	if gpu > 0 {
+	if gpu >= 0 {
 		limits["gpus"] = mesos.Value_Scalar{Value: gpu}
 	}
-	if mem > 0 {
+	if mem >= 0 {
 		limits["mem"] = mesos.Value_Scalar{Value: mem}
 	}
 
