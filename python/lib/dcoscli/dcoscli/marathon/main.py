@@ -140,7 +140,7 @@ def _cmds():
 
         cmds.Command(
             hierarchy=['marathon', 'group', 'add'],
-            arg_keys=['<group-resource>'],
+            arg_keys=['<group-resource>', '--id'],
             function=subcommand.group_add),
 
         cmds.Command(
@@ -475,7 +475,7 @@ class MarathonSubcommand(object):
         emitting.publish_table(emitter, groups, tables.group_table, json_)
         return 0
 
-    def group_add(self, group_resource):
+    def group_add(self, group_resource, id_):
         """
         :param group_resource: optional filename for the group resource
         :type group_resource: str
@@ -483,7 +483,10 @@ class MarathonSubcommand(object):
         :rtype: int
         """
 
-        group_resource = self._resource_reader.get_resource(group_resource)
+        if id_:
+            group_resource = {'id': id_}
+        else:
+            group_resource = self._resource_reader.get_resource(group_resource)
 
         client = self._create_marathon_client()
 

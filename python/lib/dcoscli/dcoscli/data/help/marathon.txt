@@ -23,7 +23,7 @@ Usage:
     dcos marathon deployment stop <deployment-id>
     dcos marathon deployment watch [--max-count=<max-count>]
                                    [--interval=<interval>] <deployment-id>
-    dcos marathon group add [<group-resource>]
+    dcos marathon group add [<group-resource>|--id=<group-id>]
     dcos marathon group list [--json]
     dcos marathon group scale [--force] <group-id> <scale-factor>
     dcos marathon group show [--group-version=<group-version>] <group-id>
@@ -137,6 +137,8 @@ Options:
         absolute or relative value. Absolute values must be in ISO8601 date
         format. Relative values must be specified as a negative integer and they
         represent the version from the currently deployed group definition.
+    --id=<group-id>
+        The group ID to add.
     -h, --help
         Print usage.
     --host=<host>
