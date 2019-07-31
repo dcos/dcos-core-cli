@@ -3,6 +3,7 @@ package quota
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
@@ -19,6 +20,10 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 		Short: "Create a quota",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if strings.Contains(args[0], "/") {
+				return fmt.Errorf("could not create quota '%s', quotas cannot be created for subgroups yet", args[0])
+			}
+
 			if cpu == -1.0 && disk == -1.0 && gpu == -1.0 && mem == -1.0 {
 				return fmt.Errorf("could not create quota '%s', at least one limit has to be given", args[0])
 			}
