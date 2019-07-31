@@ -36,14 +36,18 @@ func newCmdQuotaGet(ctx api.Context) *cobra.Command {
 			}
 
 			resources := map[string]resource{}
+			quotaFound := false
 
 			for _, role := range roles.Roles {
 				if role.Quota.Role == args[0] {
+					quotaFound = true
+
 					if jsonOutput {
 						enc := json.NewEncoder(ctx.Out())
 						enc.SetIndent("", "    ")
 						return enc.Encode(role.Quota)
 					}
+
 					for resName, resLimit := range role.Quota.Limit {
 						resourceNames = append(resourceNames, resName)
 						var res resource
@@ -60,6 +64,10 @@ func newCmdQuotaGet(ctx api.Context) *cobra.Command {
 						resources[resName] = res
 					}
 				}
+			}
+
+			if !quotaFound {
+				return fmt.Errorf("could not find quota '%s'", args[0])
 			}
 
 			// Not exposing the guarantees yet as it's not displayed in the DC/OS UI.
@@ -88,7 +96,13 @@ func formatValue(val interface{}, name string) string {
 	switch typedVal := val.(type) {
 	case float64:
 		if name == "mem" || name == "disk" {
-			return fmt.Sprintf("%.1fGiB", typedVal/1024)
+			if typedVal < 1024 {
+				return fmt.Sprintf("%.0f MiB", typedVal)
+			}
+			if typedVal == float64(int64(typedVal)) {
+				return fmt.Sprintf("%.0f GiB", typedVal/1024)
+			}
+			return fmt.Sprintf("%.1f GiB", typedVal/1024)
 		}
 		return fmt.Sprintf("%.0f", typedVal)
 	}
