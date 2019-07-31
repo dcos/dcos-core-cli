@@ -28,18 +28,27 @@ func newCmdNodeDrain(ctx api.Context) *cobra.Command {
 			}
 
 			if wait {
+				var agentFound bool
 				fmt.Fprintln(ctx.Out(), "Waiting for the agent to be drained...")
+
 				for range time.Tick(5 * time.Second) {
+					agentFound = false
 					agents, err := c.Agents()
 					if err != nil {
 						return err
 					}
+
 					for _, agent := range agents {
 						if args[0] == agent.AgentInfo.GetID().Value {
+							agentFound = true
 							if agent.GetDrainInfo().GetState() == mesos.DrainState_DRAINED {
 								return nil
 							}
 						}
+					}
+					// The agent is gone, which is what the user wanted.
+					if decommission && !agentFound {
+						return nil
 					}
 				}
 			}
