@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.14-patch.1
+
+* Fixes
+
+  * Improve the `dcos quota` subcommand according to internal UX feedback
+
 ## 1.14-patch.0
 
 * Breaking changes
