@@ -41,8 +41,9 @@ func NewClient(ctx api.Context) (*Client, error) {
 	return &Client{API: client, baseURL: baseURL}, nil
 }
 
-// GroupsAsQuotas returns the Marathon groups' names as quotas.
-func (c *Client) GroupsAsQuotas() (map[string]bool, error) {
+// GroupsWithoutRootSlash returns the Marathon groups' names as a map without the first "/".
+// This makes it easy to match Marathon groups with Mesos roles that cannot start with "/".
+func (c *Client) GroupsWithoutRootSlash() (map[string]bool, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/groups")
 	if err != nil {
@@ -63,7 +64,7 @@ func (c *Client) GroupsAsQuotas() (map[string]bool, error) {
 		}
 		return groupsMap, nil
 	default:
-		return nil, errors.New("unable to get groups")
+		return nil, errors.New("unable to get Marathon groups")
 	}
 
 }

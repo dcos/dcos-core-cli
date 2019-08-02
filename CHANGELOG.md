@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.14-patch.2
+
+ * Fixes
+
+   * Update 'dcos quota create' to error out less often according to internal UX feedback
+
 ## 1.14-patch.1
 
 * Fixes
@@ -10,7 +16,7 @@
 
 * Breaking changes
 
-  * `dcos task ls` without any argument to get the list of all tasks files is not supported anymore.
+  * `dcos task ls` without any argument to get the list of all tasks files is not supported anymore
 
 * Features
 
