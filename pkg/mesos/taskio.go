@@ -14,6 +14,7 @@ import (
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
 	agentcalls "github.com/mesos/mesos-go/api/v1/lib/agent/calls"
+	"github.com/mesos/mesos-go/api/v1/lib/httpcli/apierrors"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
@@ -215,6 +216,8 @@ func (t *TaskIO) attachInput() {
 		// Wait for the output to be attached before attaching the input.
 		<-t.outputAttached
 
+		t.opts.Logger.Info("Attaching container input.")
+
 		err := t.attachContainerInput()
 		if err != nil && t.ctx.Err() == nil {
 			t.cancelFunc()
@@ -244,6 +247,8 @@ func (t *TaskIO) attachContainerInput() error {
 
 		// Create a proxy reader for stdin which is able to detect the escape sequence.
 		t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
+
+		t.opts.Logger.Info("Put the terminal in raw mode.")
 
 		// Set the terminal in raw mode and make sure it's restored
 		// to its previous state before the function returns.
@@ -374,6 +379,14 @@ func (t *TaskIO) attachContainerInput() error {
 
 	err := agentcalls.SendNoData(t.ctx, t.opts.Sender, acif)
 	if err != nil && err != io.EOF {
+		apiError, ok := err.(*apierrors.Error)
+		if ok && int(apiError.Code()) == 500 {
+			// In cases where we receive a 500 response from the agent, we actually want to continue
+			// without returning an error. A 500 error indicates that we can't connect to the container
+			// because it has already finished running. In that case we continue running to allow the
+			// output data to be forwarded to STDOUT/STDERR.
+			return nil
+		}
 		return err
 	}
 	return nil
@@ -381,6 +394,7 @@ func (t *TaskIO) attachContainerInput() error {
 
 // attachContainerOutput attaches the CLI output to container stdout/stderr.
 func (t *TaskIO) attachContainerOutput() error {
+	t.opts.Logger.Info("Attaching container output.")
 
 	// Send returns immediately with a Response from which output may be decoded.
 	call := agentcalls.NonStreaming(agentcalls.AttachContainerOutput(t.containerID))
