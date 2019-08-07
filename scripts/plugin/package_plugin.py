@@ -28,7 +28,7 @@ description = "View DC/OS node information"
 
 [[commands]]
 name = "package"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "Install and manage DC/OS software packages"
 
 [[commands]]

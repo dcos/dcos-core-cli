@@ -19,10 +19,10 @@ def test_help_node():
                        stdout=content.read().encode('utf-8'))
 
 
-def test_help_package():
-    with open('dcoscli/data/help/package.txt') as content:
-        assert_command(['dcos', 'help', 'package'],
-                       stdout=content.read().encode('utf-8'))
+# def test_help_package():
+#     with open('dcoscli/data/help/package.txt') as content:
+#         assert_command(['dcos', 'help', 'package'],
+#                        stdout=content.read().encode('utf-8'))
 
 
 def test_help_service():

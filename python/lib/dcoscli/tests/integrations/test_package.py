@@ -48,23 +48,6 @@ def zk_znode(request):
     return request
 
 
-def test_package():
-    with open('dcoscli/data/help/package.txt') as content:
-        assert_command(['dcos', 'package', '--help'],
-                       stdout=content.read().encode('utf-8'))
-
-
-def test_info():
-    info = b"Install and manage DC/OS software packages\n"
-    assert_command(['dcos', 'package', '--info'],
-                   stdout=info)
-
-
-def test_version():
-    assert_command(['dcos', 'package', '--version'],
-                   stdout=b'dcos-package version SNAPSHOT\n')
-
-
 def test_repo_list():
     repo_list = bytes(
         (
