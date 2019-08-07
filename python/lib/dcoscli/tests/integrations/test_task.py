@@ -404,6 +404,21 @@ def test_exec_interactive():
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task exec' not supported on Windows")
+def test_exec_interactive_long_output():
+    task_id = _get_task_id('test-app1')
+
+    # Pass the --interactive option and generate 10 000 random lines.
+    # Then make sure the CLI can consume all the output. The input
+    # connection should fail silently when the container terminates.
+    # See https://jira.mesosphere.com/browse/DCOS_OSS-5432
+    cmd = ['dcos', 'task', 'exec', '-i', task_id, 'sh', '-c',
+           'cat /dev/urandom | tr -dc "a-zA-Z0-9" | fold | head -n 10000']
+
+    assert_lines(cmd, 10000)
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task exec' not supported on Windows")
 def test_exec_match_id_pattern():
     assert_command(['dcos', 'task', 'exec', 'app1', 'true'])
     assert_command(['dcos', 'task', 'exec', 'app2', 'true'])
