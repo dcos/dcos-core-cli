@@ -14,6 +14,7 @@ import (
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
 	agentcalls "github.com/mesos/mesos-go/api/v1/lib/agent/calls"
+	"github.com/mesos/mesos-go/api/v1/lib/httpcli/apierrors"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
@@ -60,6 +61,7 @@ type TaskIO struct {
 	// We use a WaitGroup and will wait for all HTTP connections to be closed before returning.
 	wg sync.WaitGroup
 
+	restoreTerminal           func() error
 	exitSequenceDetected      bool
 	terminationSignalDetected bool
 }
@@ -215,6 +217,8 @@ func (t *TaskIO) attachInput() {
 		// Wait for the output to be attached before attaching the input.
 		<-t.outputAttached
 
+		t.opts.Logger.Info("Attaching container input.")
+
 		err := t.attachContainerInput()
 		if err != nil && t.ctx.Err() == nil {
 			t.cancelFunc()
@@ -245,13 +249,18 @@ func (t *TaskIO) attachContainerInput() error {
 		// Create a proxy reader for stdin which is able to detect the escape sequence.
 		t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
 
+		t.opts.Logger.Info("Put the terminal in raw mode.")
+
 		// Set the terminal in raw mode and make sure it's restored
 		// to its previous state before the function returns.
 		oldState, err := terminal.MakeRaw(stdinFd)
 		if err != nil {
 			return err
 		}
-		defer terminal.Restore(stdinFd, oldState)
+
+		t.restoreTerminal = func() error {
+			return terminal.Restore(stdinFd, oldState)
+		}
 
 		if runtime.GOOS != "windows" {
 			// To force a redraw of the remote terminal, we first resize it to 0 before setting it
@@ -373,7 +382,16 @@ func (t *TaskIO) attachContainerInput() error {
 	acif := agentcalls.FromChan(aciCh)
 
 	err := agentcalls.SendNoData(t.ctx, t.opts.Sender, acif)
+
 	if err != nil && err != io.EOF {
+
+		// In cases where we receive a 500 response from the agent, we actually want to continue
+		// without returning an error. A 500 error indicates that we can't connect to the container
+		// because it has already finished running. In that case we continue running to allow the
+		// output data to be forwarded to STDOUT/STDERR.
+		if apierrors.Code(500).Matches(err) {
+			return nil
+		}
 		return err
 	}
 	return nil
@@ -381,6 +399,7 @@ func (t *TaskIO) attachContainerInput() error {
 
 // attachContainerOutput attaches the CLI output to container stdout/stderr.
 func (t *TaskIO) attachContainerOutput() error {
+	t.opts.Logger.Info("Attaching container output.")
 
 	// Send returns immediately with a Response from which output may be decoded.
 	call := agentcalls.NonStreaming(agentcalls.AttachContainerOutput(t.containerID))
@@ -401,6 +420,11 @@ func (t *TaskIO) attachContainerOutput() error {
 func (t *TaskIO) wait() (int, error) {
 	t.wg.Wait()
 
+	if t.restoreTerminal != nil {
+		if err := t.restoreTerminal(); err != nil {
+			t.opts.Logger.Warnf("Couldn't restore terminal: %s", err)
+		}
+	}
 	select {
 	case err := <-t.errCh:
 		return 0, err

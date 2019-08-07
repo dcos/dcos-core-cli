@@ -1,10 +1,16 @@
 # CHANGELOG
 
+## 1.14-patch.3
+
+* Fixes
+
+  * Make sure to consume remaining output when input connection fails during 'dcos task exec -i'
+
 ## 1.14-patch.2
 
- * Fixes
+* Fixes
 
-   * Update 'dcos quota create' to error out less often according to internal UX feedback
+  * Update 'dcos quota create' to error out less often according to internal UX feedback
 
 ## 1.14-patch.1
 
