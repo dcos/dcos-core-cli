@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/sirupsen/logrus"
@@ -87,7 +88,7 @@ func (c *Client) Job(jobID string, opts ...JobsOption) (*Job, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -118,7 +119,7 @@ func (c *Client) Jobs(opts ...JobsOption) ([]Job, error) {
 		err = json.NewDecoder(resp.Body).Decode(&jobs)
 		return jobs, err
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -154,7 +155,7 @@ func (c *Client) addOrUpdateJob(job *Job, add bool) (*Job, error) {
 		}
 		return &j, nil
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -186,7 +187,7 @@ func (c *Client) RunJob(jobID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -208,7 +209,7 @@ func (c *Client) Run(jobID, runID string) (*Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -230,7 +231,7 @@ func (c *Client) Runs(jobID string) ([]Run, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -249,7 +250,7 @@ func (c *Client) Kill(jobID, runID string) error {
 	case 404:
 		return fmt.Errorf(`job "%s" or run "%s" does not exist`, jobID, runID)
 	default:
-		return httpResponseToError(resp)
+		return handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -281,7 +282,7 @@ func (c *Client) RemoveJob(jobID string, force bool) error {
 	case 409:
 		return fmt.Errorf(`job "%s" is running`, jobID)
 	default:
-		return httpResponseToError(resp)
+		return handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -304,7 +305,7 @@ func (c *Client) Schedules(jobID string) ([]Schedule, error) {
 	case 404:
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -341,7 +342,7 @@ func (c *Client) addOrUpdateSchedule(jobID string, schedule *Schedule, add bool)
 		}
 		return &s, nil
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -369,7 +370,7 @@ func (c *Client) RemoveSchedule(jobID, scheduleID string) error {
 	case 404:
 		return fmt.Errorf(`job "%s" or schedule "%s" does not exist`, jobID, scheduleID)
 	default:
-		return httpResponseToError(resp)
+		return handleErrorResponse(resp, c.logger)
 	}
 }
 
@@ -397,11 +398,11 @@ func (c *Client) Queued(jobID string) ([]Queue, error) {
 		}
 		return nil, fmt.Errorf(`job "%s" does not exist`, jobID)
 	default:
-		return nil, httpResponseToError(resp)
+		return nil, handleErrorResponse(resp, c.logger)
 	}
 }
 
-func httpResponseToError(resp *http.Response) error {
+func handleErrorResponse(resp *http.Response, logger *logrus.Logger) error {
 	if resp.StatusCode < 400 {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
@@ -412,5 +413,12 @@ func httpResponseToError(resp *http.Response) error {
 		}
 	}
 	apiError.Code = resp.StatusCode
+	for _, d := range apiError.Details {
+		var path string
+		if d.Path != "" {
+			path = d.Path + ": "
+		}
+		logger.Warnf("%s%s", path, strings.Join(d.Errors, ","))
+	}
 	return apiError
 }
