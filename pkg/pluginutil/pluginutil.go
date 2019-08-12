@@ -52,7 +52,15 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 // replace the httpClient of the CLI.
 func NewHTTPClient() *http.Client {
 	dcosConfig := dcos.NewConfig(nil)
+	dcosConfig = SetConfigFromEnv(dcosConfig)
+	client := dcos.NewHTTPClient(dcosConfig)
+	client.Transport.(*dcos.DefaultTransport).Logger = Logger()
+	return client
+}
 
+// SetConfigFromEnv updates the fields of a DC/OS Config depending
+// on the environment where it is being run.
+func SetConfigFromEnv(dcosConfig *dcos.Config) *dcos.Config {
 	if acsToken, _ := os.LookupEnv("DCOS_ACS_TOKEN"); acsToken != "" {
 		dcosConfig.SetACSToken(acsToken)
 	}
@@ -74,10 +82,7 @@ func NewHTTPClient() *http.Client {
 		}
 	}
 	dcosConfig.SetTLS(tls)
-
-	client := dcos.NewHTTPClient(dcosConfig)
-	client.Transport.(*dcos.DefaultTransport).Logger = Logger()
-	return client
+	return dcosConfig
 }
 
 // Logger returns a logger for a given plugin runtime.
