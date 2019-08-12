@@ -5,7 +5,9 @@ import (
 
 	"github.com/antihax/optional"
 	"github.com/dcos/client-go/dcos"
+	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 )
 
 // Client is a diagnostics client for DC/OS.
@@ -13,9 +15,16 @@ type Client struct {
 	cosmos *dcos.CosmosApiService
 }
 
-// NewClient creates a new diagnostics client.
-func NewClient(baseClient *httpclient.Client) (*Client, error) {
-	dcosClient, err := dcos.NewClient()
+// NewClient creates a new Cosmos client.
+func NewClient(ctx api.Context, baseClient *httpclient.Client) (*Client, error) {
+	dcosConfigStore := dcos.NewConfigStore(&dcos.ConfigStoreOpts{
+		Fs: ctx.Fs(),
+	})
+	dcosConfig := dcos.NewConfig(dcosConfigStore)
+	dcosConfig.SetURL(baseClient.BaseURL().String())
+	pluginutil.SetConfigFromEnv(dcosConfig)
+
+	dcosClient, err := dcos.NewClientWithConfig(dcosConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -40,4 +49,17 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 		Package: desc.Package,
 	}
 	return &backwardCompatibleDesc, nil
+}
+
+// PackageSearch returns the packages found using the given query.
+func (c *Client) PackageSearch(query string) (*SearchResult, error) {
+	desc, _, err := c.cosmos.PackageSearch(context.TODO(), dcos.CosmosPackageSearchV1Request{Query: query})
+	if err != nil {
+		return nil, err
+	}
+
+	backwardCompatibleSearchResult := SearchResult{
+		Packages: desc.Packages,
+	}
+	return &backwardCompatibleSearchResult, nil
 }

@@ -698,7 +698,7 @@ def test_search():
 
     assert returncode == 1
     assert b'' == stdout
-    assert stderr == b'No packages found.\n'
+    assert b'no packages found' in stderr
 
     returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'search', '--json'])
