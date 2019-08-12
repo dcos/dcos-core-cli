@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/docker/docker/pkg/term"
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
 	agentcalls "github.com/mesos/mesos-go/api/v1/lib/agent/calls"
@@ -247,7 +246,7 @@ func (t *TaskIO) attachContainerInput() error {
 		}
 
 		// Create a proxy reader for stdin which is able to detect the escape sequence.
-		t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
+		t.opts.Stdin = NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
 
 		t.opts.Logger.Info("Put the terminal in raw mode.")
 
@@ -298,21 +297,8 @@ func (t *TaskIO) attachContainerInput() error {
 			for {
 				// Use a buffer with a reasonable size in order to perform well when STDIN is piped and has
 				// a significant size. See https://jira.mesosphere.com/browse/DCOS_OSS-5357
-				bufLen := 512
-
-				if t.opts.TTY {
-					// TODO(bamarni): investigate on why "test_task:test_attach" fails if the buffer size below
-					// is greater than 1, this looks like an issue with the term package we're using, which doesn't
-					// work properly when reading more than 1 char at a time.
-					bufLen = 1
-				}
-				buf := make([]byte, bufLen)
+				buf := make([]byte, 512)
 				n, err := t.opts.Stdin.Read(buf)
-				if _, ok := err.(term.EscapeError); ok {
-					t.cancelFunc()
-					t.exitSequenceDetected = true
-					return
-				}
 				if n > 0 {
 					select {
 					case input <- buf[:n]:
@@ -320,8 +306,10 @@ func (t *TaskIO) attachContainerInput() error {
 						return
 					}
 				}
-				// TODO(jdef) check for temporary error?
 				if err != nil {
+					if _, ok := err.(EscapeError); ok {
+						t.exitSequenceDetected = true
+					}
 					return
 				}
 			}
@@ -340,10 +328,7 @@ func (t *TaskIO) attachContainerInput() error {
 			case <-receivedTerminationSignal:
 				return
 
-			case ttyInfo, ok := <-ttyInfoCh:
-				if !ok {
-					return
-				}
+			case ttyInfo := <-ttyInfoCh:
 				c := agentcalls.AttachContainerInputTTY(ttyInfo)
 
 				select {
@@ -382,6 +367,10 @@ func (t *TaskIO) attachContainerInput() error {
 	acif := agentcalls.FromChan(aciCh)
 
 	err := agentcalls.SendNoData(t.ctx, t.opts.Sender, acif)
+
+	if t.exitSequenceDetected {
+		t.cancelFunc()
+	}
 
 	if err != nil && err != io.EOF {
 
