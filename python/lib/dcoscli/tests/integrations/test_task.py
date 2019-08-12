@@ -462,6 +462,31 @@ def test_attach():
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task attach' not supported on Windows")
+def test_attach_partial_escape_sequence():
+    task_id = _get_task_id('cat-app')
+
+    proc, master = popen_tty('dcos task attach ' + task_id)
+    master = os.fdopen(master, 'w')
+    tty.setraw(master, when=termios.TCSANOW)
+
+    master.write('\x10B')
+    master.flush()
+
+    assert proc.stdout.read(3).decode() == '^PB'
+
+    # Flush ctrl-p and ctrl-q individually,
+    # this is closer to how a real tty behaves.
+    master.buffer.write(b'\x10')
+    master.flush()
+    master.buffer.write(b'\x11')
+    master.flush()
+
+    assert proc.wait() == 0
+    master.close()
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task attach' not supported on Windows")
 def test_attach_no_tty():
     task_id = _get_task_id('ls-app')
 
