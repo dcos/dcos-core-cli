@@ -168,7 +168,7 @@ func mesosHTTPClient(ctx api.Context, agentID string) (*httpcli.Client, error) {
 		return nil, fmt.Errorf("Agent ID %s not found", agentID)
 	}
 
-	rt := pluginutil.NewHTTPClient("").Transport
+	rt := pluginutil.NewHTTPClient().Transport
 
 	httpClient := httpcli.New(
 		httpcli.Endpoint(fmt.Sprintf("%s/slave/%s/api/v1", cluster.URL(), agentID)),

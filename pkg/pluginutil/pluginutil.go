@@ -50,12 +50,8 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 // NewHTTPClient returns an HTTP client from a plugin runtime.
 // It is created with the `client-go` package and will eventually
 // replace the httpClient of the CLI.
-func NewHTTPClient(baseURL string) *http.Client {
+func NewHTTPClient() *http.Client {
 	dcosConfig := dcos.NewConfig(nil)
-
-	if baseURL == "" {
-		baseURL, _ = os.LookupEnv("DCOS_URL")
-	}
 
 	if acsToken, _ := os.LookupEnv("DCOS_ACS_TOKEN"); acsToken != "" {
 		dcosConfig.SetACSToken(acsToken)
@@ -91,7 +87,7 @@ func Logger() *logrus.Logger {
 		Formatter: &log.Formatter{},
 		Hooks:     make(logrus.LevelHooks),
 	}
-	
+
 	verbosity, _ := os.LookupEnv("DCOS_VERBOSITY")
 	switch verbosity {
 	case "0":

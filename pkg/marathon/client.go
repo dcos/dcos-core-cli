@@ -27,11 +27,9 @@ func NewClient(ctx api.Context) (*Client, error) {
 		baseURL = cluster.URL() + "/service/marathon"
 	}
 
-	dcosClient := pluginutil.NewHTTPClient(baseURL)
-
 	config := marathon.NewDefaultConfig()
 	config.URL = baseURL
-	config.HTTPClient = dcosClient
+	config.HTTPClient = pluginutil.NewHTTPClient()
 
 	client, err := marathon.NewClient(config)
 	if err != nil {
