@@ -1,21 +1,22 @@
 Manage DC/OS quotas
 
 Usage:
-  dcos quota [command]
+    dcos quota [command]
 
 Commands:
-  create
-      Create a quota
-  delete
-      Delete a quota
-  get
-      Get a quota
-  list
-      List quotas
-  update
-      Update a quota
+    create
+        Create a quota
+    delete
+        Delete a quota
+    get
+        Get a quota
+    list
+        List quotas
+    update
+        Update a quota
 
 Options:
-  -h, --help   help for quota
+    -h, --help
+        help for quota
 
 Use "dcos quota [command] --help" for more information about a command.

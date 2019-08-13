@@ -1,35 +1,38 @@
 Display DC/OS node information
 
 Usage:
-  dcos node [command]
+    dcos node [command]
 
 Commands:
-  deactivate
-      Deactivate a node
-  decommission
-      Mark an agent as gone
-  diagnostics
-      Use diagnostics bundles
-  dns
-      Return the IP address(es) corresponding to a given hostname
-  drain
-      Drain a node so that its tasks get rescheduled
-  list
-      Show all nodes in the cluster
-  list-components
-      Print a list of available DC/OS components on specified node
-  log
-      Print logs for the leading master node or agent nodes
-  metrics
-      Display the metrics of a node
-  reactivate
-      Reactivate a drained/deactivated node
-  ssh
-      Establish an SSH connection to the master or agent nodes of your DC/OS cluster
+    deactivate
+        Deactivate a node
+    decommission
+        Mark an agent as gone
+    diagnostics
+        Use diagnostics bundles
+    dns
+        Return the IP address(es) corresponding to a given hostname
+    drain
+        Drain a node so that its tasks get rescheduled
+    list
+        Show all nodes in the cluster
+    list-components
+        Print a list of available DC/OS components on specified node
+    log
+        Print logs for the leading master node or agent nodes
+    metrics
+        Display the metrics of a node
+    reactivate
+        Reactivate a drained/deactivated node
+    ssh
+        Establish an SSH connection to the master or agent nodes of your DC/OS cluster
 
 Options:
-      --field dcos node   Name of extra field to include in the output of dcos node. Can be repeated multiple times to add several fields.
-  -h, --help              help for node
-      --json              Print in json format
+    --field
+        Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.
+    -h, --help
+        help for node
+    --json
+        Print in json format
 
 Use "dcos node [command] --help" for more information about a command.
