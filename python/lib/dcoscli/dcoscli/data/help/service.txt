@@ -1,20 +1,24 @@
 Manage DC/OS services
 
 Usage:
-  dcos service [command]
+    dcos service [command]
 
 Commands:
-  list
-      Show DC/OS services
-  log
-      Print logs for DC/OS services
-  shutdown
-      Shutdown a service
+    list
+        Show DC/OS services
+    log
+        Print logs for DC/OS services
+    shutdown
+        Shutdown a service
 
 Options:
-      --completed   Print completed and active services
-  -h, --help        help for service
-      --inactive    Print inactive and active services
-      --json        Print in json format
+    --completed
+        Print completed and active services
+    -h, --help
+        help for service
+    --inactive
+        Print inactive and active services
+    --json
+        Print in json format
 
 Use "dcos service [command] --help" for more information about a command.
