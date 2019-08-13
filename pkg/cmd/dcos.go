@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-core-cli/pkg/cmd/diagnostics"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/job"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/node"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/pkg"
@@ -30,6 +31,7 @@ func NewDCOSCommand(ctx api.Context) *cobra.Command {
 		quota.NewCommand(ctx),
 		service.NewCommand(ctx),
 		task.NewCommand(ctx),
+		diagnostics.NewCommand(ctx),
 	)
 
 	// This follows the CLI design guidelines for help formatting.
