@@ -3,6 +3,7 @@ package v2
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -49,6 +50,34 @@ func (c *Client) List() ([]Bundle, error) {
 		return bundles, err
 	default:
 		return nil, httpResponseToError(resp)
+	}
+}
+
+// Download downloads the bundle indicated by id into dst
+func (c *Client) Download(id string, dst io.Writer) error {
+	url := fmt.Sprintf("/system/health/v1/diagnostics/%s/file", id)
+
+	resp, err := c.http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		_, err := io.Copy(dst, resp.Body)
+		if err != nil {
+			return err
+		}
+		return nil
+	case http.StatusNotFound:
+		return fmt.Errorf("no bundle %s found", id)
+	case http.StatusNotModified:
+		return fmt.Errorf("bundle %s canceled or not completed", id)
+	case http.StatusInternalServerError:
+		return fmt.Errorf("bundle %s not readable", id)
+	default:
+		return httpResponseToError(resp)
 	}
 }
 

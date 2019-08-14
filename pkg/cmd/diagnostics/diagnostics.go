@@ -12,6 +12,9 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		Use:   "diagnostics",
 		Short: "Create and manage DCOS diagnostics bundles",
 	}
-	cmd.AddCommand(newDiagnosticsListCommand(ctx))
+	cmd.AddCommand(
+		newDiagnosticsListCommand(ctx),
+		newDiagnosticsDownloadCommand(ctx),
+	)
 	return cmd
 }
