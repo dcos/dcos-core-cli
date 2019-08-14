@@ -71,21 +71,17 @@ Please follow your platform's instructions on how to do that.
         cd python/lib/dcoscli
         make env
 
-## Using the DC/OS CLI
+## Using the DC/OS Core CLI plugin
 
-1.  From the dcoscli directory, source the virtualenv activation script
-    to add the dcos command line interface to your PATH:
+Assuming you have the [DC/OS CLI installed](https://docs.d2iq.com/mesosphere/dcos/latest/cli/install/) and a configured cluster (see [dcos cluster setup](https://docs.d2iq.com/mesosphere/dcos/1.13/cli/command-reference/dcos-cluster/dcos-cluster-setup/)).
 
-        source env/bin/activate
+1.  From the root of the project, run:
 
-2.  Configure the CLI, changing the values below as appropriate for your
-    local installation of DC/OS:
+        make && make plugin
 
-        dcos cluster setup http://dcos-ea-1234.us-west-2.elb.amazonaws.com
+2.  Add the Core CLI plugin to your CLI (use `darwin`, `linux`, or `windows`):
 
-3.  Get started by calling the DC/OS CLI help:
-
-        dcos help
+        dcos plugin add -u ./build/darwin/dcos-core-cli.zip
 
 ## Running tests
 
