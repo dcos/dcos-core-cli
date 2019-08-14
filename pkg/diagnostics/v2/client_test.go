@@ -100,11 +100,6 @@ func TestDownloadBundleErrors(t *testing.T) {
 			returnCode: http.StatusInternalServerError,
 			errMessage: "bundle bundle-0 not readable",
 		},
-		{
-			name:       "not modified",
-			returnCode: http.StatusNotModified,
-			errMessage: "bundle bundle-0 canceled or not completed",
-		},
 	}
 
 	for _, test := range tests {
