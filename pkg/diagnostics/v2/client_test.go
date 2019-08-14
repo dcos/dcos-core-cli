@@ -60,7 +60,7 @@ func TestDownload(t *testing.T) {
 		assert.Equal(t, "/system/health/v1/diagnostics/bundle-0/file", r.URL.String())
 		assert.Equal(t, "GET", r.Method)
 
-		http.ServeFile(w, r, "testdata/bundle.zip")
+		http.ServeFile(w, r, "testdata/test_bundle.zip")
 	}))
 	defer ts.Close()
 
@@ -76,7 +76,7 @@ func TestDownload(t *testing.T) {
 	outputData, err := ioutil.ReadFile(file.Name())
 	require.NoError(t, err)
 
-	testData, err := ioutil.ReadFile("testdata/bundle.zip")
+	testData, err := ioutil.ReadFile("testdata/test_bundle.zip")
 	require.NoError(t, err)
 
 	assert.EqualValues(t, testData, outputData)
