@@ -66,10 +66,7 @@ func (c *Client) Download(id string, dst io.Writer) error {
 	switch resp.StatusCode {
 	case http.StatusOK:
 		_, err := io.Copy(dst, resp.Body)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	case http.StatusNotFound:
 		return fmt.Errorf("no bundle %s found", id)
 	case http.StatusInternalServerError:

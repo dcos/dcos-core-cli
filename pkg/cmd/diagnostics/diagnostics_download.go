@@ -36,9 +36,6 @@ func newDiagnosticsDownloadCommand(ctx api.Context) *cobra.Command {
 
 			err = client.Download(id, outFile)
 			if err != nil {
-				outFile.Close()
-				os.Remove(outputPath)
-
 				return err
 			}
 
