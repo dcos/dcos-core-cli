@@ -72,8 +72,6 @@ func (c *Client) Download(id string, dst io.Writer) error {
 		return nil
 	case http.StatusNotFound:
 		return fmt.Errorf("no bundle %s found", id)
-	case http.StatusNotModified:
-		return fmt.Errorf("bundle %s canceled or not completed", id)
 	case http.StatusInternalServerError:
 		return fmt.Errorf("bundle %s not readable", id)
 	default:
