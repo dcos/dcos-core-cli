@@ -35,9 +35,9 @@ func newDiagnosticsListCommand(ctx api.Context) *cobra.Command {
 
 			for _, b := range bundles {
 				size := humanize.Bytes(uint64(b.Size))
-				stopped := humanize.Time(b.Stopped)
+				created := humanize.Time(b.Started)
 
-				fields := []string{b.ID, b.Status.String(), stopped, size}
+				fields := []string{b.ID, b.Status.String(), created, size}
 				table.Append(fields)
 			}
 
