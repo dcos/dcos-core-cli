@@ -488,6 +488,10 @@ class MarathonSubcommand(object):
         else:
             group_resource = self._resource_reader.get_resource(group_resource)
 
+        if 'enforceRole' not in group_resource:
+            # enforceRole by default, this is in-line with the UI.
+            group_resource['enforceRole'] = True
+
         client = self._create_marathon_client()
 
         # Check that the group doesn't exist
