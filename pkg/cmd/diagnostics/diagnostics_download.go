@@ -34,15 +34,10 @@ func newDiagnosticsDownloadCommand(ctx api.Context) *cobra.Command {
 			}
 			defer outFile.Close()
 
-			err = client.Download(id, outFile)
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return client.Download(id, outFile)
 		},
 	}
 
-	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Set output path (defaults to bundle's ID in current directory)")
+	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Set output path (defaults to '<bundle-id>.zip')")
 	return cmd
 }
