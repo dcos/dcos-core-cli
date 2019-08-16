@@ -8,7 +8,10 @@ import (
 	"time"
 
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+	uuid "github.com/satori/go.uuid"
 )
+
+const baseURL = "/system/health/v1/diagnostics"
 
 // Bundle represents a bundle object received from the diagnostics API
 type Bundle struct {
@@ -34,7 +37,7 @@ func NewClient(baseClient *httpclient.Client) *Client {
 
 // List gets a list of all cluster bundles.
 func (c *Client) List() ([]Bundle, error) {
-	resp, err := c.http.Get("/system/health/v1/diagnostics")
+	resp, err := c.http.Get(baseURL)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +58,7 @@ func (c *Client) List() ([]Bundle, error) {
 
 // Download downloads the bundle indicated by id into dst
 func (c *Client) Download(id string, dst io.Writer) error {
-	url := fmt.Sprintf("/system/health/v1/diagnostics/%s/file", id)
+	url := fmt.Sprintf("%s/%s/file", baseURL, id)
 
 	resp, err := c.http.Get(url)
 	if err != nil {
@@ -73,6 +76,36 @@ func (c *Client) Download(id string, dst io.Writer) error {
 		return fmt.Errorf("bundle %s not readable", id)
 	default:
 		return httpResponseToError(resp)
+	}
+}
+
+// Create creates a new cluster bundle and returns its ID.
+func (c *Client) Create() (string, error) {
+	newID := uuid.NewV4()
+	req, err := c.http.NewRequest("PUT", fmt.Sprintf("%s/%s", baseURL, newID.String()), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	type Response struct {
+		ID string
+	}
+	var response Response
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		err = json.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			return "", err
+		}
+		return response.ID, nil
+	default:
+		return "", httpResponseToError(resp)
 	}
 }
 
