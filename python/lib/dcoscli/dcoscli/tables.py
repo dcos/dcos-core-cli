@@ -125,7 +125,8 @@ def app_table(apps, deployments):
         ("DEPLOYMENT", get_deployment),
         ("WAITING", lambda app: app.get('overdue', False)),
         ("CONTAINER", get_container),
-        ("CMD", get_cmd)
+        ("CMD", get_cmd),
+        ("ROLE", lambda a: a["role"])
     ])
 
     limits = {
@@ -154,7 +155,8 @@ def app_task_table(tasks):
          all(check['alive'] for check in t.get('healthCheckResults', []))),
         ("STARTED", lambda t: t.get("startedAt", "N/A")),
         ("HOST", lambda t: t["host"]),
-        ("ID", lambda t: t["id"])
+        ("ID", lambda t: t["id"]),
+        ("ROLE", lambda t: t["role"])
     ])
 
     tb = table(fields, tasks, sortby="APP")
@@ -505,10 +507,12 @@ def group_table(groups):
     fields = OrderedDict([
         ('ID', lambda g: g[0]['id']),
         ('APPS', lambda g: g[1]),
+        ('ENFORCE_ROLE', lambda g: g[0]['enforceRole'])
     ])
 
     tb = table(fields, group_dict.values(), sortby="ID")
     tb.align['ID'] = 'l'
+    tb.align['ENFORCE_ROLE'] = 'r'
 
     return tb
 
@@ -544,7 +548,8 @@ def pod_table(pods):
         ('VERSION', lambda pod: pod['spec'].get('version', '-')),
         ('STATUS', lambda pod: pod['status']),
         ('STATUS SINCE', lambda pod: pod['statusSince']),
-        ('WAITING', lambda pod: pod.get('overdue', False))
+        ('WAITING', lambda pod: pod.get('overdue', False)),
+        ('ROLE', lambda pod: pod['spec'].get('role', 'N/A'))
     ])
 
     tb = table(fields, pods, sortby=key_column)
