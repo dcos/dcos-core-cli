@@ -108,6 +108,29 @@ func (c *Client) Create() (string, error) {
 	}
 }
 
+func (c *Client) Delete(id string) error {
+	req, err := c.http.NewRequest("DELETE", fmt.Sprintf("%s/%s", baseURL, id), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusNotFound:
+		return fmt.Errorf("no bundle %s found", id)
+	case http.StatusNotModified:
+		return fmt.Errorf("bundle %s has already been deleted", id)
+	default:
+		return httpResponseToError(resp)
+	}
+}
+
 func httpResponseToError(resp *http.Response) error {
 	if resp.StatusCode < 400 {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)

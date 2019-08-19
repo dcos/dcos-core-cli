@@ -61,6 +61,65 @@ func TestEmptyList(t *testing.T) {
 	assert.Empty(t, bundles)
 }
 
+func TestDeleteHappyPath(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/system/health/v1/diagnostics/this-is-the-bundle-id", r.URL.Path)
+		assert.Equal(t, "DELETE", r.Method)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+	err := c.Delete("this-is-the-bundle-id")
+	assert.NoError(t, err)
+}
+
+func TestDeleteWithEmptyID(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/system/health/v1/diagnostics/", r.URL.Path)
+		assert.Equal(t, "DELETE", r.Method)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+	err := c.Delete("")
+	assert.Error(t, err)
+	httpError, ok := err.(*httpclient.HTTPError)
+	assert.True(t, ok, "unexpected error: %#v", err)
+	assert.NotNil(t, httpError.Response)
+	assert.Equal(t, httpError.Response.StatusCode, http.StatusMethodNotAllowed)
+	assert.Equal(t, "HTTP 405 error", httpError.Error())
+}
+
+func TestDeleteWithUnknownID(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/system/health/v1/diagnostics/never-heard-of-this-id", r.URL.Path)
+		assert.Equal(t, "DELETE", r.Method)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+	err := c.Delete("never-heard-of-this-id")
+	assert.Error(t, err)
+	assert.Equal(t, "no bundle never-heard-of-this-id found", err.Error())
+}
+
+func TestDeleteWithDeletedBundle(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/system/health/v1/diagnostics/already-deleted", r.URL.Path)
+		assert.Equal(t, "DELETE", r.Method)
+		w.WriteHeader(http.StatusNotModified)
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+	err := c.Delete("already-deleted")
+	assert.Error(t, err)
+	assert.Equal(t, "bundle already-deleted has already been deleted", err.Error())
+}
+
 func TestCreateHappyPath(t *testing.T) {
 	var newID uuid.UUID
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
