@@ -108,6 +108,7 @@ func (c *Client) Create() (string, error) {
 	}
 }
 
+// Delete deletes the given cluster bundle.
 func (c *Client) Delete(id string) error {
 	req, err := c.http.NewRequest("DELETE", fmt.Sprintf("%s/%s", baseURL, id), nil)
 	if err != nil {
