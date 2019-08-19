@@ -81,8 +81,7 @@ func (c *Client) Download(id string, dst io.Writer) error {
 
 // Create creates a new cluster bundle and returns its ID.
 func (c *Client) Create() (string, error) {
-	newID := uuid.NewV4()
-	req, err := c.http.NewRequest("PUT", fmt.Sprintf("%s/%s", baseURL, newID.String()), nil)
+	req, err := c.http.NewRequest("PUT", fmt.Sprintf("%s/%s", baseURL, uuid.NewV4().String()), nil)
 	if err != nil {
 		return "", err
 	}
