@@ -13,14 +13,20 @@ func newCmdNodeListComponents(ctx api.Context) *cobra.Command {
 	var leader bool
 	var mesosID string
 	cmd := &cobra.Command{
-		Use:   "list-components",
+		Use:   "list-components [<mesos-id>]",
 		Short: "Print a list of available DC/OS components on specified node",
-		Args:  cobra.NoArgs,
+		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if mesosID != "" {
+				ctx.Deprecated("The --mesos-id option is deprecated, please pass an argument instead.")
+			}
+			if len(args) == 1 {
+				mesosID = args[0]
+			}
 			if !leader && mesosID == "" {
-				return fmt.Errorf("'--leader' or '--mesos-id' must be provided")
+				return fmt.Errorf("'--leader' or '<mesos-id>' must be provided")
 			} else if leader && mesosID != "" {
-				return fmt.Errorf("unable to use leader and mesos id at the same time")
+				return fmt.Errorf("unable to use --leader and <mesos-id> at the same time")
 			}
 			return nil
 		},
