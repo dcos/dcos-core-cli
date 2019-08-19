@@ -17,14 +17,20 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	var lines int
 
 	cmd := &cobra.Command{
-		Use:   "log",
+		Use:   "log [<mesos-id>]",
 		Short: "Print logs for the leading master node or agent nodes",
-		Args:  cobra.NoArgs,
+		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if mesosID != "" {
+				ctx.Deprecated("The --mesos-id option is deprecated, please pass an argument instead.")
+			}
+			if len(args) == 1 {
+				mesosID = args[0]
+			}
 			if !leader && mesosID == "" {
-				return fmt.Errorf("'--leader' or '--mesos-id' must be provided")
+				return fmt.Errorf("'--leader' or '<mesos-id>' must be provided")
 			} else if leader && mesosID != "" {
-				return fmt.Errorf("unable to use leader and mesos id at the same time")
+				return fmt.Errorf("unable to use --leader and <mesos-id> at the same time")
 			}
 
 			if all {

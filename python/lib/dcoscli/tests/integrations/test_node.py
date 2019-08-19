@@ -75,7 +75,7 @@ def test_node_table_uppercase_field_option():
 
 
 def test_node_log_empty():
-    stderr = b"Error: '--leader' or '--mesos-id' must be provided\n"
+    stderr = b"Error: '--leader' or '<mesos-id>' must be provided\n"
     assert_command(['dcos', 'node', 'log'], returncode=1, stderr=stderr)
 
 
@@ -86,14 +86,14 @@ def test_node_log_leader():
 def test_node_log_slave():
     slave_id = _node()[0]['id']
     assert_lines(
-        ['dcos', 'node', 'log', '--mesos-id={}'.format(slave_id)],
+        ['dcos', 'node', 'log', slave_id],
         10,
         greater_than=True)
 
 
 def test_node_log_missing_slave():
-    returncode, stdout, stderr = exec_command(
-        ['dcos', 'node', 'log', '--mesos-id=bogus'])
+    returncode, _, stderr = exec_command(
+        ['dcos', 'node', 'log', 'bogus'])
 
     assert returncode == 1
     assert b"'bogus' not found" in stderr
