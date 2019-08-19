@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
@@ -60,22 +62,24 @@ func TestEmptyList(t *testing.T) {
 }
 
 func TestCreateHappyPath(t *testing.T) {
-	var newID string
+	var newID uuid.UUID
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		re := regexp.MustCompile("^/system/health/v1/diagnostics/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
 		urlMatch := re.FindStringSubmatch(r.URL.Path)
-		newID = urlMatch[1]
-		require.True(t, len(urlMatch) == 2, fmt.Sprintf("URL %s doesn't match %s", r.URL.Path, re.String()))
-		require.Equal(t, "PUT", r.Method)
+		idMatch := urlMatch[1]
+		var err error
+		newID, err = uuid.FromString(idMatch)
+		assert.NoError(t, err)
+		assert.Equal(t, "PUT", r.Method)
 		fmt.Fprint(w, fmt.Sprintf(`{"id":"%s","status":"Started","started_at":"2019-08-19T08:07:24.404239211Z","stopped_at":"0001-01-01T00:00:00Z"}`, newID))
 	}))
 	defer ts.Close()
 
 	c := NewClient(pluginutil.HTTPClient(ts.URL))
 	id, err := c.Create()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
-	assert.Equal(t, newID, id)
+	assert.Equal(t, newID.String(), id)
 }
 
 func TestCreateServerError(t *testing.T) {
@@ -86,14 +90,14 @@ func TestCreateServerError(t *testing.T) {
 
 	c := NewClient(pluginutil.HTTPClient(ts.URL))
 	id, err := c.Create()
-	require.Error(t, err)
-	require.Empty(t, id)
+	assert.Error(t, err)
+	assert.Empty(t, id)
 
 	httpError, ok := err.(*httpclient.HTTPError)
-	require.True(t, ok, "unexpected error: %#v", err)
-	require.NotNil(t, httpError.Response)
-	require.Equal(t, httpError.Response.StatusCode, 500)
-	require.Equal(t, "HTTP 500 error", httpError.Error())
+	assert.True(t, ok, "unexpected error: %#v", err)
+	assert.NotNil(t, httpError.Response)
+	assert.Equal(t, httpError.Response.StatusCode, 500)
+	assert.Equal(t, "HTTP 500 error", httpError.Error())
 }
 
 func TestDownload(t *testing.T) {
