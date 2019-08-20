@@ -51,6 +51,40 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 	return &backwardCompatibleDesc, nil
 }
 
+// PackageAddRepo adds a package repository.
+func (c *Client) PackageAddRepo(name string, uri string, index int) ([]dcos.CosmosPackageRepo, error) {
+	desc, _, err := c.cosmos.PackageRepositoryAdd(context.TODO(), &dcos.PackageRepositoryAddOpts{
+		CosmosPackageAddRepoV1Request: optional.NewInterface(dcos.CosmosPackageAddRepoV1Request{
+			Name:  name,
+			Uri:   uri,
+			Index: int32(index),
+		}),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return desc.Repositories, nil
+}
+
+// PackageListRepo returns a list of package repositories.
+func (c *Client) PackageListRepo() ([]dcos.CosmosPackageRepo, error) {
+	desc, _, err := c.cosmos.PackageRepositoryList(context.TODO(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return desc.Repositories, nil
+}
+
+// PackageDeleteRepo removes a package repository.
+func (c *Client) PackageDeleteRepo(name string) error {
+	_, _, err := c.cosmos.PackageRepositoryDelete(context.TODO(), &dcos.PackageRepositoryDeleteOpts{
+		CosmosPackageDeleteRepoV1Request: optional.NewInterface(dcos.CosmosPackageDeleteRepoV1Request{
+			Name: name,
+		}),
+	})
+	return err
+}
+
 // PackageSearch returns the packages found using the given query.
 func (c *Client) PackageSearch(query string) (*SearchResult, error) {
 	desc, _, err := c.cosmos.PackageSearch(context.TODO(), dcos.CosmosPackageSearchV1Request{Query: query})
