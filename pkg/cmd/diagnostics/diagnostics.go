@@ -16,6 +16,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		newDiagnosticsListCommand(ctx),
 		newDiagnosticsDownloadCommand(ctx),
 		newDiagnosticsCreateCommand(ctx),
+		newDiagnosticsDeleteCommand(ctx),
 	)
 	return cmd
 }
