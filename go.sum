@@ -21,8 +21,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dcos/client-go v0.0.0-20190418124828-a5c3660ae957 h1:cSXScdOP3VTlXQtG1PefluLn/C94mlKwrRIHHV8QQIk=
 github.com/dcos/client-go v0.0.0-20190418124828-a5c3660ae957/go.mod h1:dyBl1aNzJ19ktYyJ7trgCrwz0sBzDwaDkKR2mnXqFgU=
-github.com/dcos/client-go v0.0.0-20190724173804-cad66a3a5fb9 h1:OiGpoUmN+iTaMdDZVP2oQF+4Ek12z3tT9m5ZI6ZV7Os=
-github.com/dcos/client-go v0.0.0-20190724173804-cad66a3a5fb9/go.mod h1:wDbV2eOyjoUmqPZ9cxE5VCc/YIPvriRYWWnYnF5bRoA=
+github.com/dcos/client-go v0.0.0-20190821132006-bb04330bd331 h1:SbeOhIl5/SmRafAzBjmV+pTt8zn8InypLwiOJTFsr50=
+github.com/dcos/client-go v0.0.0-20190821132006-bb04330bd331/go.mod h1:wDbV2eOyjoUmqPZ9cxE5VCc/YIPvriRYWWnYnF5bRoA=
 github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80 h1:MVB4ba2IjXm1b+3BgRD4VAU7tfxk9neaRHgZk7DUgnA=
 github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80/go.mod h1:2lBhxwqSkrbilc+Z5VMDkPb3Q6s33GFxltAYiswpIis=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=

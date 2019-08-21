@@ -3,7 +3,7 @@ module github.com/dcos/dcos-core-cli
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6
-	github.com/dcos/client-go v0.0.0-20190724173804-cad66a3a5fb9
+	github.com/dcos/client-go v0.0.0-20190821132006-bb04330bd331
 	github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80
 	github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
 	github.com/dustin/go-humanize v1.0.0
