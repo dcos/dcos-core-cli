@@ -217,6 +217,9 @@ func newTaskIO(ctx api.Context, id string, interactive bool, tty bool, user stri
 
 	if escapeSequenceEnv, ok := ctx.EnvLookup("DCOS_TASK_ESCAPE_SEQUENCE"); ok {
 		opts.EscapeSequence, err = term.ToBytes(escapeSequenceEnv)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return mesos.NewTaskIO(containerID, opts)
 }
