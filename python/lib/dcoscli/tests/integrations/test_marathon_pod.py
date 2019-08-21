@@ -123,7 +123,8 @@ def _assert_pod_list_table():
 
     stdout_lines = stdout.decode('utf-8').split('\n')
 
-    pattern = r'ID\+TASKS +INSTANCES +VERSION +STATUS +STATUS SINCE +WAITING *'
+    pattern = r'ID\+TASKS +INSTANCES +VERSION +STATUS +STATUS SINCE +WAITING' \
+              r' +ROLE *'
     assert re.fullmatch(pattern, stdout_lines[0])
 
     assert stdout_lines[1].startswith('/double-pod')
