@@ -487,6 +487,25 @@ def test_attach_partial_escape_sequence():
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="'dcos task attach' not supported on Windows")
+def test_attach_custom_escape_sequence():
+    task_id = _get_task_id('cat-app')
+
+    env = os.environ.copy()
+    env["DCOS_TASK_ESCAPE_SEQUENCE"] = "ctrl-p,ctrl-r,ctrl-s"
+
+    proc, master = popen_tty('dcos task attach ' + task_id, env=env)
+    master = os.fdopen(master, 'w')
+    tty.setraw(master, when=termios.TCSANOW)
+
+    master.buffer.write(b'\x10\x12\x13')
+    master.flush()
+
+    assert proc.wait() == 0
+    master.close()
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="'dcos task attach' not supported on Windows")
 def test_attach_no_tty():
     task_id = _get_task_id('ls-app')
 
