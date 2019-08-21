@@ -8,6 +8,7 @@ import (
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	"github.com/docker/docker/pkg/term"
 	"github.com/gobwas/glob"
 	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
@@ -203,7 +204,7 @@ func newTaskIO(ctx api.Context, id string, interactive bool, tty bool, user stri
 		}
 	}
 
-	return mesos.NewTaskIO(containerID, mesos.TaskIOOpts{
+	opts := mesos.TaskIOOpts{
 		Stdin:       ctx.Input(),
 		Stdout:      ctx.Out(),
 		Stderr:      ctx.ErrOut(),
@@ -212,5 +213,13 @@ func newTaskIO(ctx api.Context, id string, interactive bool, tty bool, user stri
 		User:        user,
 		Sender:      httpagent.NewSender(httpClient.Send),
 		Logger:      pluginutil.Logger(),
-	})
+	}
+
+	if escapeSequenceEnv, ok := ctx.EnvLookup("DCOS_TASK_ESCAPE_SEQUENCE"); ok {
+		opts.EscapeSequence, err = term.ToBytes(escapeSequenceEnv)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return mesos.NewTaskIO(containerID, opts)
 }

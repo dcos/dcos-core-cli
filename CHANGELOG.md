@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 1.14-patch.5
+
+* Features
+
+  * Support custom escape sequences for `dcos task attach`
+
+## 1.14-patch.4
+
+* Fixes
+
+  * Enforce role by default when creating a Marathon group
+  * Improve error messages on metronome API errors
+  * Fix error when detecting a partial escape sequence
+
 ## 1.14-patch.3
 
 * Fixes
