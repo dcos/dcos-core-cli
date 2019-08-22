@@ -35,7 +35,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print the new bundle ID in JSON format")
 
 	return cmd
 }
