@@ -16,6 +16,7 @@ const baseURL = "/system/health/v1/diagnostics"
 // Bundle represents a bundle object received from the diagnostics API
 type Bundle struct {
 	ID      string    `json:"id,omitempty"`
+	Type    Type      `json:"type"`
 	Size    int64     `json:"size,omitempty"` // length in bytes for regular files; 0 when Canceled or Deleted
 	Status  Status    `json:"status"`
 	Started time.Time `json:"started_at,omitempty"`

@@ -34,6 +34,11 @@ func newDiagnosticsListCommand(ctx api.Context) *cobra.Command {
 			table := cli.NewTable(ctx.Out(), tableHeader)
 
 			for _, b := range bundles {
+				// skip any local bundles
+				if b.Type == diagnostics.Local {
+					continue
+				}
+
 				size := humanize.Bytes(uint64(b.Size))
 				created := humanize.Time(b.Started)
 
