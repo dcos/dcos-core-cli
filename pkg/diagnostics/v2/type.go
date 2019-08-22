@@ -9,6 +9,7 @@ import (
 // Type represents a bundle type
 type Type int
 
+// Possible types of diagnostics bundles
 const (
 	Local Type = iota
 	Cluster
