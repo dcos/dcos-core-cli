@@ -1,7 +1,6 @@
 package diagnostics
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
@@ -11,7 +10,6 @@ import (
 )
 
 func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
-	var jsonOutput bool
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a diagnostics bundle",
@@ -24,18 +22,10 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			if jsonOutput {
-				enc := json.NewEncoder(ctx.Out())
-				enc.SetIndent("", "    ")
-				return enc.Encode(id)
-			}
-
-			_, err = fmt.Fprintf(ctx.Out(), "Job has been successfully started, available bundle: %s\n", id)
+			_, err = fmt.Fprintf(ctx.Out(), "%s", id)
 			return err
 		},
 	}
-
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print the new bundle ID in JSON format")
 
 	return cmd
 }
