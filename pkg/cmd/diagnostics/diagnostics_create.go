@@ -22,7 +22,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			_, err = fmt.Fprintf(ctx.Out(), "%s\n", id)
+			_, err = fmt.Fprintln(ctx.Out(), id)
 			return err
 		},
 	}
