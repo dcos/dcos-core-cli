@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -17,6 +18,12 @@ func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
 		Short: "Download a diagnostics bundle",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
+			if ok {
+				return fmt.Errorf("unknown command download")
+			}
+			ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics download' instead.")
+
 			if location == "" {
 				var err error
 				location, err = os.Getwd()

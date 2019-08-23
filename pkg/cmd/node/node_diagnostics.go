@@ -1,7 +1,10 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +17,12 @@ func newCmdNodeDiagnostics(ctx api.Context) *cobra.Command {
 		Use:   "diagnostics",
 		Short: "Use diagnostics bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			_, ok := ctx.EnvLookup(cli.EnvStrictDeprecations)
+			if ok {
+				return fmt.Errorf("unknown command diagnostics")
+			}
+			ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics' instead.")
 			var subCommand *cobra.Command
 			if cancel {
 				subCommand = newCmdNodeDiagnosticsCancel(ctx)
