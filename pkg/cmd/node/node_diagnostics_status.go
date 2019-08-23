@@ -16,6 +16,11 @@ func newCmdNodeDiagnosticsStatus(ctx api.Context) *cobra.Command {
 		Short: "Print diagnostics job status",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			err := ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics list' instead.")
+			if err != nil {
+				return err
+			}
+
 			status, err := diagnosticsClient().Status()
 			if err != nil {
 				return err
