@@ -22,7 +22,10 @@ func newCmdNodeDiagnostics(ctx api.Context) *cobra.Command {
 			if ok {
 				return fmt.Errorf("unknown command diagnostics")
 			}
-			ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics' instead.")
+			err := ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics' instead.")
+			if err != nil {
+				return err
+			}
 			var subCommand *cobra.Command
 			if cancel {
 				subCommand = newCmdNodeDiagnosticsCancel(ctx)
