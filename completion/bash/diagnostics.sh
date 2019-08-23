@@ -89,7 +89,7 @@ _dcos_diagnostics_download() {
     "--output"
     )
 
-    # the normal `if` here omitted to make the optional file completion work
+    # the normal `if` here omitted to make the output file completion work
     case "$cur" in
         --*)
             __dcos_handle_compreply "${flags[@]}"
