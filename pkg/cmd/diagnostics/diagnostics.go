@@ -10,7 +10,7 @@ import (
 func NewCommand(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diagnostics",
-		Short: "Create and manage DCOS diagnostics bundles",
+		Short: "Create and manage DC/OS diagnostics bundles",
 	}
 	cmd.AddCommand(
 		newDiagnosticsListCommand(ctx),

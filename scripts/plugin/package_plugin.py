@@ -45,6 +45,11 @@ description = "Manage DC/OS services"
 name = "task"
 path = "bin/dcos{0}"
 description = "Manage DC/OS tasks"
+
+[[commands]]
+name = "diagnostics"
+path = "bin/dcos{0}"
+description = "Create and manage DC/OS diagnostics bundles"
 '''
 
 # Path to the root of the repo
