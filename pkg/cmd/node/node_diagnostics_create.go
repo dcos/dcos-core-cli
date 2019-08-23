@@ -13,6 +13,11 @@ func newCmdNodeDiagnosticsCreate(ctx api.Context) *cobra.Command {
 		Short: "Create a diagnostics bundle",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			err := ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics create' instead.")
+			if err != nil {
+				return err
+			}
+
 			resp, err := diagnosticsClient().Create(args)
 			if err != nil {
 				return err
