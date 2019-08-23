@@ -473,6 +473,9 @@ def test_uninstall_cli():
         "apps": [
             "/helloworld"
         ],
+        "command": {
+            "name": "helloworld"
+        },
         "description": "Example DCOS application package",
         "framework": False,
         "maintainer": "support@mesosphere.io",
@@ -480,6 +483,7 @@ def test_uninstall_cli():
         "packagingVersion": "3.0",
         "postInstallNotes": "A sample post-installation message",
         "preInstallNotes": "A sample pre-installation message",
+        "releaseVersion": 0,
         "selected": False,
         "tags": [
             "mesosphere",
@@ -540,7 +544,7 @@ def test_list(zk_znode):
 
     with _helloworld():
         expected_output = file_json(
-            'tests/data/package/json/test_list_helloworld.json')
+            'tests/data/package/json/test_list_helloworld.json', 4)
         _list(args=['--json'], stdout=expected_output)
         _list(args=['--json', 'helloworld'], stdout=expected_output)
         _list(args=['--json', '--app-id=/helloworld'], stdout=expected_output)
@@ -597,7 +601,7 @@ def test_install_no():
 def test_list_cli():
     _install_helloworld()
     stdout = file_json(
-        'tests/data/package/json/test_list_helloworld.json')
+        'tests/data/package/json/test_list_helloworld.json', 4)
     _list(args=['--json'], stdout=stdout)
     _uninstall_helloworld()
 
@@ -614,7 +618,7 @@ def test_list_cli():
     _install_helloworld(args=['--cli', '--yes'], stdout=stdout)
 
     stdout = file_json(
-        'tests/data/package/json/test_list_helloworld_cli.json')
+        'tests/data/package/json/test_list_helloworld_cli.json', 4)
     _list(args=['--json'], stdout=stdout)
 
     _uninstall_cli_helloworld()
@@ -622,7 +626,7 @@ def test_list_cli():
 
 def test_list_cli_only(env):
     helloworld_path = 'tests/data/package/json/test_list_helloworld_cli.json'
-    helloworld_json = file_json(helloworld_path)
+    helloworld_json = file_json(helloworld_path, 4)
 
     with _helloworld_cli(), \
             update_config('package.cosmos_url', 'http://nohost', env):
@@ -633,22 +637,10 @@ def test_list_cli_only(env):
         assert_command(
             cmd=['dcos', 'package', 'list', '--json', '--cli',
                  '--app-id=/helloworld'],
-            stdout=b'[]\n')
+            stdout=helloworld_json)
 
         assert_command(
             cmd=['dcos', 'package', 'list', '--json', '--cli', 'helloworld'],
-            stdout=helloworld_json)
-
-
-def test_cli_global():
-    helloworld_path = 'tests/data/package/json/test_list_helloworld_cli.json'
-    helloworld_json = file_json(helloworld_path)
-
-    with _helloworld_cli(global_=True):
-        assert os.path.exists(subcommand.global_package_dir("helloworld"))
-
-        assert_command(
-            cmd=['dcos', 'package', 'list', '--json', '--cli'],
             stdout=helloworld_json)
 
 
@@ -905,10 +897,8 @@ def _helloworld():
                     uninstall_stderr=stderr)
 
 
-def _helloworld_cli(global_=False):
+def _helloworld_cli():
     args = ['--yes', '--cli']
-    if global_:
-        args += ['--global']
     return _package(name='helloworld',
                     args=args,
                     stdout=(

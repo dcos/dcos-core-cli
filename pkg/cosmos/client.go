@@ -55,6 +55,56 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 	return &backwardCompatibleDesc, nil
 }
 
+// PackageList returns the packages installed in a cluster.
+func (c *Client) PackageList() (*[]Package, error) {
+	desc, _, err := c.cosmos.PackageList(context.TODO(), &dcos.PackageListOpts{
+		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{})})
+	if err != nil {
+		return nil, err
+	}
+
+	var ps []Package
+	pAppNames := make(map[string]int)
+	index := 0
+	for _, p := range desc.Packages {
+		if val, ok := pAppNames[p.PackageInformation.PackageDefinition.Name]; ok {
+			ps[val].Apps = append(ps[val].Apps, p.AppId)
+		} else {
+			pAppNames[p.PackageInformation.PackageDefinition.Name] = index
+			index++
+
+			newPackage := Package{
+				Apps:               []string{p.AppId},
+				Description:        p.PackageInformation.PackageDefinition.Description,
+				Framework:          p.PackageInformation.PackageDefinition.Framework,
+				Licenses:           p.PackageInformation.PackageDefinition.Licenses,
+				Maintainer:         p.PackageInformation.PackageDefinition.Maintainer,
+				Name:               p.PackageInformation.PackageDefinition.Name,
+				PackagingVersion:   p.PackageInformation.PackageDefinition.PackagingVersion,
+				PostInstallNotes:   p.PackageInformation.PackageDefinition.PostInstallNotes,
+				PostUninstallNotes: p.PackageInformation.PackageDefinition.PostUninstallNotes,
+				PreInstallNotes:    p.PackageInformation.PackageDefinition.PreInstallNotes,
+				Scm:                p.PackageInformation.PackageDefinition.Scm,
+				Selected:           p.PackageInformation.PackageDefinition.Selected,
+				Tags:               p.PackageInformation.PackageDefinition.Tags,
+				Version:            p.PackageInformation.PackageDefinition.Version,
+				Website:            p.PackageInformation.PackageDefinition.Website,
+			}
+
+			if p.PackageInformation.PackageDefinition.PackagingVersion != "4.0" {
+				newPackage.Command = &dcos.CosmosPackageCommand{Name: p.PackageInformation.PackageDefinition.Name}
+				newPackage.ReleaseVersion = &p.PackageInformation.PackageDefinition.ReleaseVersion
+			}
+
+			ps = append(ps, newPackage)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &ps, nil
+}
+
 // PackageListVersions returns the versions of a package.
 func (c *Client) PackageListVersions(name string) ([]string, error) {
 	list, _, err := c.cosmos.PackageListVersions(context.TODO(), dcos.CosmosPackageListVersionsV1Request{
