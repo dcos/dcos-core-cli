@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
@@ -13,6 +14,7 @@ import (
 
 func newDiagnosticsListCommand(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
+	var quietOutput bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available bundles",
@@ -22,6 +24,15 @@ func newDiagnosticsListCommand(ctx api.Context) *cobra.Command {
 			bundles, err := client.List()
 			if err != nil {
 				return err
+			}
+
+			if quietOutput {
+				for _, b := range bundles {
+					if b.Type == diagnostics.Cluster {
+						fmt.Fprintln(ctx.Out(), b.ID)
+					}
+				}
+				return nil
 			}
 
 			if jsonOutput {
@@ -52,6 +63,7 @@ func newDiagnosticsListCommand(ctx api.Context) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().BoolVarP(&quietOutput, "quiet", "q", false, "Print only bundle IDs")
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 
 	return cmd
