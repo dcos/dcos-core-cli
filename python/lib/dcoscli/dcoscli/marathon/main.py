@@ -1233,7 +1233,8 @@ class MarathonSubcommand(object):
                 emitter, queued_app,
                 tables.queued_app_details_table, json_)
         else:
-            raise DCOSException("Couldn't find app {} in Marathon queue".format(app_id))
+            raise DCOSException("Couldn't find app {} in Marathon queue"
+                                .format(app_id))
 
         return 0
 

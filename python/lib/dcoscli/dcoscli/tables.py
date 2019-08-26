@@ -832,7 +832,9 @@ def queued_app_details_table(queued_app):
         ('MEM', lambda entry: value_declined(entry, 'InsufficientMemory')),
         ('DISK', lambda entry: value_declined(entry, 'InsufficientDisk')),
         ('PORTS', lambda entry: value_declined(entry, 'UnfulfilledRole')),
-        ('SCARCE', lambda entry: value_declined(entry, 'DeclinedScarceResources')),
+        ('SCARCE', lambda entry:
+            value_declined(entry, 'DeclinedScarceResources')
+         ),
         ('RECEIVED', lambda entry:
             entry.get('timestamp', EMPTY_ENTRY)
          ),
