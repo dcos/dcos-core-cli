@@ -46,6 +46,16 @@ type Options struct {
 // ctxKey is a custom type to set values in request contexts.
 type ctxKey int
 
+// HTTPError represents an HTTP error, it is returned when FailOnErrStatus is enabled.
+type HTTPError struct {
+	Response *http.Response
+}
+
+// Error returns the error message.
+func (err *HTTPError) Error() string {
+	return fmt.Sprintf("HTTP %d error", err.Response.StatusCode)
+}
+
 // ctxKeyFailOnErrStatus is a request context key which, when sets, indicates that
 // the HTTP client should return in error when it encounters an HTTP error (4XX / 5XX).
 const ctxKeyFailOnErrStatus ctxKey = 0
@@ -166,6 +176,16 @@ func (c *Client) Post(path string, contentType string, body io.Reader, opts ...O
 	return c.Do(req)
 }
 
+// Put issues a PUT to the specified DC/OS cluster path.
+func (c *Client) Put(path string, contentType string, body io.Reader, opts ...Option) (*http.Response, error) {
+	req, err := c.NewRequest("PUT", path, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+	return c.Do(req)
+}
+
 // Delete issues a DELETE to the specified DC/OS cluster path.
 func (c *Client) Delete(path string, opts ...Option) (*http.Response, error) {
 	req, err := c.NewRequest("DELETE", path, nil, opts...)
@@ -251,7 +271,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		_, failOnErrStatus := req.Context().Value(ctxKeyFailOnErrStatus).(struct{})
 
 		if failOnErrStatus && resp.StatusCode >= 400 && resp.StatusCode < 600 {
-			return nil, fmt.Errorf("HTTP %d error", resp.StatusCode)
+			return nil, &HTTPError{Response: resp}
 		}
 	}
 	return resp, err

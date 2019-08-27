@@ -28,6 +28,11 @@ import (
 	"github.com/vbauerster/mpb/decor"
 )
 
+// ExistError indicates that a plugin installation failed because it's already installed.
+type ExistError struct {
+	error
+}
+
 // Manager retrieves the plugins available for the current cluster
 // by navigating into the filesystem.
 type Manager struct {
@@ -86,15 +91,30 @@ func (m *Manager) Install(resource string, installOpts *InstallOpts) (err error)
 		installOpts.path = resource
 	}
 
-	// The staging dir is where the plugin will be constructed
-	// before eventually getting moved to its final location.
-	installOpts.stagingDir, err = afero.TempDir(m.fs, os.TempDir(), "dcos-cli")
+	if err := m.fs.MkdirAll(m.tempDir(), 0755); err != nil {
+		return err
+	}
+
+	// The staging dir is where the plugin will be constructed before eventually getting moved to
+	// its final location. It relies on a temp directory inside the cluster directory instead of
+	// the system's temp directory, otherwise this would cause issues when the system's temp dir
+	// and the DC/OS dir are on different devices.
+	//
+	// See https://groups.google.com/forum/m/#!topic/golang-dev/5w7Jmg_iCJQ.
+	installOpts.stagingDir, err = afero.TempDir(m.fs, m.tempDir(), "dcos-cli")
+	if err != nil {
+		return err
+	}
+	defer m.fs.RemoveAll(installOpts.stagingDir)
+
+	// Build the plugin into the staging directory.
+	err = m.buildPlugin(installOpts)
 	if err != nil {
 		return err
 	}
 
-	// Build the plugin into the staging directory.
-	err = m.buildPlugin(installOpts)
+	// Validate the plugin before installation.
+	err = m.validatePlugin(installOpts)
 	if err != nil {
 		return err
 	}
@@ -176,8 +196,8 @@ func (m *Manager) loadPlugin(name string) (*Plugin, error) {
 
 	// Save a deep copy of the plugin once it's loaded from the plugin.toml file.
 	persistedPlugin := &Plugin{}
-	deriveDeepCopy(persistedPlugin, plugin)
 	plugin.dir = pluginPath
+	deriveDeepCopy(persistedPlugin, plugin)
 
 	if len(plugin.Commands) == 0 {
 		plugin.Commands = m.findCommands(pluginPath)
@@ -196,7 +216,9 @@ func (m *Manager) loadPlugin(name string) (*Plugin, error) {
 
 	// Compare the normalized plugin with the saved copy to know whether or not the file should be updated.
 	if !reflect.DeepEqual(persistedPlugin, plugin) {
-		m.persistPlugin(plugin, pluginFilePath)
+		if err := m.persistPlugin(plugin, pluginFilePath); err != nil {
+			m.logger.Debug(err)
+		}
 	}
 	return plugin, nil
 }
@@ -261,19 +283,33 @@ func (m *Manager) unmarshalPlugin(plugin *Plugin, path string) error {
 }
 
 // persistPlugin saves a `plugin.toml` file representing the plugin.
-func (m *Manager) persistPlugin(plugin *Plugin, path string) {
-	pluginTOML, err := toml.Marshal(*plugin)
-	if err == nil {
-		err = afero.WriteFile(m.fs, path, pluginTOML, 0644)
+func (m *Manager) persistPlugin(plugin *Plugin, path string) error {
+	if err := m.fs.MkdirAll(m.tempDir(), 0755); err != nil {
+		return err
 	}
+
+	f, err := afero.TempFile(m.fs, m.tempDir(), "plugin.toml")
 	if err != nil {
-		m.logger.Debug(err)
+		return err
 	}
+
+	defer m.fs.Remove(f.Name())
+	defer f.Close()
+
+	if err := toml.NewEncoder(f).Encode(*plugin); err != nil {
+		return err
+	}
+	return m.fs.Rename(f.Name(), path)
 }
 
 // pluginsDir returns the path to the plugins directory.
 func (m *Manager) pluginsDir() string {
 	return filepath.Join(m.cluster.Dir(), "subcommands")
+}
+
+// tempDir returns the path to the temp directory.
+func (m *Manager) tempDir() string {
+	return filepath.Join(m.cluster.Dir(), "tmp")
 }
 
 // downloadPlugin downloads a plugin and returns the path to the temporary file it stored it to.
@@ -298,13 +334,20 @@ func (m *Manager) downloadPlugin(url string, installOpts *InstallOpts) (string, 
 		respReader = resp.Body
 	}
 
-	if installOpts.ProgressBar != nil && resp.ContentLength > 0 {
+	if installOpts.ProgressBar != nil {
 		bar := installOpts.ProgressBar.AddBar(
 			resp.ContentLength,
 			mpb.PrependDecorators(decor.Name(installOpts.Name)),
-			mpb.AppendDecorators(decor.CountersKibiByte("% 6.1f / % 6.1f")),
+			mpb.AppendDecorators(
+				decor.OnComplete(decor.CountersKibiByte("% 6.1f / % 6.1f"), " plugin is now installed"),
+			),
+			mpb.BarClearOnComplete(),
 		)
-		respReader = bar.ProxyReader(respReader)
+		if resp.ContentLength > 0 {
+			respReader = bar.ProxyReader(respReader)
+		} else {
+			respReader = newStreamReader(respReader, bar)
+		}
 	}
 
 	if err := fsutil.CopyReader(m.fs, respReader, downloadedFilePath, 0644); err != nil {
@@ -369,7 +412,11 @@ func (m *Manager) buildPlugin(installOpts *InstallOpts) error {
 		if err := m.fs.MkdirAll(binDir, 0755); err != nil {
 			return err
 		}
-		binPath := filepath.Join(binDir, filepath.Base(installOpts.path))
+		binaryFilename := filepath.Base(installOpts.path)
+		if installOpts.Name != "" {
+			binaryFilename = "dcos-" + installOpts.Name
+		}
+		binPath := filepath.Join(binDir, binaryFilename)
 		err := fsutil.CopyFile(m.fs, installOpts.path, binPath, 0751)
 		if err != nil {
 			return err
@@ -387,34 +434,45 @@ func (m *Manager) buildPlugin(installOpts *InstallOpts) error {
 	return nil
 }
 
+// validatePlugin validates that a plugin is properly structured.
+func (m *Manager) validatePlugin(installOpts *InstallOpts) error {
+	pluginDir := filepath.Join(installOpts.stagingDir, "env")
+
+	hasPluginTOML, err := afero.Exists(m.fs, filepath.Join(pluginDir, "plugin.toml"))
+	if err != nil {
+		m.logger.Debugf("Couldn't check if plugin.toml exists: %s", err)
+	}
+
+	if !hasPluginTOML && len(m.findCommands(pluginDir)) == 0 {
+		return fmt.Errorf("%s has no commands", installOpts.Name)
+	}
+
+	// TODO: verify that plugin binaries are executables?
+	return nil
+}
+
 // installPlugin installs a plugin from a staging dir into its final location.
 // "update" indicates whether an already existing plugin can be overwritten.
 func (m *Manager) installPlugin(installOpts *InstallOpts) error {
 	dest := filepath.Join(m.pluginsDir(), installOpts.Name)
 
-	if installOpts.Update {
-		if err := m.fs.RemoveAll(dest); err != nil {
-			return err
-		}
-	} else {
-		pluginDirExists, err := afero.DirExists(m.fs, dest)
-		if err != nil {
-			m.logger.Debug(err)
-		}
-		if pluginDirExists {
-			return fmt.Errorf("'%s' is already installed", installOpts.Name)
-		}
-	}
-
 	if err := m.fs.MkdirAll(filepath.Dir(dest), 0755); err != nil {
 		return err
 	}
 
-	// Copy the plugin folder to its final location. We don't move it as this causes
-	// issues when the system's temp dir and the DC/OS dir are on different devices.
-	// See https://groups.google.com/forum/m/#!topic/golang-dev/5w7Jmg_iCJQ.
-	defer m.fs.RemoveAll(installOpts.stagingDir)
-	return fsutil.CopyDir(m.fs, installOpts.stagingDir, dest)
+	if installOpts.Update {
+		if err := m.fs.RemoveAll(dest); err != nil {
+			return err
+		}
+	}
+
+	err := m.fs.Rename(installOpts.stagingDir, dest)
+	if err != nil {
+		if os.IsExist(err) {
+			return ExistError{fmt.Errorf("'%s' is already installed", installOpts.Name)}
+		}
+	}
+	return err
 }
 
 // httpClient returns the appropriate HTTP client for a given resource.
@@ -434,4 +492,29 @@ func (m *Manager) httpClient(url string) *httpclient.Client {
 		)
 	}
 	return httpclient.New("", httpOpts...)
+}
+
+// newStreamReader updates the progress bar as it reads from the io.Reader,
+// keeping the total 1 byte ahead of the current progress. When io.EOF is returned,
+// the extra byte is decremented from the total, triggering a bar completed event.
+// It is used to indicate download progress for plugins with unknown Content-Length.
+func newStreamReader(r io.Reader, bar *mpb.Bar) *streamReader {
+	return &streamReader{r, bar, 1}
+}
+
+type streamReader struct {
+	io.Reader
+	bar   *mpb.Bar
+	total int
+}
+
+func (sr *streamReader) Read(p []byte) (n int, err error) {
+	n, err = sr.Reader.Read(p)
+	sr.total += n
+	if err == io.EOF {
+		sr.total--
+	}
+	sr.bar.SetTotal(int64(sr.total), false)
+	sr.bar.IncrBy(n)
+	return
 }
