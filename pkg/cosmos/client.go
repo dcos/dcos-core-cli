@@ -91,7 +91,7 @@ func (c *Client) PackageList() (*[]Package, error) {
 				Website:            p.PackageInformation.PackageDefinition.Website,
 			}
 
-			if p.PackageInformation.PackageDefinition.PackagingVersion != "4.0" {
+			if p.PackageInformation.PackageDefinition.PackagingVersion < "4.0" {
 				newPackage.Command = &dcos.CosmosPackageCommand{Name: p.PackageInformation.PackageDefinition.Name}
 				newPackage.ReleaseVersion = &p.PackageInformation.PackageDefinition.ReleaseVersion
 			}
