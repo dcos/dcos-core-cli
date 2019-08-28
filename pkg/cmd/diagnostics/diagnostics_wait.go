@@ -1,7 +1,6 @@
 package diagnostics
 
 import (
-	"errors"
 	"time"
 
 	"github.com/dcos/dcos-cli/api"
@@ -55,31 +54,4 @@ func newDiagnosticsWaitCommand(ctx api.Context) *cobra.Command {
 	}
 
 	return cmd
-}
-
-func latestBundle(client *diagnostics.Client) (*diagnostics.Bundle, error) {
-	bundles, err := client.List()
-	if err != nil {
-		return nil, err
-	}
-	if len(bundles) == 0 {
-		return nil, errors.New("no bundles found")
-	}
-
-	// default time.Time is as far back we'll need to worry about anyway so serves as a good starting min
-	var max time.Time
-	var bundle diagnostics.Bundle
-
-	for _, b := range bundles {
-		if b.Type == diagnostics.Cluster && b.Started.After(max) {
-			max = b.Started
-			bundle = b
-		}
-	}
-
-	if max.Equal(time.Time{}) {
-		return nil, errors.New("no cluster bundles found")
-	}
-
-	return &bundle, nil
 }
