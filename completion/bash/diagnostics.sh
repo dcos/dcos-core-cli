@@ -15,6 +15,7 @@ _dcos_diagnostics() {
     "delete"
     "download"
     "list"
+    "wait"
     )
 
     if [ -z "$command" ]; then
@@ -125,6 +126,27 @@ _dcos_diagnostics_list() {
         esac
         return
     fi
+}
+
+_dcos_diagnostics_wait() {
+    local i command
+
+    if ! __dcos_default_command_parse; then
+        return
+    fi
+
+    local flags=(
+    "--help"
+    )
+
+    case "$cur" in
+        --*)
+            __dcos_handle_compreply "${flags[@]}"
+            ;;
+        *)
+            __dcos_complete_bundle_ids
+            ;;
+    esac
 }
 
 __dcos_complete_bundle_ids() {
