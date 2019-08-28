@@ -180,20 +180,6 @@ def file_json_ast(path):
         return json.load(f)
 
 
-def json_ast_format(ast):
-    """Returns the given JSON AST formatted as bytes
-
-    :param ast: JSON AST
-    :returns: formatted JSON
-    :rtype: bytes
-    """
-    return six.b(
-        json.dumps(ast,
-                   sort_keys=True,
-                   indent=2,
-                   separators=(',', ': '))) + b'\n'
-
-
 def fetch_valid_json(cmd):
     """Assert stdout contains valid JSON
 
@@ -212,15 +198,21 @@ def fetch_valid_json(cmd):
         raise Exception(error_text)
 
 
-def file_json(path):
+def file_json(path, indent=2):
     """ Returns formatted json from file
 
     :param path: path to file
     :type path: str
+    :param indent: indentation of JSON
+    :type indent: int
     :returns: formatted json
     :rtype: bytes
     """
-    return json_ast_format(file_json_ast(path))
+    return six.b(
+        json.dumps(file_json_ast(path),
+                   sort_keys=True,
+                   indent=indent,
+                   separators=(',', ': '))) + b'\n'
 
 
 @contextlib.contextmanager
