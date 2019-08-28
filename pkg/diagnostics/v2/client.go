@@ -24,6 +24,11 @@ type Bundle struct {
 	Errors  []string  `json:"errors,omitempty"`
 }
 
+// IsFinished returns if the bundle has a status that indicating that it is finished.
+func (b *Bundle) IsFinished() bool {
+	return b.Status == Done || b.Status == Deleted || b.Status == Canceled || b.Status == Failed
+}
+
 // Client is a REST API wrapper around the new Diagnostics API.
 type Client struct {
 	http *httpclient.Client
@@ -106,6 +111,35 @@ func (c *Client) Create() (string, error) {
 		return response.ID, nil
 	default:
 		return "", httpResponseToError(resp)
+	}
+}
+
+// Get gets a single bundle from the cluster
+func (c *Client) Get(id string) (*Bundle, error) {
+	req, err := c.http.NewRequest("GET", fmt.Sprintf("%s/%s", baseURL, id), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		var bundle Bundle
+		err = json.NewDecoder(resp.Body).Decode(&bundle)
+		if err != nil {
+			return nil, err
+		}
+		return &bundle, nil
+	case http.StatusNotFound:
+		return nil, fmt.Errorf("no bundle %s found", id)
+	case http.StatusNotModified:
+		return nil, fmt.Errorf("bundle %s has already been deleted", id)
+	default:
+		return nil, httpResponseToError(resp)
 	}
 }
 

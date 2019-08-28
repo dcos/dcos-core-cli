@@ -61,6 +61,69 @@ func TestEmptyList(t *testing.T) {
 	assert.Empty(t, bundles)
 }
 
+func TestGet(t *testing.T) {
+	response := &Bundle{
+		ID:      "test",
+		Size:    100,
+		Status:  Done,
+		Started: time.Now().UTC(),
+		Stopped: time.Now().UTC(),
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/system/health/v1/diagnostics/bundle-id", r.URL.Path)
+		assert.Equal(t, "GET", r.Method)
+		w.WriteHeader(http.StatusOK)
+		assert.NoError(t, json.NewEncoder(w).Encode(response))
+	}))
+	defer ts.Close()
+
+	c := NewClient(pluginutil.HTTPClient(ts.URL))
+	bundle, err := c.Get("bundle-id")
+	require.NoError(t, err)
+
+	assert.EqualValues(t, response, bundle)
+}
+
+func TestGetErrors(t *testing.T) {
+	type testDef struct {
+		name       string
+		returnCode int
+		errMessage string
+	}
+
+	tests := []testDef{
+		{
+			name:       "not found",
+			returnCode: http.StatusNotFound,
+			errMessage: "no bundle bundle-0 found",
+		},
+		{
+			name:       "not modified",
+			returnCode: http.StatusNotModified,
+			errMessage: "bundle bundle-0 has already been deleted",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, "/system/health/v1/diagnostics/bundle-0", r.URL.String())
+				assert.Equal(t, "GET", r.Method)
+
+				w.WriteHeader(test.returnCode)
+			}))
+			defer ts.Close()
+
+			c := NewClient(pluginutil.HTTPClient(ts.URL))
+			bundle, err := c.Get("bundle-0")
+			assert.Error(t, err)
+			assert.EqualError(t, err, test.errMessage)
+
+			assert.Nil(t, bundle)
+		})
+	}
+}
+
 func TestDeleteHappyPath(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/system/health/v1/diagnostics/this-is-the-bundle-id", r.URL.Path)
