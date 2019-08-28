@@ -78,8 +78,6 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 							list = append(list, pkg)
 						}
 					}
-				} else {
-					fmt.Println(err)
 				}
 			}
 
