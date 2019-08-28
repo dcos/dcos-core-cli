@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
+	"path/filepath"
 	"strings"
 	"unicode/utf8"
 
@@ -51,12 +51,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 
 			plugins := ctx.PluginManager(cluster).Plugins()
 			for _, plugin := range plugins {
-				fmt.Println(plugin.Dir())
-				packagePath := path.Join(plugin.Dir(), "..", "package.json")
-				if runtime.GOOS == "windows" {
-					packagePath = path.Join(plugin.Dir(), "..", "..", "package.json")
-				}
-				fmt.Println(packagePath)
+				packagePath := path.Join(filepath.Dir(plugin.Dir()), "package.json")
 				if _, err := os.Stat(packagePath); err == nil {
 					file, err := ioutil.ReadFile(packagePath)
 					if err != nil {
