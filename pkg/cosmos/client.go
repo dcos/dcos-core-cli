@@ -3,6 +3,7 @@ package cosmos
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"sort"
@@ -186,7 +187,7 @@ func (c *Client) PackageAddRepo(name string, uri string, index int) ([]dcos.Cosm
 		CosmosPackageAddRepoV1Request: optional.NewInterface(addRepoRequest),
 	})
 	if err != nil {
-		return nil, err
+		return nil, cosmosErrUnwrap(err)
 	}
 	return desc.Repositories, nil
 }
@@ -198,14 +199,29 @@ func (c *Client) PackageDeleteRepo(name string) error {
 			Name: name,
 		}),
 	})
-	return err
+
+	return cosmosErrUnwrap(err)
 }
 
 // PackageListRepo returns a list of package repositories.
-func (c *Client) PackageListRepo() ([]dcos.CosmosPackageRepo, error) {
+func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error) {
 	desc, _, err := c.cosmos.PackageRepositoryList(context.TODO(), nil)
 	if err != nil {
-		return nil, err
+		return nil, cosmosErrUnwrap(err)
 	}
-	return desc.Repositories, nil
+	return &desc, nil
+}
+
+func cosmosErrUnwrap(err error) error {
+	switch err := err.(type) {
+	case dcos.GenericOpenAPIError:
+		if err.Model() != nil {
+			if e, ok := err.Model().(dcos.CosmosError); ok {
+				return fmt.Errorf(e.Message)
+			}
+		}
+		return err
+	default:
+		return err
+	}
 }
