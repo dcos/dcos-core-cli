@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
@@ -14,8 +13,6 @@ import (
 const description = `Print the package repository sources
 
 Possible sources include a local file, HTTPS, and Git.`
-
-const noReposError = "There are currently no repos configured. Please use `dcos package repo add` to add a repo"
 
 func newCmdPackageRepoList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
@@ -40,11 +37,6 @@ func newCmdPackageRepoList(ctx api.Context) *cobra.Command {
 				enc := json.NewEncoder(ctx.Out())
 				enc.SetIndent("", "    ")
 				return enc.Encode(repos)
-			}
-
-			// TODO: this follows the python behavior but is this really an error?
-			if len(repos.Repositories) == 0 {
-				return errors.New(noReposError)
 			}
 
 			tableHeader := []string{"NAME", "URI"}
