@@ -172,14 +172,14 @@ func (c *Client) PackageSearch(query string) (*SearchResult, error) {
 }
 
 // PackageAddRepo adds a package repository.
-func (c *Client) PackageAddRepo(name string, uri string, index int) ([]dcos.CosmosPackageRepo, error) {
+func (c *Client) PackageAddRepo(name string, uri string, index *int) ([]dcos.CosmosPackageRepo, error) {
 	addRepoRequest := dcos.CosmosPackageAddRepoV1Request{
 		Name: name,
 		Uri:  uri,
 	}
 
-	if index > 0 {
-		index32 := int32(index)
+	if index != nil {
+		index32 := int32(*index)
 		addRepoRequest.Index = &index32
 	}
 

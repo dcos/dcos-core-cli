@@ -23,7 +23,11 @@ func newCmdPackageRepoAdd(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			_, err = c.PackageAddRepo(repoName, repoURL, index)
+			if cmd.Flags().Changed("index") {
+				_, err = c.PackageAddRepo(repoName, repoURL, &index)
+				return err
+			}
+			_, err = c.PackageAddRepo(repoName, repoURL, nil)
 			return err
 		},
 	}
