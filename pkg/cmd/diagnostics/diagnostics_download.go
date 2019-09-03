@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newDiagnosticsDownloadCommand(ctx api.Context) *cobra.Command {
+func newDiagnosticsDownloadCommand(_ api.Context) *cobra.Command {
 	var outputPath string
 
 	cmd := &cobra.Command{

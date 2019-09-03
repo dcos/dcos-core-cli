@@ -59,7 +59,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 					}
 
 					pkg := cosmos.Package{}
-					err = json.Unmarshal([]byte(file), &pkg)
+					err = json.Unmarshal(file, &pkg)
 					if err != nil {
 						return err
 					}

@@ -52,21 +52,21 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 				rolesRes <- rolesResult{roles, err}
 			}()
 
-			rolesResult := <-rolesRes
-			if rolesResult.err != nil {
-				return rolesResult.err
+			rResult := <-rolesRes
+			if rResult.err != nil {
+				return rResult.err
 			}
 
-			groupsResult := <-groupsRes
-			if groupsResult.err != nil {
-				return groupsResult.err
+			gResult := <-groupsRes
+			if gResult.err != nil {
+				return gResult.err
 			}
 
-			if !groupsResult.groups[args[0]] {
+			if !gResult.groups[args[0]] {
 				return errors.New("/" + args[0] + " is not an existing Marathon group")
 			}
 
-			for _, role := range rolesResult.roles.Roles {
+			for _, role := range rResult.roles.Roles {
 				// Deleted quotas can still exist but will have no limits set thus we check the content of the quota.
 				if role.Quota.Role == args[0] && len(role.Quota.Limit) > 0 {
 					return errors.New(args[0] + " is an existing quota, use 'dcos quota update' if you want to update it.")

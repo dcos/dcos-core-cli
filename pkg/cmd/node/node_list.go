@@ -53,24 +53,24 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			// results in a significant speedup of the command.
 			stateRes := make(chan stateResult)
 			go func() {
-				state, err := client.State()
-				stateRes <- stateResult{state, err}
+				state, e := client.State()
+				stateRes <- stateResult{state, e}
 			}()
 
 			stateSummaryRes := make(chan stateSummaryResult)
 			go func() {
-				stateSummary, err := client.StateSummary()
-				stateSummaryRes <- stateSummaryResult{stateSummary, err}
+				stateSummary, e := client.StateSummary()
+				stateSummaryRes <- stateSummaryResult{stateSummary, e}
 			}()
 
 			ipsRes := make(chan ipsResult)
 			go func() {
 				c := networking.NewClient(pluginutil.HTTPClient(""))
-				nodes, err := c.Nodes()
+				nodes, e := c.Nodes()
 
 				ips := make(map[string][]string)
-				if err != nil {
-					ctx.Logger().Debug(err)
+				if e != nil {
+					ctx.Logger().Debug(e)
 				} else {
 					for _, node := range nodes {
 						ips[node.PrivateIP] = node.PublicIPs
@@ -81,8 +81,8 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 			agentsRes := make(chan agentsResult)
 			go func() {
-				agents, err := client.Agents()
-				agentsRes <- agentsResult{agents, err}
+				agents, e := client.Agents()
+				agentsRes <- agentsResult{agents, e}
 			}()
 
 			masters, err := mesosDNSClient().Masters()
@@ -218,8 +218,10 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
-	cmd.Flags().StringArrayVar(&fields, "field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
-	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "Only display the information concerning a node with a specific Mesos ID")
+	cmd.Flags().StringArrayVar(&fields, "field", nil,
+		"Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
+	cmd.Flags().StringVar(&mesosID, "mesos-id", "",
+		"Only display the information concerning a node with a specific Mesos ID")
 	return cmd
 }
 

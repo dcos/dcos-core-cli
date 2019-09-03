@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mesos/mesos-go/api/v1/lib/encoding"
+
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
 	agentcalls "github.com/mesos/mesos-go/api/v1/lib/agent/calls"
@@ -40,7 +42,7 @@ type TaskIOOpts struct {
 // TaskIO is an abstraction used to stream I/O between a running Mesos task and the local terminal.
 //
 // A TaskIO object can only be used for a single streaming session (through Attach or Exec),
-// for subsequent streaming sessions one should instanciate new TaskIO objects.
+// for subsequent streaming sessions one should instantiate new TaskIO objects.
 type TaskIO struct {
 	containerID mesos.ContainerID
 	opts        TaskIOOpts
@@ -510,7 +512,7 @@ func (t *TaskIO) ttyInfo(fd int) (*mesos.TTYInfo, error) {
 
 // forwardContainerOutput forwards output of the LAUNCH_NESTED_CONTAINER_SESSION
 // or ATTACH_CONTAINER_OUTPUT responses to STDOUT/STDERR.
-func (t *TaskIO) forwardContainerOutput(resp mesos.Response) error {
+func (t *TaskIO) forwardContainerOutput(resp encoding.Decoder) error {
 	forward := func(b []byte, out io.Writer) error {
 		n, err := out.Write(b)
 		if err == nil && len(b) != n {

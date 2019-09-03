@@ -224,7 +224,7 @@ type Docker struct {
 	Image          string        `json:"image"`
 	Network        string        `json:"network"`
 	PortMappings   []PortMapping `json:"port_mappings"`
-	Priviledge     bool          `json:"priviledge"`
+	Privileged     bool          `json:"privileged"`
 	Parameters     []Parameter   `json:"parameters"`
 	ForcePullImage bool          `json:"force_pull_image"`
 }
@@ -236,7 +236,7 @@ type PortMapping struct {
 	Protocol      string `json:"protocol"`
 }
 
-// TaskDiscovery represents the dicovery information of a task
+// TaskDiscovery represents the discovery information of a task
 type TaskDiscovery struct {
 	Visibility string `json:"visibility"`
 	Name       string `json:"name"`

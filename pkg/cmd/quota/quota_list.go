@@ -41,20 +41,19 @@ func newCmdQuotaList(ctx api.Context) *cobra.Command {
 				rolesRes <- rolesResult{roles, err}
 			}()
 
-			rolesResult := <-rolesRes
-			if rolesResult.err != nil {
-				return rolesResult.err
+			rResult := <-rolesRes
+			if rResult.err != nil {
+				return rResult.err
 			}
 
-			groupsResult := <-groupsRes
-			if groupsResult.err != nil {
-				return groupsResult.err
+			gResult := <-groupsRes
+			if gResult.err != nil {
+				return gResult.err
 			}
 
-			quotas := []mesos.Quota{}
-
-			for _, role := range rolesResult.roles.Roles {
-				if role.Quota.Role != "" && groupsResult.groups[role.Quota.Role] {
+			var quotas []mesos.Quota
+			for _, role := range rResult.roles.Roles {
+				if role.Quota.Role != "" && gResult.groups[role.Quota.Role] {
 					quotas = append(quotas, role.Quota)
 				}
 			}

@@ -70,21 +70,21 @@ func newCmdTaskMetricsSummary(ctx api.Context) *cobra.Command {
 
 			cpuUsed := summaryDatapoints["cpus.user_time_secs"] + summaryDatapoints["cpus.system_time_secs"]
 			cpuTotal := cpuUsed + summaryDatapoints["cpus.throttled_time_secs"]
-			cpuPercent := "N/A"
+			cpuPercent := notAvailable
 			if cpuTotal != 0 {
 				cpuPercent = fmt.Sprintf("%.2f%%", (cpuUsed/cpuTotal)*100)
 			}
 
 			memUsed := summaryDatapoints["mem.file_bytes"]
 			memTotal := summaryDatapoints["mem.total_bytes"]
-			memPercent := "N/A"
+			memPercent := notAvailable
 			if memTotal != 0 {
 				memPercent = fmt.Sprintf("%.2f%%", (memUsed/memTotal)*100)
 			}
 
 			diskUsed := summaryDatapoints["disk.used_bytes"]
 			diskLimit := summaryDatapoints["disk.limit_bytes"]
-			diskPercent := "N/A"
+			diskPercent := notAvailable
 			if diskLimit != 0 {
 				diskPercent = fmt.Sprintf("%.2f%%", (diskUsed/diskLimit)*100)
 			}

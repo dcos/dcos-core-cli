@@ -91,7 +91,8 @@ func newCmdNodeLog(ctx api.Context) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "Print all the lines available")
 	cmd.Flags().StringVar(&component, "component", "", "Show DC/OS component logs")
-	cmd.Flags().StringArrayVar(&filters, "filter", nil, "Filter logs by field and value. Filter must be a string separated by colon. For example: --filter _PID:0 --filter _UID:1")
+	cmd.Flags().StringArrayVar(&filters, "filter", nil,
+		"Filter logs by field and value. Filter must be a string separated by colon. For example: --filter _PID:0 --filter _UID:1")
 	cmd.Flags().BoolVar(&follow, "follow", false, "Dynamically update the log")
 	cmd.Flags().BoolVar(&leader, "leader", false, "The leading master")
 	cmd.Flags().IntVar(&lines, "lines", 10, "Print the N last lines")

@@ -23,9 +23,9 @@ func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
 			}
 
 			if location == "" {
-				var err error
-				location, err = os.Getwd()
-				if err != nil {
+				var e error
+				location, e = os.Getwd()
+				if e != nil {
 					return err
 				}
 			}
@@ -49,9 +49,15 @@ func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
 			}
 
 			out, err := os.Create(filepath.Join(location, args[0]))
+			if err != nil {
+				return err
+			}
 			defer out.Close()
 
 			resp, err := client.Get(args[0])
+			if err != nil {
+				return err
+			}
 			defer resp.Body.Close()
 
 			_, err = io.Copy(out, resp.Body)

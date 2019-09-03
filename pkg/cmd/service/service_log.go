@@ -51,9 +51,9 @@ func newCmdServiceLog(ctx api.Context) *cobra.Command {
 			}
 
 			if args[0] == "marathon" {
-				url, err := marathonMasterURL(marathonClient, ctx)
-				if err != nil {
-					return err
+				url, e := marathonMasterURL(marathonClient, ctx)
+				if e != nil {
+					return e
 				}
 
 				logClient := logs.NewClient(pluginutil.HTTPClient(url), ctx.Out())

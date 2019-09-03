@@ -34,17 +34,12 @@ python:
 		make binary
 
 .PHONY: test
-test: vet
+test: lint
 	$(call inDocker,go test -race -cover ./...)
-
-.PHONY: vet
-vet: lint
-	$(call inDocker,go vet ./...)
 
 .PHONY: lint
 lint: docker-image
-	# Can be simplified once https://github.com/golang/lint/issues/320 is fixed.
-	$(call inDocker,golint -set_exit_status ./cmd/... ./pkg/...)
+	$(call inDocker, golangci-lint -v run)
 
 .PHONY: generate
 generate: docker-image

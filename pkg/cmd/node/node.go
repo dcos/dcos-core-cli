@@ -36,7 +36,8 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool("json", false, "Print in json format")
-	cmd.Flags().StringArray("field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
+	cmd.Flags().StringArray("field", nil,
+		"Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
 
 	cmd.AddCommand(
 		newCmdNodeDeactivate(ctx),

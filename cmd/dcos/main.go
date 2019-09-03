@@ -18,7 +18,7 @@ func main() {
 	}
 }
 
-func run(ctx api.Context, args []string) error {
+func run(ctx api.Context, _ []string) error {
 	return cmd.NewDCOSCommand(ctx).Execute()
 }
 

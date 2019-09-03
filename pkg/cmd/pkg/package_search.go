@@ -51,7 +51,13 @@ func newCmdPackageSearch(ctx api.Context) *cobra.Command {
 				if utf8.RuneCountInString(cosmosPackage.Description) >= 80 {
 					description = description[0:76] + "..."
 				}
-				table.Append([]string{cosmosPackage.Name, cosmosPackage.CurrentVersion, strconv.FormatBool(cosmosPackage.Selected), strconv.FormatBool(cosmosPackage.Framework), description})
+				table.Append([]string{
+					cosmosPackage.Name,
+					cosmosPackage.CurrentVersion,
+					strconv.FormatBool(cosmosPackage.Selected),
+					strconv.FormatBool(cosmosPackage.Framework),
+					description,
+				})
 			}
 			table.Render()
 

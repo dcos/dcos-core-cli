@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const notAvailable = "N/A"
+
 func newCmdTaskList(ctx api.Context) *cobra.Command {
 	var all, jsonOutput, completed, quietOutput bool
 	var agentID string
@@ -77,8 +79,8 @@ func newCmdTaskList(ctx api.Context) *cobra.Command {
 				for _, a := range agents {
 					if a.AgentInfo.ID.GetValue() == t.SlaveID {
 						host = a.AgentInfo.Hostname
-						region = "N/A"
-						zone = "N/A"
+						region = notAvailable
+						zone = notAvailable
 						if a.AgentInfo.Domain != nil && a.AgentInfo.Domain.FaultDomain != nil {
 							if a.AgentInfo.Domain.FaultDomain.GetRegion().Name != "" {
 								region = a.AgentInfo.Domain.FaultDomain.GetRegion().Name
