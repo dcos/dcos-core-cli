@@ -36,6 +36,8 @@ Please follow your platform's instructions on how to do that.
 1.  [git](http://git-scm.com) must be installed to download the source
     code for the DC/OS CLI.
 2.  [python](https://www.python.org/) version 3.7.x must be installed.
+    If you have another Python version installed, you can export
+    `DCOS_EXPERIMENTAL=1` and the installation steps will allow it.
 3.  If `make env` fails you may be missing required dependencies for
     cryptography. See
     [here](https://cryptography.io/en/latest/installation/) for more
