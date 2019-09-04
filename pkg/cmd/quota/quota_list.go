@@ -29,32 +29,31 @@ func newCmdQuotaList(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			groupsRes := make(chan groupsResult)
+			groupsResultChan := make(chan groupsResult)
 			go func() {
 				groups, err := marathonClient.GroupsWithoutRootSlash()
-				groupsRes <- groupsResult{groups, err}
+				groupsResultChan <- groupsResult{groups, err}
 			}()
 
-			rolesRes := make(chan rolesResult)
+			rolesResChan := make(chan rolesResult)
 			go func() {
 				roles, err := mesosClient.Roles()
-				rolesRes <- rolesResult{roles, err}
+				rolesResChan <- rolesResult{roles, err}
 			}()
 
-			rolesResult := <-rolesRes
-			if rolesResult.err != nil {
-				return rolesResult.err
+			rolesRes := <-rolesResChan
+			if rolesRes.err != nil {
+				return rolesRes.err
 			}
 
-			groupsResult := <-groupsRes
-			if groupsResult.err != nil {
-				return groupsResult.err
+			groupsRes := <-groupsResultChan
+			if groupsRes.err != nil {
+				return groupsRes.err
 			}
 
-			quotas := []mesos.Quota{}
-
-			for _, role := range rolesResult.roles.Roles {
-				if role.Quota.Role != "" && groupsResult.groups[role.Quota.Role] {
+			var quotas []mesos.Quota
+			for _, role := range rolesRes.roles.Roles {
+				if role.Quota.Role != "" && groupsRes.groups[role.Quota.Role] {
 					quotas = append(quotas, role.Quota)
 				}
 			}

@@ -218,8 +218,10 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
-	cmd.Flags().StringArrayVar(&fields, "field", nil, "Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
-	cmd.Flags().StringVar(&mesosID, "mesos-id", "", "Only display the information concerning a node with a specific Mesos ID")
+	cmd.Flags().StringArrayVar(&fields, "field", nil,
+		"Name of extra field to include in the output of `dcos node`. Can be repeated multiple times to add several fields.")
+	cmd.Flags().StringVar(&mesosID, "mesos-id", "",
+		"Only display the information concerning a node with a specific Mesos ID")
 	return cmd
 }
 

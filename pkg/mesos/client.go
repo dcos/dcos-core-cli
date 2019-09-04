@@ -459,7 +459,7 @@ func (c *Client) Quota() (*master.Response_GetQuota, error) {
 	}
 }
 
-// Roles returns a stripped down mesos/roles containg quota information.
+// Roles returns a stripped down mesos/roles containing quota information.
 func (c *Client) Roles() (*Roles, error) {
 	resp, err := c.http.Get("/roles")
 	if err != nil {

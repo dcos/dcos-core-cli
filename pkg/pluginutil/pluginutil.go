@@ -35,7 +35,7 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 
 	tlsInsecure, _ := os.LookupEnv("DCOS_TLS_INSECURE")
 	if tlsInsecure == "1" {
-		baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{InsecureSkipVerify: true}))
+		baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{InsecureSkipVerify: true})) //nolint: gosec
 	} else {
 		tlsCAPath, _ := os.LookupEnv("DCOS_TLS_CA_PATH")
 		if tlsCAPath != "" {
@@ -111,7 +111,7 @@ func Logger() *logrus.Logger {
 	return logger
 }
 
-// Usage defines a help template folowing the UX guidelines
+// Usage defines a help template following the UX guidelines
 func Usage(command *cobra.Command) error {
 	tpl := template.New("top")
 	template.Must(tpl.Parse(`Usage:{{if .HasAvailableSubCommands}}

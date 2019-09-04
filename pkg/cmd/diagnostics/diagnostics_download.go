@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dcos/dcos-cli/api"
 	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
-func newDiagnosticsDownloadCommand(ctx api.Context) *cobra.Command {
+func newDiagnosticsDownloadCommand() *cobra.Command {
 	var outputPath string
 
 	cmd := &cobra.Command{

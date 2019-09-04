@@ -14,7 +14,7 @@ default: $(PLATFORM)
 
 .PHONY: darwin linux windows
 darwin linux windows: docker-image
-	$(call inDocker,env GOOS=$(@) go build \
+	$(call inDocker, GOOS=$(@) go build \
 		-tags '$(GO_BUILD_TAGS)' \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
 
@@ -34,17 +34,12 @@ python:
 		make binary
 
 .PHONY: test
-test: vet
+test: lint
 	$(call inDocker,go test -race -cover ./...)
-
-.PHONY: vet
-vet: lint
-	$(call inDocker,go vet ./...)
 
 .PHONY: lint
 lint: docker-image
-	# Can be simplified once https://github.com/golang/lint/issues/320 is fixed.
-	$(call inDocker,golint -set_exit_status ./cmd/... ./pkg/...)
+	$(call inDocker, golangci-lint run)
 
 .PHONY: generate
 generate: docker-image

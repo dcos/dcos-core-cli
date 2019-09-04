@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dcos/dcos-cli/api"
-	"github.com/mesos/mesos-go/api/v1/lib"
+	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/spf13/cobra"
 )
 

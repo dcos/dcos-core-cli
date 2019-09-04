@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"fmt"
+
 	"github.com/dcos/dcos-cli/api"
 	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"

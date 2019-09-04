@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const notAvailable = "N/A"
+
 // NewCommand creates the `core service` subcommand.
 func NewCommand(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{

@@ -99,9 +99,7 @@ func (c *Client) PackageList() (*[]Package, error) {
 			ps = append(ps, newPackage)
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	return &ps, nil
 }
 
@@ -135,7 +133,7 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 			return nil, err
 		}
 
-		err = json.Unmarshal([]byte(options), &optionsInterface)
+		err = json.Unmarshal(options, &optionsInterface)
 		if err != nil {
 			log.Fatal(err)
 		}

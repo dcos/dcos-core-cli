@@ -20,10 +20,6 @@ func newCmdTaskAttach(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			if err != nil {
-				return err
-			}
-
 			exitCode, err := taskIO.Attach()
 			if err != nil {
 				return err

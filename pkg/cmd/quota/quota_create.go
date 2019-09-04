@@ -40,33 +40,33 @@ func newCmdQuotaCreate(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			groupsRes := make(chan groupsResult)
+			groupsResultChan := make(chan groupsResult)
 			go func() {
 				groups, err := marathonClient.GroupsWithoutRootSlash()
-				groupsRes <- groupsResult{groups, err}
+				groupsResultChan <- groupsResult{groups, err}
 			}()
 
-			rolesRes := make(chan rolesResult)
+			rolesResChan := make(chan rolesResult)
 			go func() {
 				roles, err := mesosClient.Roles()
-				rolesRes <- rolesResult{roles, err}
+				rolesResChan <- rolesResult{roles, err}
 			}()
 
-			rolesResult := <-rolesRes
-			if rolesResult.err != nil {
-				return rolesResult.err
+			rolesRes := <-rolesResChan
+			if rolesRes.err != nil {
+				return rolesRes.err
 			}
 
-			groupsResult := <-groupsRes
-			if groupsResult.err != nil {
-				return groupsResult.err
+			groupsRes := <-groupsResultChan
+			if groupsRes.err != nil {
+				return groupsRes.err
 			}
 
-			if !groupsResult.groups[args[0]] {
+			if !groupsRes.groups[args[0]] {
 				return errors.New("/" + args[0] + " is not an existing Marathon group")
 			}
 
-			for _, role := range rolesResult.roles.Roles {
+			for _, role := range rolesRes.roles.Roles {
 				// Deleted quotas can still exist but will have no limits set thus we check the content of the quota.
 				if role.Quota.Role == args[0] && len(role.Quota.Limit) > 0 {
 					return errors.New(args[0] + " is an existing quota, use 'dcos quota update' if you want to update it.")

@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const annotationUsageOptions string = "usage_options"
-
 // NewDCOSCommand creates the `dcos` command with all the available subcommands.
 func NewDCOSCommand(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{

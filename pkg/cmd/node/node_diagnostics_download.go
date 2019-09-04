@@ -49,9 +49,15 @@ func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
 			}
 
 			out, err := os.Create(filepath.Join(location, args[0]))
+			if err != nil {
+				return err
+			}
 			defer out.Close()
 
 			resp, err := client.Get(args[0])
+			if err != nil {
+				return err
+			}
 			defer resp.Body.Close()
 
 			_, err = io.Copy(out, resp.Body)
