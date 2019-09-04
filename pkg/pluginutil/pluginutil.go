@@ -35,9 +35,7 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 
 	tlsInsecure, _ := os.LookupEnv("DCOS_TLS_INSECURE")
 	if tlsInsecure == "1" {
-		baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{
-			InsecureSkipVerify: true}, //nolint: gosec
-		))
+		baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{InsecureSkipVerify: true})) //nolint: gosec
 	} else {
 		tlsCAPath, _ := os.LookupEnv("DCOS_TLS_CA_PATH")
 		if tlsCAPath != "" {
