@@ -39,7 +39,7 @@ test: lint
 
 .PHONY: lint
 lint: docker-image
-	$(call inDocker, golangci-lint -v run)
+	$(call inDocker, golangci-lint run)
 
 .PHONY: generate
 generate: docker-image
