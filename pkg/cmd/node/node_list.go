@@ -53,24 +53,24 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 			// results in a significant speedup of the command.
 			stateRes := make(chan stateResult)
 			go func() {
-				state, e := client.State()
-				stateRes <- stateResult{state, e}
+				state, stateErr := client.State()
+				stateRes <- stateResult{state, stateErr}
 			}()
 
 			stateSummaryRes := make(chan stateSummaryResult)
 			go func() {
-				stateSummary, e := client.StateSummary()
-				stateSummaryRes <- stateSummaryResult{stateSummary, e}
+				stateSummary, summaryErr := client.StateSummary()
+				stateSummaryRes <- stateSummaryResult{stateSummary, summaryErr}
 			}()
 
 			ipsRes := make(chan ipsResult)
 			go func() {
 				c := networking.NewClient(pluginutil.HTTPClient(""))
-				nodes, e := c.Nodes()
+				nodes, nodesErr := c.Nodes()
 
 				ips := make(map[string][]string)
-				if e != nil {
-					ctx.Logger().Debug(e)
+				if nodesErr != nil {
+					ctx.Logger().Debug(nodesErr)
 				} else {
 					for _, node := range nodes {
 						ips[node.PrivateIP] = node.PublicIPs
@@ -81,8 +81,8 @@ func newCmdNodeList(ctx api.Context) *cobra.Command {
 
 			agentsRes := make(chan agentsResult)
 			go func() {
-				agents, e := client.Agents()
-				agentsRes <- agentsResult{agents, e}
+				agents, agentsErr := client.Agents()
+				agentsRes <- agentsResult{agents, agentsErr}
 			}()
 
 			masters, err := mesosDNSClient().Masters()

@@ -12,13 +12,13 @@ import (
 
 func main() {
 	ctx := cli.NewContext(cli.NewOsEnvironment())
-	if err := run(ctx, os.Args); err != nil {
+	if err := run(ctx); err != nil {
 		fmt.Fprintf(ctx.ErrOut(), "Error: %s\n", errorMessage(err))
 		os.Exit(1)
 	}
 }
 
-func run(ctx api.Context, _ []string) error {
+func run(ctx api.Context) error {
 	return cmd.NewDCOSCommand(ctx).Execute()
 }
 
