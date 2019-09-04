@@ -27,9 +27,9 @@ func newCmdJobShowRuns(ctx api.Context) *cobra.Command {
 
 			var runs []metronome.Run
 			if runID != "" {
-				run, runErr := client.Run(args[0], runID)
-				if runErr != nil {
-					return runErr
+				run, err := client.Run(args[0], runID)
+				if err != nil {
+					return err
 				}
 				runs = append(runs, *run)
 			} else {
