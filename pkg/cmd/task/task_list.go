@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const notAvailable = "N/A"
-
 func newCmdTaskList(ctx api.Context) *cobra.Command {
 	var all, jsonOutput, completed, quietOutput bool
 	var agentID string
