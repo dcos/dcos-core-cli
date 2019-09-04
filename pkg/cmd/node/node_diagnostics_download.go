@@ -23,9 +23,9 @@ func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
 			}
 
 			if location == "" {
-				var getwdErr error
-				location, getwdErr = os.Getwd()
-				if getwdErr != nil {
+				var err error
+				location, err = os.Getwd()
+				if err != nil {
 					return err
 				}
 			}
