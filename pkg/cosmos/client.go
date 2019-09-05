@@ -223,3 +223,13 @@ func cosmosErrUnwrap(err error) error {
 		return err
 	}
 }
+
+func (c *Client) PackageUninstall(packageName string, all bool, appID string) error {
+	reqParams := dcos.CosmosPackageUninstallV1Request{
+		All:         all,
+		AppId:       appID,
+		PackageName: packageName,
+	}
+	_, _, err := c.cosmos.PackageUninstall(context.TODO(), reqParams, &dcos.PackageUninstallOpts{})
+	return err
+}
