@@ -2,9 +2,9 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
-	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
@@ -39,14 +39,9 @@ func newCmdPackageRepoList(ctx api.Context) *cobra.Command {
 				return enc.Encode(repos)
 			}
 
-			tableHeader := []string{"NAME", "URI"}
-			table := cli.NewTable(ctx.Out(), tableHeader)
-
 			for _, r := range repos.Repositories {
-				fields := []string{r.Name, r.Uri}
-				table.Append(fields)
+				fmt.Fprintf(ctx.Out(), "%s: %s\n", r.Name, r.Uri)
 			}
-			table.Render()
 
 			return nil
 		},
