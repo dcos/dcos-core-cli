@@ -65,7 +65,7 @@ ifdef NO_DOCKER
   endef
 else
   define inDocker
-    # Run as the current user and make sure the $HOME folder is writable.
+    # Run as the current user and make sure the $$HOME folder is writable.
     docker run \
       -e GOFLAGS -e GO111MODULE -e HOME=/tmp \
       -u $(shell id -u):$(shell id -g) \
