@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.13-patch.6
+
+* Fixes
+
+  * Support Docker `forcePullImage` in job JSON definitions
+
 ## 1.13-patch.5
 
 * Fixes
