@@ -122,8 +122,8 @@ def test_repo_remove_multi_and_empty():
 
 def test_describe_nonexistent():
     stderr = (
-        b"Package [xyzzy] not found. Find the correct package name using "
-        b"'dcos package search'\n"
+        b"Error: package [xyzzy] not found. Find the correct package name using "
+        b"'dcos package search': 400 Bad Request\n"
     )
     assert_command(['dcos', 'package', 'describe', 'xyzzy'],
                    stderr=stderr,

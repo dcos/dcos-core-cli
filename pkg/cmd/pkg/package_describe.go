@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/api"
@@ -40,7 +41,8 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 
 			description, err := c.PackageDescribe(packageName, version)
 			if err != nil {
-				return err
+				return fmt.Errorf("package [%s] not found. Find the correct package name using 'dcos package search': %s",
+					packageName, err)
 			}
 
 			if appOnly {
