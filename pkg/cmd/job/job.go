@@ -66,7 +66,6 @@ func parseJSONJob(r io.Reader) (*metronome.Job, error) {
 	if err := json.Unmarshal(jsonBytes, &job); err != nil {
 		return nil, err
 	}
-
 	return &job, nil
 }
 

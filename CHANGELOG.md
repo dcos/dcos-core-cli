@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0-patch.1
+
+* Fixes
+
+  * Support Docker `forcePullImage` in job JSON definitions
+
 ## 2.0-patch.0
 
 * Deprecations

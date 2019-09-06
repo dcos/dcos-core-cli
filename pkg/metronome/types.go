@@ -47,7 +47,8 @@ type artifact struct {
 }
 
 type docker struct {
-	Image string `json:"image,omitempty"`
+	Image          string `json:"image,omitempty"`
+	ForcePullImage bool   `json:"forcePullImage"`
 }
 
 type ucr struct {
