@@ -503,6 +503,7 @@ def test_uninstall_cli():
     _uninstall_helloworld()
 
 
+@pytest.mark.skip(reason="Cosmos issue, see https://jira.mesosphere.com/browse/DCOS_OSS-5529")
 def test_uninstall_multiple_apps():
     stdout = (
         b'By Deploying, you agree to the Terms '
