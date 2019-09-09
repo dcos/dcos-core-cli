@@ -28,7 +28,7 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 				return err
 			}
 			enc := json.NewEncoder(ctx.Out())
-			enc.SetIndent("", "    ")
+			enc.SetIndent("", "  ")
 
 			if allVersions {
 				versions, err := c.PackageListVersions(packageName)
@@ -41,11 +41,23 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 
 			description, err := c.PackageDescribe(packageName, version)
 			if err != nil {
-				return fmt.Errorf("package [%s] not found. Find the correct package name using 'dcos package search': %s",
-					packageName, err)
+				if version == "" {
+					return fmt.Errorf("package [%s] not found. Find the correct package name using 'dcos package search': %s",
+						packageName, err)
+				}
+				return fmt.Errorf("version [%s] of package [%s] not found: %s", version, packageName, err)
 			}
 
 			if appOnly {
+				// If the user supplied template options, they definitely want to render the template
+				if render || optionsPath != "" {
+					template, err := c.PackageRender(appID, packageName, version, optionsPath)
+					if err != nil {
+						return err
+					}
+					return enc.Encode(template)
+				}
+
 				template, err := base64.StdEncoding.DecodeString(description.Package.Marathon.V2AppMustacheTemplate)
 				if err != nil {
 					return err
@@ -62,14 +74,6 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 					return enc.Encode(description.Package.Command)
 				}
 				return nil
-			}
-
-			if render {
-				template, err := c.PackageRender(appID, packageName, version, optionsPath)
-				if err != nil {
-					return err
-				}
-				return enc.Encode(template)
 			}
 
 			if config {

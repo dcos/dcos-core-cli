@@ -122,8 +122,9 @@ def test_repo_remove_multi_and_empty():
 
 def test_describe_nonexistent():
     stderr = (
-        b"Error: package [xyzzy] not found. Find the correct package name using "
-        b"'dcos package search': 400 Bad Request\n"
+        b"Error: package [xyzzy] not found."
+        b" Find the correct package name using 'dcos package search'"
+        b": 400 Bad Request\n"
     )
     assert_command(['dcos', 'package', 'describe', 'xyzzy'],
                    stderr=stderr,
@@ -131,7 +132,8 @@ def test_describe_nonexistent():
 
 
 def test_describe_nonexistent_version():
-    stderr = b'Version [a.b.c] of package [helloworld] not found\n'
+    stderr = b'Error: version [a.b.c] of package [helloworld] not found' \
+             b': 400 Bad Request\n'
     assert_command(['dcos', 'package', 'describe', 'helloworld',
                     '--package-version=a.b.c'],
                    stderr=stderr,
@@ -141,8 +143,15 @@ def test_describe_nonexistent_version():
 def test_describe_cli():
     stdout = file_json(
         'tests/data/package/json/test_describe_cli_helloworld.json')
-    assert_command(['dcos', 'package', 'describe', 'helloworld', '--cli'],
-                   stdout=stdout)
+    expected_stdout = json.loads(stdout.decode('utf-8'))
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'package', 'describe', 'helloworld', '--cli'])
+
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    assert expected_stdout == actual_stdout
 
 
 def test_describe_app():
@@ -155,8 +164,17 @@ def test_describe_app():
 def test_describe_config():
     stdout = file_json(
         'tests/data/package/json/test_describe_helloworld_config.json')
-    assert_command(['dcos', 'package', 'describe', 'helloworld', '--config'],
-                   stdout=stdout)
+    expected_stdout = json.loads(stdout.decode('utf-8'))
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'package', 'describe', 'helloworld', '--config'])
+
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    assert expected_stdout == actual_stdout
+
+    assert expected_stdout == actual_stdout
 
 
 def test_describe_render():
@@ -204,15 +222,17 @@ def test_describe_render_app_id():
 def test_describe_package_version():
     stdout = file_json(
         'tests/data/package/json/test_describe_helloworld.json')
+    expected_stdout = json.loads(stdout.decode('utf-8'))
 
-    returncode_, stdout_, stderr_ = exec_command(
+    returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'describe', 'helloworld',
             '--package-version=0.1.0'])
 
-    assert returncode_ == 0
-    output = json.loads(stdout_.decode('utf-8'))
-    assert output == json.loads(stdout.decode('utf-8'))
-    assert stderr_ == b''
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    assert expected_stdout == actual_stdout
 
 
 def test_describe_package_versions():
@@ -252,11 +272,19 @@ def test_describe_options():
 
 
 def test_describe_app_cli():
-    stdout = file_bytes(
+    stdout = file_json(
         'tests/data/package/json/test_describe_app_cli.json')
-    assert_command(
+    expected_stdout = json.loads(stdout.decode('utf-8'))
+
+    returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'describe', 'helloworld', '--app', '--cli'],
-        stdout=stdout)
+    )
+
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    assert expected_stdout == actual_stdout
 
 
 def test_bad_install():
