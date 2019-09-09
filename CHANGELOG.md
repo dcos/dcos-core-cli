@@ -1,9 +1,17 @@
 # CHANGELOG
 
-## 1.14-patch.5
+## 2.0-patch.0
+
+* Deprecations
+
+  * Deprecated --mesos-id in some commands
 
 * Features
 
+  * Added `dcos diagnostics` command
+  * Added `SCARCE` column to `marathon debug details` command output (#341)
+  * Support custom escape sequences (#331)
+  * Expose task roles in Marathon subcommands.
   * Support custom escape sequences for `dcos task attach`
 
 ## 1.14-patch.4
