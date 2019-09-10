@@ -3,13 +3,13 @@ package pkg
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/api"
+	"github.com/spf13/cobra"
+
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	"github.com/spf13/cobra"
 )
 
 func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
@@ -41,11 +41,7 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 
 			description, err := c.PackageDescribe(packageName, version)
 			if err != nil {
-				if version == "" {
-					return fmt.Errorf("package [%s] not found. Find the correct package name using 'dcos package search': %s",
-						packageName, err)
-				}
-				return fmt.Errorf("version [%s] of package [%s] not found: %s", version, packageName, err)
+				return err
 			}
 
 			if appOnly {

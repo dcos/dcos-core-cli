@@ -121,19 +121,14 @@ def test_repo_remove_multi_and_empty():
 
 
 def test_describe_nonexistent():
-    stderr = (
-        b"Error: package [xyzzy] not found."
-        b" Find the correct package name using 'dcos package search'"
-        b": 400 Bad Request\n"
-    )
+    stderr = b"Error: Package [xyzzy] not found\n"
     assert_command(['dcos', 'package', 'describe', 'xyzzy'],
                    stderr=stderr,
                    returncode=1)
 
 
 def test_describe_nonexistent_version():
-    stderr = b'Error: version [a.b.c] of package [helloworld] not found' \
-             b': 400 Bad Request\n'
+    stderr = b'Error: Version [a.b.c] of package [helloworld] not found\n'
     assert_command(['dcos', 'package', 'describe', 'helloworld',
                     '--package-version=a.b.c'],
                    stderr=stderr,
