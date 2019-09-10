@@ -8,7 +8,7 @@ import (
 // newCmdClusterUpdate updates a job.
 func newCmdJobUpdate(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <file>",
+		Use:   "update [<file>]",
 		Short: "Update a job",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -20,6 +20,9 @@ func newCmdJobUpdate(ctx api.Context) *cobra.Command {
 			// Handling input from file or stdin
 			reader, err := inputReader(ctx, args)
 			if err != nil {
+				if err == errTerminalInput {
+					return cmd.Help()
+				}
 				return err
 			}
 

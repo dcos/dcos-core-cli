@@ -11,7 +11,7 @@ import (
 // newCmdClusterAdd creates a new job.
 func newCmdJobAdd(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add <file>",
+		Use:   "add [<file>]",
 		Short: "Add a job",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,6 +23,9 @@ func newCmdJobAdd(ctx api.Context) *cobra.Command {
 			// Handling input from file or stdin
 			reader, err := inputReader(ctx, args)
 			if err != nil {
+				if err == errTerminalInput {
+					return cmd.Help()
+				}
 				return err
 			}
 

@@ -2,6 +2,7 @@ package job
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+var errTerminalInput = errors.New("input from the terminal is not accepted")
 
 // NewCommand creates the `core job` subcommand.
 func NewCommand(ctx api.Context) *cobra.Command {
@@ -74,7 +77,7 @@ func inputReader(ctx api.Context, args []string) (io.Reader, error) {
 	case 0:
 		input, _ := ctx.Input().(*os.File)
 		if terminal.IsTerminal(int(input.Fd())) {
-			return nil, fmt.Errorf("input from the terminal is not accepted")
+			return nil, errTerminalInput
 		}
 		return ctx.Input(), nil
 	case 1:

@@ -5,6 +5,7 @@
 * Fixes
 
   * Support Docker `forcePullImage` in job JSON definitions
+  * `dcos job add` and `dcos job update` should show the help menu by default
 
 ## 1.13-patch.5
 
