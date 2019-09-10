@@ -18,7 +18,6 @@ from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO,
                                   teardown_universe_server, UNIVERSE_REPO,
                                   UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
-from ..common import file_bytes
 
 
 @pytest.fixture
@@ -168,9 +167,11 @@ def test_describe_options():
     ('helloworld --app', 'test_describe_app_helloworld.json'),
     ('helloworld --config', 'test_describe_helloworld_config.json'),
     ('helloworld --app --render', 'test_describe_helloworld_app_render.json'),
-    ('helloworld --app --render --app-id=helloworld', 'test_describe_helloworld_app_id_render.json'),
+    ('helloworld --app --render --app-id=helloworld',
+     'test_describe_helloworld_app_id_render.json'),
     ('helloworld --app --cli', 'test_describe_app_cli.json'),
-    ('helloworld --package-versions', 'test_describe_helloworld_versions.json'),
+    ('helloworld --package-versions',
+     'test_describe_helloworld_versions.json'),
     ('helloworld --package-version=0.1.0', 'test_describe_helloworld.json'),
 ])
 def test_describe(command_to_run, expected_output_file):
