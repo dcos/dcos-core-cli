@@ -1,6 +1,44 @@
 # CHANGELOG
 
-## Next
+## 1.13-patch.5
+
+* Fixes
+
+  * Fix possible segfault in `node ssh`
+  * Fix unknown subcommand errors
+  * Upgrade to Python 3.7 on UNIX systems
+  * Updates get_package_commands to check plugin.toml
+  * Uses job's task ID(s) when printing history with json
+  * Support SSE heartbeats
+
+## 1.13-patch.4
+
+* Fixes
+
+  * Print the version mismatch warning to stderr.
+
+## 1.13-patch.3
+
+* Fixes
+
+  * Add dynamic autocompletion to dcos job
+  * Added 'GPUs' to Mesos Resources struct
+
+## 1.13-patch.2
+
+* Fixes
+
+  * Fix `volumes` field and add `ucr` field in job JSON.
+  * Revert "Specified if agent is public when using 'dcos node list'"
+
+## 1.13-patch.1
+
+* Fixes
+
+  * `dcos node list` shouldn't error-out if it misses public IPs
+  * Fixed _log() to have old behavior when dcos-log disabled.
+
+## 1.13-patch.0
 
 * Features
 
