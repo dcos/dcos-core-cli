@@ -105,11 +105,9 @@ def test_repo_remove_multi_and_empty():
 
     returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'repo', 'list'])
-    stderr_msg = (b"There are currently no repos configured. "
-                  b"Please use `dcos package repo add` to add a repo\n")
-    assert returncode == 1
+    assert returncode == 0
     assert stdout == b''
-    assert stderr == stderr_msg
+    assert stderr == b''
 
     # Add back test repos
     for name, url in UNIVERSE_TEST_REPOS.items():
@@ -503,6 +501,8 @@ def test_uninstall_cli():
     _uninstall_helloworld()
 
 
+@pytest.mark.skip(reason=("Cosmos issue, see "
+                          "https://jira.mesosphere.com/browse/DCOS_OSS-5529"))
 def test_uninstall_multiple_apps():
     stdout = (
         b'By Deploying, you agree to the Terms '

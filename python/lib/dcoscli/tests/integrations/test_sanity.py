@@ -73,7 +73,7 @@ def test_add_pod():
 
 def test_repo_list():
     repo_list = file_json(
-        'tests/data/package/json/test_repo_list.json')
+        'tests/data/package/json/test_repo_list.json', indent=4)
     assert_command(
         ['dcos', 'package', 'repo', 'list', '--json'], stdout=repo_list)
 
