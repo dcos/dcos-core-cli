@@ -3,7 +3,7 @@ module github.com/dcos/dcos-core-cli
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6
-	github.com/dcos/client-go v0.0.0-20190910095325-bf9650e8b6b0
+	github.com/dcos/client-go v0.0.0-20190910161559-e3e16c6d1484
 	github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80
 	github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
 	github.com/dustin/go-humanize v1.0.0
@@ -26,7 +26,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
 	github.com/vbauerster/mpb v3.4.0+incompatible // indirect
-	golang.org/x/crypto v0.0.0-20190909091759-094676da4a83
+	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/net v0.0.0-20190909003024-a7b16738d86b // indirect
 	golang.org/x/sys v0.0.0-20190910064555-bbd175535a8b // indirect
 	golang.org/x/text v0.3.2 // indirect
