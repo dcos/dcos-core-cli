@@ -156,6 +156,30 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 	return render.MarathonJson, nil
 }
 
+// PackageInstall installs package and returns post install notes
+func (c *Client) PackageInstalls(appID string, name string, version string, optionsPath string) (string, error) {
+	var optionsInterface map[string]interface{}
+	if optionsPath != "" {
+		options, err := ioutil.ReadFile(optionsPath)
+		if err != nil {
+			return "", err
+		}
+
+		err = json.Unmarshal(options, &optionsInterface)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	install, _, err := c.cosmos.PackageInstall(context.TODO(), dcos.CosmosPackageInstallV1Request{
+		AppId:          appID,
+		PackageName:    name,
+		PackageVersion: version,
+		Options:        optionsInterface,
+	})
+	return install.PostInstallNotes, cosmosErrUnwrap(err)
+}
+
 // PackageSearch returns the packages found using the given query.
 func (c *Client) PackageSearch(query string) (*SearchResult, error) {
 	desc, _, err := c.cosmos.PackageSearch(context.TODO(), dcos.CosmosPackageSearchV1Request{Query: query})
