@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.0-patch.2
+
+This release reverts https://github.com/dcos/dcos-core-cli/pull/354.
+The commit has landed in the 2.1-patch.x branch instead.
+
 ## 2.0-patch.1
 
 * Fixes
