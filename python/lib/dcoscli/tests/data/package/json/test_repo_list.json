@@ -1,16 +1,16 @@
 {
-    "repositories": [
-        {
-            "name": "Universe",
-            "uri": "https://universe.mesosphere.com/repo"
-        },
-        {
-            "name": "Bootstrap Registry",
-            "uri": "https://registry.component.thisdcos.directory/repo"
-        },
-        {
-            "name": "helloworld-universe",
-            "uri": "http://helloworld-universe.marathon.mesos:8086/repo"
-        }
-    ]
+  "repositories": [
+    {
+      "name": "Universe",
+      "uri": "https://universe.mesosphere.com/repo"
+    },
+    {
+      "name": "Bootstrap Registry",
+      "uri": "https://registry.component.thisdcos.directory/repo"
+    },
+    {
+      "name": "helloworld-universe",
+      "uri": "http://helloworld-universe.marathon.mesos:8086/repo"
+    }
+  ]
 }
