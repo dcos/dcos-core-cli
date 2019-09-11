@@ -3,7 +3,6 @@ package cosmos
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"sort"
@@ -170,14 +169,14 @@ func (c *Client) PackageSearch(query string) (*SearchResult, error) {
 }
 
 // PackageAddRepo adds a package repository.
-func (c *Client) PackageAddRepo(name string, uri string, index *int) ([]dcos.CosmosPackageRepo, error) {
+func (c *Client) PackageAddRepo(name string, uri string, index int) ([]dcos.CosmosPackageRepo, error) {
 	addRepoRequest := dcos.CosmosPackageAddRepoV1Request{
 		Name: name,
 		Uri:  uri,
 	}
 
-	if index != nil {
-		index32 := int32(*index)
+	if index > 0 {
+		index32 := int32(index)
 		addRepoRequest.Index = &index32
 	}
 
@@ -185,7 +184,7 @@ func (c *Client) PackageAddRepo(name string, uri string, index *int) ([]dcos.Cos
 		CosmosPackageAddRepoV1Request: optional.NewInterface(addRepoRequest),
 	})
 	if err != nil {
-		return nil, cosmosErrUnwrap(err)
+		return nil, err
 	}
 	return desc.Repositories, nil
 }
@@ -197,29 +196,14 @@ func (c *Client) PackageDeleteRepo(name string) error {
 			Name: name,
 		}),
 	})
-
-	return cosmosErrUnwrap(err)
+	return err
 }
 
 // PackageListRepo returns a list of package repositories.
-func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error) {
+func (c *Client) PackageListRepo() ([]dcos.CosmosPackageRepo, error) {
 	desc, _, err := c.cosmos.PackageRepositoryList(context.TODO(), nil)
 	if err != nil {
-		return nil, cosmosErrUnwrap(err)
+		return nil, err
 	}
-	return &desc, nil
-}
-
-func cosmosErrUnwrap(err error) error {
-	switch err := err.(type) {
-	case dcos.GenericOpenAPIError:
-		if err.Model() != nil {
-			if e, ok := err.Model().(dcos.CosmosError); ok {
-				return fmt.Errorf(e.Message)
-			}
-		}
-		return err
-	default:
-		return err
-	}
+	return desc.Repositories, nil
 }
