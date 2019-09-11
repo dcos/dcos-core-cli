@@ -1,15 +1,18 @@
 # CHANGELOG
 
+## 2.1-patch.0
+
+* Notes
+
+During this new minor release we also refactored the `dcos describe` subcommand from Python to Go.
+
+
 ## 2.0-patch.1
 
 * Fixes
 
   * Support Docker `forcePullImage` in job JSON definitions
   * `dcos job add` and `dcos job update` should show the help menu by default
-
-* Notes
-
-During this new minor release we also refactored the `dcos describe` subcommand from Python to Go.
 
 ## 2.0-patch.0
 
