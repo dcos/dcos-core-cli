@@ -18,7 +18,6 @@ from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO,
                                   teardown_universe_server, UNIVERSE_REPO,
                                   UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
-from ..common import file_bytes
 
 
 @pytest.fixture
@@ -121,106 +120,18 @@ def test_repo_remove_multi_and_empty():
 
 
 def test_describe_nonexistent():
-    stderr = (
-        b"Package [xyzzy] not found. Find the correct package name using "
-        b"'dcos package search'\n"
-    )
+    stderr = b"Error: Package [xyzzy] not found\n"
     assert_command(['dcos', 'package', 'describe', 'xyzzy'],
                    stderr=stderr,
                    returncode=1)
 
 
 def test_describe_nonexistent_version():
-    stderr = b'Version [a.b.c] of package [helloworld] not found\n'
+    stderr = b'Error: Version [a.b.c] of package [helloworld] not found\n'
     assert_command(['dcos', 'package', 'describe', 'helloworld',
                     '--package-version=a.b.c'],
                    stderr=stderr,
                    returncode=1)
-
-
-def test_describe_cli():
-    stdout = file_json(
-        'tests/data/package/json/test_describe_cli_helloworld.json')
-    assert_command(['dcos', 'package', 'describe', 'helloworld', '--cli'],
-                   stdout=stdout)
-
-
-def test_describe_app():
-    stdout = file_bytes(
-        'tests/data/package/json/test_describe_app_helloworld.json')
-    assert_command(['dcos', 'package', 'describe', 'helloworld', '--app'],
-                   stdout=stdout)
-
-
-def test_describe_config():
-    stdout = file_json(
-        'tests/data/package/json/test_describe_helloworld_config.json')
-    assert_command(['dcos', 'package', 'describe', 'helloworld', '--config'],
-                   stdout=stdout)
-
-
-def test_describe_render():
-    stdout = file_json(
-        'tests/data/package/json/test_describe_helloworld_app_render.json')
-    stdout = json.loads(stdout.decode('utf-8'))
-    expected_labels = stdout.pop("labels", None)
-
-    returncode, stdout_, stderr = exec_command(
-        ['dcos', 'package', 'describe', 'helloworld', '--app', '--render'])
-
-    stdout_ = json.loads(stdout_.decode('utf-8'))
-    actual_labels = stdout_.pop("labels", None)
-
-    for label, value in expected_labels.items():
-        assert value == actual_labels.get(label)
-
-    assert stdout == stdout_
-    assert stderr == b''
-    assert returncode == 0
-
-
-def test_describe_render_app_id():
-    stdout = file_json(
-        'tests/data/package/json/test_describe_helloworld_app_id_render.json')
-    stdout = json.loads(stdout.decode('utf-8'))
-    expected_labels = stdout.pop("labels", None)
-
-    returncode, stdout_, stderr = exec_command(['dcos', 'package', 'describe',
-                                                'helloworld', '--app',
-                                                '--render',
-                                                '--app-id=helloworld'])
-
-    stdout_ = json.loads(stdout_.decode('utf-8'))
-    actual_labels = stdout_.pop("labels", None)
-
-    for label, value in expected_labels.items():
-        assert value == actual_labels.get(label)
-
-    assert stdout == stdout_
-    assert stderr == b''
-    assert returncode == 0
-
-
-def test_describe_package_version():
-    stdout = file_json(
-        'tests/data/package/json/test_describe_helloworld.json')
-
-    returncode_, stdout_, stderr_ = exec_command(
-        ['dcos', 'package', 'describe', 'helloworld',
-            '--package-version=0.1.0'])
-
-    assert returncode_ == 0
-    output = json.loads(stdout_.decode('utf-8'))
-    assert output == json.loads(stdout.decode('utf-8'))
-    assert stderr_ == b''
-
-
-def test_describe_package_versions():
-    stdout = file_bytes(
-        'tests/data/package/json/test_describe_helloworld_versions.json')
-    assert_command(
-        ['dcos', 'package', 'describe', 'helloworld', '--package-versions'],
-        stdout=stdout)
 
 
 def test_describe_options():
@@ -251,12 +162,31 @@ def test_describe_options():
     assert returncode == 0
 
 
-def test_describe_app_cli():
-    stdout = file_bytes(
-        'tests/data/package/json/test_describe_app_cli.json')
-    assert_command(
-        ['dcos', 'package', 'describe', 'helloworld', '--app', '--cli'],
-        stdout=stdout)
+@pytest.mark.parametrize("command_to_run,expected_output_file", [
+    ('helloworld --cli', 'test_describe_cli_helloworld.json'),
+    ('helloworld --app', 'test_describe_app_helloworld.json'),
+    ('helloworld --config', 'test_describe_helloworld_config.json'),
+    ('helloworld --app --render', 'test_describe_helloworld_app_render.json'),
+    ('helloworld --app --render --app-id=helloworld',
+     'test_describe_helloworld_app_id_render.json'),
+    ('helloworld --app --cli', 'test_describe_app_cli.json'),
+    ('helloworld --package-versions',
+     'test_describe_helloworld_versions.json'),
+    ('helloworld --package-version=0.1.0', 'test_describe_helloworld.json'),
+])
+def test_describe(command_to_run, expected_output_file):
+    stdout = file_json('tests/data/package/json/' + expected_output_file)
+    expected_stdout = json.loads(stdout.decode('utf-8'))
+
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'package', 'describe'] + command_to_run.split(' '),
+    )
+
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    assert expected_stdout == actual_stdout
 
 
 def test_bad_install():

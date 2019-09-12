@@ -47,7 +47,7 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 		}),
 	})
 	if err != nil {
-		return nil, err
+		return nil, cosmosErrUnwrap(err)
 	}
 
 	backwardCompatibleDesc := Description{
@@ -112,7 +112,7 @@ func (c *Client) PackageListVersions(name string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cosmosErrUnwrap(err)
 	}
 
 	var versions []string
@@ -150,7 +150,7 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, cosmosErrUnwrap(err)
 	}
 
 	return render.MarathonJson, nil

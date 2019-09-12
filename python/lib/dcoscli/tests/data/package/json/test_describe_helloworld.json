@@ -31,12 +31,32 @@
     "postInstallNotes": "A sample post-installation message",
     "preInstallNotes": "A sample pre-installation message",
     "releaseVersion": 0,
+    "resource": {
+      "assets": {
+        "container": {}
+      },
+      "cli": {
+        "binaries": {
+          "darwin": {
+            "x86-64": {}
+          },
+          "linux": {
+            "x86-64": {}
+          },
+          "windows": {
+            "x86-64": {}
+          }
+        }
+      },
+      "images": {}
+    },
     "tags": [
       "mesosphere",
       "example",
       "subcommand"
     ],
     "version": "0.1.0",
-    "website": "https://github.com/mesosphere/dcos-helloworld"
+    "website": "https://github.com/mesosphere/dcos-helloworld",
+    "manager": {}
   }
 }
