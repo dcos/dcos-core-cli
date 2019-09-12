@@ -28,7 +28,6 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 		Short: "Install a package",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			packageName := args[0]
 
 			if cliOnly == appOnly {
@@ -47,15 +46,14 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 			}
 			pkg := description.Package
 
-			link := "https://mesosphere.com/catalog-terms-conditions/#community-services"
-			if pkg.Selected {
-				link = "https://mesosphere.com/catalog-terms-conditions/#certified-services"
+			link := "https://mesosphere.com/catalog-terms-conditions/#certified-services"
+			if !pkg.Selected {
+				fmt.Fprint(ctx.Out(), "This is a Community service. "+
+					"Community services are not tested for production environments. "+
+					"There may be bugs, incomplete features, incorrect documentation, or other discrepancies.\n")
+				link = "https://mesosphere.com/catalog-terms-conditions/#community-services"
 			}
-			_, err = fmt.Fprintf(ctx.Out(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
-			if err != nil {
-				return err
-			}
-
+			fmt.Fprintf(ctx.Out(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
 			if appOnly && pkg.PreInstallNotes != "" {
 				_, err := fmt.Fprintf(ctx.Out(), "%s\n", pkg.PreInstallNotes)
 				if err != nil {
@@ -72,28 +70,16 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 			}
 
 			if appOnly && description.Package.Marathon.V2AppMustacheTemplate != "" {
-				_, err = fmt.Fprintf(ctx.Out(), "Installing Marathon app for package [%s] version [%s]\n", packageName, pkg.Version)
-				if err != nil {
-					return err
-				}
-
+				fmt.Fprintf(ctx.Out(), "Installing Marathon app for package [%s] version [%s]\n", packageName, pkg.Version)
 				err := c.PackageInstalls(appID, packageName, pkg.Version, optionsPath)
 				if err != nil {
 					return err
 				}
 			}
 
-			_, err = fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
-			if err != nil {
-				return err
-			}
-
+			fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
 			if cliOnly && !isEmptyCli(pkg.Resource.Cli) {
-				_, err = fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
-				if err != nil {
-					return err
-				}
-
+				fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
 				pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
 				if err != nil {
 					return err
@@ -144,10 +130,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 					cmds = append(cmds, c.Name)
 				}
 
-				_, err = fmt.Fprintf(ctx.Out(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
-				if err != nil {
-					return err
-				}
+				fmt.Fprintf(ctx.Out(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 			}
 
 			return nil
