@@ -210,6 +210,17 @@ func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error
 	return &desc, nil
 }
 
+// PackageUninstall uninstalls the given package/appID from the cluster
+func (c *Client) PackageUninstall(packageName string, all bool, appID string) (*dcos.CosmosPackageUninstallV1Response, error) {
+	reqParams := dcos.CosmosPackageUninstallV1Request{
+		All:         all,
+		AppId:       appID,
+		PackageName: packageName,
+	}
+	resp, _, err := c.cosmos.PackageUninstall(context.TODO(), reqParams, &dcos.PackageUninstallOpts{})
+	return &resp, cosmosErrUnwrap(err)
+}
+
 func cosmosErrUnwrap(err error) error {
 	switch err := err.(type) {
 	case dcos.GenericOpenAPIError:
@@ -222,14 +233,4 @@ func cosmosErrUnwrap(err error) error {
 	default:
 		return err
 	}
-}
-
-func (c *Client) PackageUninstall(packageName string, all bool, appID string) error {
-	reqParams := dcos.CosmosPackageUninstallV1Request{
-		All:         all,
-		AppId:       appID,
-		PackageName: packageName,
-	}
-	_, _, err := c.cosmos.PackageUninstall(context.TODO(), reqParams, &dcos.PackageUninstallOpts{})
-	return err
 }
