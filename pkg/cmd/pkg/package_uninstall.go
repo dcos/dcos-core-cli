@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	removeAllWarningTemplate = `WARNING: This action cannot be undone. This will uninstall ` +
+		`all instances of the [%s] package, and delete all data for all %s instances.`
+
+	removeAppWarningTemplate = `WARNING: This action cannot be undone. This will uninstall ` +
+		`[%s] and delete all of its persistent data (logs, configurations, database artifacts, everything).`
+)
+
 func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 	var all, appOnly, cliOnly, yes bool
 	var appID string
@@ -119,9 +127,9 @@ func packageInstallCount(c *cosmos.Client, packageName string) (int, error) {
 
 func warningMessage(name string, all bool) string {
 	if all {
-		return fmt.Sprintf("WARNING: This action cannot be undone. This will uninstall all instances of the [%s] package, and delete all data for all %s instances.", name, name)
+		return fmt.Sprintf(removeAllWarningTemplate, name, name)
 	}
-	return fmt.Sprintf("WARNING: This action cannot be undone. This will uninstall [%s] and delete all of its persistent data (logs, configurations, database artifacts, everything).", name)
+	return fmt.Sprintf(removeAppWarningTemplate, name)
 }
 
 func promptMessage(name string, appID bool, all bool) string {
