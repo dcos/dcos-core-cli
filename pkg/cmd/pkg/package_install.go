@@ -1,10 +1,18 @@
 package pkg
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/plugin"
 	"github.com/dcos/dcos-cli/pkg/prompt"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
@@ -37,9 +45,10 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			pkg := description.Package
 
 			link := "https://mesosphere.com/catalog-terms-conditions/#community-services"
-			if description.Package.Selected {
+			if pkg.Selected {
 				link = "https://mesosphere.com/catalog-terms-conditions/#certified-services"
 			}
 			_, err = fmt.Fprintf(ctx.Out(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
@@ -47,36 +56,101 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			if appOnly && description.Package.PreInstallNotes != "" {
-				_, err := fmt.Fprintf(ctx.Out(), "%s\n", description.Package.PreInstallNotes)
+			if appOnly && pkg.PreInstallNotes != "" {
+				_, err := fmt.Fprintf(ctx.Out(), "%s\n", pkg.PreInstallNotes)
 				if err != nil {
 					return err
 				}
 			}
 
-			prompter := prompt.New(ctx.Input(), ctx.Out())
-			err = prompter.Confirm("Continue installing? [yes/no] ", "No")
+			if !yes {
+				prompter := prompt.New(ctx.Input(), ctx.Out())
+				err = prompter.Confirm("Continue installing? [yes/no] ", "Yes")
+				if err != nil {
+					return err
+				}
+			}
+
+			if appOnly && description.Package.Marathon.V2AppMustacheTemplate != "" {
+				_, err = fmt.Fprintf(ctx.Out(), "Installing Marathon app for package [%s] version [%s]\n", packageName, pkg.Version)
+				if err != nil {
+					return err
+				}
+
+				err := c.PackageInstalls(appID, packageName, pkg.Version, optionsPath)
+				if err != nil {
+					return err
+				}
+			}
+
+			_, err = fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
 			if err != nil {
 				return err
 			}
 
-			if appOnly {
-				_, err = fmt.Fprintf(ctx.Out(), "Installing Marathon app for package [%s] version [%s]\n", packageName, description.Package.Version)
+			if cliOnly && !isEmptyCli(pkg.Resource.Cli) {
+				_, err = fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
 				if err != nil {
 					return err
 				}
 
-				postInstallNotes, err := c.PackageInstalls(appID, packageName, description.Package.Version, optionsPath)
+				pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
 				if err != nil {
 					return err
 				}
-				_, err = fmt.Fprintf(ctx.Out(), "%s\n", postInstallNotes)
+
+				var checksum plugin.Checksum
+				for _, contentHash := range pluginInfo.ContentHash {
+					switch contentHash.Algo {
+					case dcos.SHA256:
+						checksum.Hasher = sha256.New()
+						checksum.Value = contentHash.Value
+					}
+				}
+
+				cluster, err := ctx.Cluster()
+				if err != nil {
+					return err
+				}
+
+				err = ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
+					Name:     packageName,
+					Update:   true,
+					Checksum: checksum,
+					PostInstall: func(fs afero.Fs, pluginDir string) error {
+						pkgInfoFilepath := filepath.Join(pluginDir, "package.json")
+						pkgInfoFile, err := fs.OpenFile(pkgInfoFilepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+						if err != nil {
+							return err
+						}
+						defer pkgInfoFile.Close()
+						return json.NewEncoder(pkgInfoFile).Encode(description.Package)
+					},
+				})
+				if err != nil {
+					return err
+				}
+				plugin, err := ctx.PluginManager(cluster).Plugin(packageName)
+				if err != nil {
+					return err
+				}
+
+				plural := ""
+				if len(plugin.Commands) > 1 {
+					plural = "s"
+				}
+				cmds := make([]string, 0, len(plugin.Commands))
+				for _, c := range plugin.Commands {
+					cmds = append(cmds, c.Name)
+				}
+
+				_, err = fmt.Fprintf(ctx.Out(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 				if err != nil {
 					return err
 				}
 			}
 
-			return invokePythonCLI(ctx)
+			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&appOnly, "app", false, "Application only")

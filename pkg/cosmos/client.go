@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
+	"runtime"
 	"sort"
 
 	"github.com/antihax/optional"
 	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
+
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 )
 
@@ -156,28 +159,28 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 	return render.MarathonJson, nil
 }
 
-// PackageInstall installs package and returns post install notes
-func (c *Client) PackageInstalls(appID string, name string, version string, optionsPath string) (string, error) {
+// PackageInstall installs package
+func (c *Client) PackageInstalls(appID string, name string, version string, optionsPath string) error {
 	var optionsInterface map[string]interface{}
 	if optionsPath != "" {
 		options, err := ioutil.ReadFile(optionsPath)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		err = json.Unmarshal(options, &optionsInterface)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
-	install, _, err := c.cosmos.PackageInstall(context.TODO(), dcos.CosmosPackageInstallV1Request{
+	_, _, err := c.cosmos.PackageInstall(context.TODO(), dcos.CosmosPackageInstallV1Request{
 		AppId:          appID,
 		PackageName:    name,
 		PackageVersion: version,
 		Options:        optionsInterface,
 	})
-	return install.PostInstallNotes, cosmosErrUnwrap(err)
+	return cosmosErrUnwrap(err)
 }
 
 // PackageSearch returns the packages found using the given query.
@@ -246,4 +249,35 @@ func cosmosErrUnwrap(err error) error {
 	default:
 		return err
 	}
+}
+
+// CLIPluginInfo extracts plugin resource data from the Cosmos package and for the current platform.
+func CLIPluginInfo(pkg dcos.CosmosPackage, baseURL *url.URL) (cliArtifact dcos.CosmosPackageResourceCliArtifact, err error) {
+	switch runtime.GOOS {
+	case "linux":
+		cliArtifact = pkg.Resource.Cli.Binaries.Linux.X8664
+	case "darwin":
+		cliArtifact = pkg.Resource.Cli.Binaries.Darwin.X8664
+	case "windows":
+		cliArtifact = pkg.Resource.Cli.Binaries.Windows.X8664
+
+	}
+	// Workaround for a Cosmos bug leading to wrong schemes in plugin resource URLs.
+	// This happens on setups with TLS termination proxies, where Cosmos might rewrite
+	// the scheme to HTTP while it is actually HTTPS. The other way around is also possible.
+	// See https://jira.mesosphere.com/browse/COPS-3052 for more context.
+	//
+	// To prevent this we're rewriting such URLs with the scheme set in `core.dcos_url`.
+	pluginURL, err := url.Parse(cliArtifact.Url)
+	if err != nil {
+		return cliArtifact, err
+	}
+	if pluginURL.Hostname() == baseURL.Hostname() {
+		pluginURL.Scheme = baseURL.Scheme
+		cliArtifact.Url = pluginURL.String()
+	}
+	if cliArtifact.Url == "" {
+		err = fmt.Errorf("'%s' isn't available for '%s')", pkg.Name, runtime.GOOS)
+	}
+	return cliArtifact, err
 }
