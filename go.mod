@@ -35,4 +35,4 @@ require (
 	gotest.tools v2.2.0+incompatible
 )
 
-go 1.13
+go 1.12
