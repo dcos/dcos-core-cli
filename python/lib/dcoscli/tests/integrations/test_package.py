@@ -327,7 +327,7 @@ def test_install_specific_version():
 
 
 def test_install_bad_package_version():
-    stderr = b'Version [a.b.c] of package [cassandra] not found\n'
+    stderr = b'Error: Version [a.b.c] of package [cassandra] not found\n'
     assert_command(
         ['dcos', 'package', 'install', 'cassandra',
          '--package-version=a.b.c'],
@@ -336,13 +336,24 @@ def test_install_bad_package_version():
 
 
 def test_install_noninteractive():
-    returncode, stdout, _ = exec_command(
+    expected_stdout = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
+        b'By Deploying, you agree to the Terms and Conditions https://'
+        b'mesosphere.com/catalog-terms-conditions/#community-services\n'
+        b'This DC/OS Service is currently in preview.\n'
+        b'Continue installing? [yes/no] '
+    )
+    returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'install', 'hello-world'],
         timeout=30,
         stdin=subprocess.DEVNULL)
 
     assert returncode == 1
-    assert b"'' is not a valid response" in stdout
+    assert stderr == b"Error: couldn't get confirmation\n"
+    assert expected_stdout == stdout
 
 
 def test_package_metadata():
@@ -379,10 +390,7 @@ def test_package_metadata():
 
 
 def test_install_missing_package():
-    stderr = (
-        b"Package [missing-package] not found. "
-        b"Find the correct package name using 'dcos package search'\n"
-    )
+    stderr = b'Error: Package [missing-package] not found\n'
     assert_command(['dcos', 'package', 'install', 'missing-package'],
                    returncode=1,
                    stderr=stderr)
@@ -505,6 +513,7 @@ def test_list_table():
         assert_lines(['dcos', 'package', 'list'], 2)
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_install_yes():
     with open('tests/data/package/assume_yes.txt') as yes_file:
         _install_helloworld(
@@ -546,8 +555,9 @@ def test_install_no():
                 b'and Conditions https://mesosphere.com/'
                 b'catalog-terms-conditions/#community-services\n'
                 b'A sample pre-installation message\n'
-                b'Continue installing? [yes/no] Exiting installation.\n'
+                b'Continue installing? [yes/no] '
             ),
+            stderr=b"Error: couldn't get confirmation\n",
             returncode=1
         )
 
