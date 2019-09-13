@@ -35,6 +35,13 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				appOnly = true
 			}
 
+			if optionsPath != "" {
+				_, err := os.Stat(optionsPath)
+				if err != nil {
+					return err
+				}
+			}
+
 			c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))
 			if err != nil {
 				return err
@@ -55,10 +62,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 			}
 			fmt.Fprintf(ctx.Out(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
 			if appOnly && pkg.PreInstallNotes != "" {
-				_, err := fmt.Fprintf(ctx.Out(), "%s\n", pkg.PreInstallNotes)
-				if err != nil {
-					return err
-				}
+				fmt.Fprintf(ctx.Out(), "%s\n", pkg.PreInstallNotes)
 			}
 
 			if !yes {
@@ -77,7 +81,11 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				}
 			}
 
-			fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
+			if cliOnly && isEmptyCli(pkg.Resource.Cli) && !isEmptyCommand(pkg.Command){
+				return fmt.Errorf("unable to install CLI subcommand. PIP subcommands are no longer supported" +
+					" see: https://godoc.org/github.com/dcos/client-go/dcos#CosmosPackageCommand")
+			}
+
 			if cliOnly && !isEmptyCli(pkg.Resource.Cli) {
 				fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
 				pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
@@ -133,6 +141,9 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				fmt.Fprintf(ctx.Out(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 			}
 
+			if appOnly && pkg.PostInstallNotes != "" {
+				fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
+			}
 			return nil
 		},
 	}

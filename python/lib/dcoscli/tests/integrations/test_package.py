@@ -199,8 +199,13 @@ Please create a JSON file with the appropriate options, and pass the \
         _install_bad_helloworld(args=args, stderr=stderr)
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_bad_install_helloworld_msg():
     terms_conditions = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
         b'and Conditions https://mesosphere.com/'
         b'catalog-terms-conditions/#community-services\n'
@@ -236,9 +241,12 @@ def test_bad_install_helloworld_msg():
 
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
-         util.temptext(b'{"name": "/hello2"}') as opts_hello2:
-
+            util.temptext(b'{"name": "/hello2"}') as opts_hello2:
         stdout = (
+            b'This is a Community service. '
+            b'Community services are not tested for production environments. '
+            b'There may be bugs, incomplete features, '
+            b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
             b'and Conditions https://mesosphere.com/'
             b'catalog-terms-conditions/#community-services\n'
@@ -285,11 +293,15 @@ def test_install_missing_options_file():
         ['dcos', 'package', 'install', 'helloworld', '--yes',
          '--options=asdf.json'],
         returncode=1,
-        stderr=b"Error opening file [asdf.json]: No such file or directory\n")
+        stderr=b"Error: stat asdf.json: no such file or directory\n")
 
-
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_install_specific_version():
     stdout = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms and Conditions https://'
         b'mesosphere.com/catalog-terms-conditions/#community-services\n'
         b'A sample pre-installation message\n'
@@ -435,6 +447,10 @@ def test_uninstall_cli():
                           "https://jira.mesosphere.com/browse/DCOS_OSS-5529"))
 def test_uninstall_multiple_apps():
     stdout = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
         b'and Conditions https://mesosphere.com/'
         b'catalog-terms-conditions/#community-services\n'
@@ -495,6 +511,10 @@ def test_install_yes():
             args=[],
             stdin=yes_file,
             stdout=(
+                b'This is a Community service. '
+                b'Community services are not tested for production environments. '
+                b'There may be bugs, incomplete features, '
+                b'incorrect documentation, or other discrepancies.\n'
                 b'By Deploying, you agree to the Terms '
                 b'and Conditions https://mesosphere.com/'
                 b'catalog-terms-conditions/#community-services\n'
@@ -518,6 +538,10 @@ def test_install_no():
             args=[],
             stdin=no_file,
             stdout=(
+                b'This is a Community service. '
+                b'Community services are not tested for production environments. '
+                b'There may be bugs, incomplete features, '
+                b'incorrect documentation, or other discrepancies.\n'
                 b'By Deploying, you agree to the Terms '
                 b'and Conditions https://mesosphere.com/'
                 b'catalog-terms-conditions/#community-services\n'
@@ -536,6 +560,10 @@ def test_list_cli():
     _uninstall_helloworld()
 
     stdout = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
         b'and Conditions https://mesosphere.com/'
         b'catalog-terms-conditions/#community-services\n'
@@ -722,6 +750,10 @@ def _executable_name(name):
 def _install_helloworld(
         args=['--yes'],
         stdout=(
+            b'This is a Community service. '
+            b'Community services are not tested for production environments. '
+            b'There may be bugs, incomplete features, '
+            b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
             b'and Conditions https://mesosphere.com/'
             b'catalog-terms-conditions/#community-services\n'
@@ -784,6 +816,10 @@ def _uninstall_chronos(args=[], returncode=0, stdout=b'', stderr=''):
 def _install_bad_helloworld(
         args=['--yes'],
         stdout=(
+            b'This is a Community service. '
+            b'Community services are not tested for production environments. '
+            b'There may be bugs, incomplete features, '
+            b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
             b'and Conditions https://mesosphere.com/'
             b'catalog-terms-conditions/#community-services\n'
@@ -811,6 +847,10 @@ HELLOWORLD_CLI_STDOUT = (
 
 def _helloworld():
     stdout = (
+        b'This is a Community service. '
+        b'Community services are not tested for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
         b'and Conditions https://mesosphere.com/'
         b'catalog-terms-conditions/#community-services\n'
@@ -832,6 +872,10 @@ def _helloworld_cli():
     return _package(name='helloworld',
                     args=args,
                     stdout=(
+                        b'This is a Community service. '
+                        b'Community services are not tested for production environments. '
+                        b'There may be bugs, incomplete features, '
+                        b'incorrect documentation, or other discrepancies.\n'
                         b'By Deploying, you agree to the Terms '
                         b'and Conditions https://mesosphere.com/'
                         b'catalog-terms-conditions/#community-services\n' +
@@ -868,9 +912,10 @@ def _package(name,
     installed = False
     timeout = http.DEFAULT_READ_TIMEOUT
     try:
-        returncode_, stdout_, _ = exec_command(command, timeout=timeout)
+        returncode_, stdout_, stderr_ = exec_command(command, timeout=timeout)
         installed = (returncode_ == 0)
 
+        assert stderr_ == b''
         assert installed
         assert stdout_ == stdout
 
