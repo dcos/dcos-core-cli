@@ -93,7 +93,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 					return err
 				}
 
-				for _, cosmosPkg := range *cosmosPackages {
+				for _, cosmosPkg := range cosmosPackages {
 					if !pkgNames[cosmosPkg.Name] {
 						pkgNames[cosmosPkg.Name] = true
 						list = append(list, cosmosPkg)

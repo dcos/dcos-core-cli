@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
-	"github.com/dcos/dcos-cli/pkg/prompt"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
@@ -28,9 +27,7 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 		Short: "Uninstall a package",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			appIDSet := cmd.Flags().Changed("app-id")
-
-			if cliOnly && (appOnly || appIDSet || all) {
+			if cliOnly && (appOnly || appID != "" || all) {
 				return errors.New("--cli cannot be used with --app, --app-id, or --all")
 			}
 			return nil
@@ -56,12 +53,12 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 			}
 
 			name := packageName
-			removingApp := cmd.Flags().Changed("app-id")
+			removingApp := appID != ""
 			if removingApp {
 				name = appID
 			}
 
-			fmt.Fprintln(ctx.Out(), warningMessage(name, all))
+			fmt.Fprintln(ctx.ErrOut(), warningMessage(name, all))
 			promptMsg := promptMessage(name, removingApp, all)
 
 			expected := name
@@ -77,15 +74,15 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 				return err
 			}
 			for _, r := range resp.Results {
-				fmt.Fprintf(ctx.Out(), "Uninstalled package [%s] version [%s]\n", r.PackageName, r.PackageVersion)
-				fmt.Fprintln(ctx.Out(), r.PostUninstallNotes)
+				fmt.Fprintf(ctx.ErrOut(), "Uninstalled package [%s] version [%s]\n", r.PackageName, r.PackageVersion)
+				fmt.Fprintln(ctx.ErrOut(), r.PostUninstallNotes)
 			}
 			// only remove the CLI if there aren't any other of the same package remaining
 			// so only 1 was installed at the start
 			// calling this with --app when there are multiple apps will not result in
 			// all of those being removed so we should only have to check if there was 1
 			// instance installed already
-			if !appOnly && installed == 1 {
+			if !appOnly && (all || installed == 1) {
 				err = removeCLI(ctx, packageName)
 			}
 
@@ -116,7 +113,7 @@ func packageInstallCount(c *cosmos.Client, packageName string) (int, error) {
 		return 0, err
 	}
 
-	for _, p := range *packages {
+	for _, p := range packages {
 		if packageName == p.Name {
 			return len(p.Apps), nil
 		}
@@ -148,14 +145,14 @@ func uninstallConfirmed(ctx api.Context, expected string, promptMsg string, skip
 		return true
 	}
 
-	p := prompt.New(ctx.Input(), ctx.Out())
+	p := ctx.Prompt()
 
 	for i := 0; i < 3; i++ {
 		response := p.Input(promptMsg)
 		if response == expected {
 			return true
 		}
-		fmt.Fprintf(ctx.Out(), "Expected '%s'. You supplied '%s'.\n", expected, response)
+		fmt.Fprintf(ctx.ErrOut(), "Expected '%s'. You supplied '%s'.\n", expected, response)
 	}
 	return false
 }

@@ -57,7 +57,7 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 }
 
 // PackageList returns the packages installed in a cluster.
-func (c *Client) PackageList() (*[]Package, error) {
+func (c *Client) PackageList() ([]Package, error) {
 	desc, _, err := c.cosmos.PackageList(context.TODO(), &dcos.PackageListOpts{
 		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{})})
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *Client) PackageList() (*[]Package, error) {
 		}
 	}
 
-	return &ps, nil
+	return ps, nil
 }
 
 // PackageListVersions returns the versions of a package.
