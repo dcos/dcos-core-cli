@@ -380,7 +380,7 @@ def test_uninstall_missing():
     stderr = 'Error: Package [chronos] is not installed\n'
     _uninstall_chronos(returncode=1, stderr=stderr)
 
-    stderr = 'Error: Package [chronos] with id [/chronos-1] is not installed\n'
+    stderr = 'Error: Package [chronos] is not installed\n'
     _uninstall_chronos(
         args=['--app-id=chronos-1'],
         returncode=1,

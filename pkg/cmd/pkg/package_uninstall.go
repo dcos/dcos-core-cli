@@ -49,7 +49,7 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 				return err
 			}
 			if installed == 0 {
-				return fmt.Errorf("Package '%s' is not installed", packageName)
+				return fmt.Errorf("Package [%s] is not installed", packageName)
 			}
 
 			name := packageName
