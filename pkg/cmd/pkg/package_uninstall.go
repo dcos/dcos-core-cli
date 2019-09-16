@@ -58,7 +58,9 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 				name = appID
 			}
 
-			fmt.Fprintln(ctx.ErrOut(), warningMessage(name, all))
+			if !yes {
+				fmt.Fprintln(ctx.ErrOut(), warningMessage(name, all))
+			}
 			promptMsg := promptMessage(name, removingApp, all)
 
 			expected := name
