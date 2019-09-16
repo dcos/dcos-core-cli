@@ -77,7 +77,9 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 			}
 			for _, r := range resp.Results {
 				fmt.Fprintf(ctx.ErrOut(), "Uninstalled package [%s] version [%s]\n", r.PackageName, r.PackageVersion)
-				fmt.Fprintln(ctx.ErrOut(), r.PostUninstallNotes)
+				if r.PostUninstallNotes != "" {
+					fmt.Fprintln(ctx.ErrOut(), r.PostUninstallNotes)
+				}
 			}
 			// only remove the CLI if there aren't any other of the same package remaining
 			// so only 1 was installed at the start
