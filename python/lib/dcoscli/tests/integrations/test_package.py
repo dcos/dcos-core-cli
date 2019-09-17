@@ -190,20 +190,18 @@ def test_describe(command_to_run, expected_output_file):
 
 
 def test_bad_install():
-    stderr = """\
-Please create a JSON file with the appropriate options, and pass the \
-/path/to/file as an --options argument.
-"""
+    stderr = 'Error: Options JSON failed validation\n'
     with util.temptext(b'{"nom": "hallo"}') as options:
         args = ['--options='+options[1], '--yes']
         _install_bad_helloworld(args=args, stderr=stderr)
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
+# @pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_bad_install_helloworld_msg():
     terms_conditions = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
@@ -216,35 +214,37 @@ def test_bad_install_helloworld_msg():
 
     stdout = (
         terms_conditions +
-        b'Installing CLI subcommand for package [helloworld] '
-        b'version [0.1.0]\n'
-        b'New command available: dcos ' +
-        _executable_name(b'helloworld') +
-        b'\nA sample post-installation message\n'
+        # Uncomment after DCOS_OSS-5539
+        # b'Installing CLI subcommand for package [helloworld] '
+        # b'version [0.1.0]\n'
+        # b'New command available: dcos ' +
+        # _executable_name(b'helloworld') +
+        b'A sample post-installation message\n'
     )
 
     with util.temptext(b'{"name": "/foo"}') as foo, \
             util.temptext(b'{"name": "/foo/bar"}') as foobar:
 
-        _install_helloworld(['--yes', '--options='+foo[1]], stdout=stdout)
+        _install_helloworld(['--app', '--yes', '--options='+foo[1]],
+                            stdout=stdout)
 
-        stderr = (b'Object is not valid\n'
-                  b'Groups and Applications may not have the same '
-                  b'identifier.\n')
+        stderr = (b'Error: Object is not valid\n')
 
-        _install_helloworld(['--yes', '--options='+foobar[1]],
+        _install_helloworld(['--app', '--yes', '--options='+foobar[1]],
                             stdout=terms_conditions,
                             stderr=stderr,
                             returncode=1)
         _uninstall_helloworld()
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
             util.temptext(b'{"name": "/hello2"}') as opts_hello2:
         stdout = (
             b'This is a Community service. '
-            b'Community services are not tested for production environments. '
+            b'Community services are not tested '
+            b'for production environments. '
             b'There may be bugs, incomplete features, '
             b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
@@ -295,27 +295,34 @@ def test_install_missing_options_file():
         returncode=1,
         stderr=b"Error: stat asdf.json: no such file or directory\n")
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
+
 def test_install_specific_version():
     stdout = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms and Conditions https://'
         b'mesosphere.com/catalog-terms-conditions/#community-services\n'
         b'A sample pre-installation message\n'
         b'Installing Marathon app for package [helloworld] version [0.1.0]\n'
-        b'Installing CLI subcommand for package [helloworld] version [0.1.0]\n'
-        b'New command available: dcos ' +
-        _executable_name(b'helloworld') +
-        b'\nA sample post-installation message\n'
+        # Uncomment after DCOS_OSS-5539
+        # b'Installing CLI subcommand '
+        # b'for package [helloworld] version [0.1.0]\n'
+        # b'New command available: dcos ' +
+        # _executable_name(b'helloworld') +
+        b'A sample post-installation message\n'
     )
 
     uninstall_stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
 
     with _package(name='helloworld',
-                  args=['--yes', '--package-version=0.1.0'],
+                  args=[
+                      '--app',  # Remove after DCOS_OSS-5539
+                      '--yes',
+                      '--package-version=0.1.0'
+                  ],
                   stdout=stdout,
                   uninstall_stderr=uninstall_stderr):
 
@@ -338,7 +345,8 @@ def test_install_bad_package_version():
 def test_install_noninteractive():
     expected_stdout = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms and Conditions https://'
@@ -356,6 +364,7 @@ def test_install_noninteractive():
     assert expected_stdout == stdout
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_package_metadata():
     _install_helloworld()
 
@@ -407,12 +416,14 @@ def test_uninstall_missing():
         stderr=stderr)
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_uninstall_subcommand():
     _install_helloworld()
     _uninstall_helloworld()
     _list(args=['--json'], stdout=b'[]\n')
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_uninstall_cli():
     _install_helloworld()
     _uninstall_cli_helloworld()
@@ -456,7 +467,8 @@ def test_uninstall_cli():
 def test_uninstall_multiple_apps():
     stdout = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
@@ -489,7 +501,8 @@ def test_uninstall_multiple_apps():
         _uninstall_helloworld(args=['--all'])
 
 
-def test_list(zk_znode):
+@pytest.mark.skip(reason="DCOS_OSS-5539")
+def test_list():
     empty = b'[]\n'
 
     _list(args=['--json'], stdout=empty)
@@ -508,20 +521,21 @@ def test_list(zk_znode):
     _list(args=['--json', '--app-id=/' + le_package], stdout=empty)
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_table():
     with _helloworld():
         assert_lines(['dcos', 'package', 'list'], 2)
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_install_yes():
     with open('tests/data/package/assume_yes.txt') as yes_file:
         _install_helloworld(
-            args=[],
+            args=['--app'],  # Remove after DCOS_OSS-5539
             stdin=yes_file,
             stdout=(
                 b'This is a Community service. '
-                b'Community services are not tested for production environments. '
+                b'Community services are not tested '
+                b'for production environments. '
                 b'There may be bugs, incomplete features, '
                 b'incorrect documentation, or other discrepancies.\n'
                 b'By Deploying, you agree to the Terms '
@@ -531,11 +545,12 @@ def test_install_yes():
                 b'Continue installing? [yes/no] '
                 b'Installing Marathon app for package [helloworld] version '
                 b'[0.1.0]\n'
-                b'Installing CLI subcommand for package [helloworld] '
-                b'version [0.1.0]\n'
-                b'New command available: dcos ' +
-                _executable_name(b'helloworld') +
-                b'\nA sample post-installation message\n'
+                # Uncomment after DCOS_OSS-5539
+                # b'Installing CLI subcommand for package [helloworld] '
+                # b'version [0.1.0]\n'
+                # b'New command available: dcos ' +
+                # _executable_name(b'helloworld') +
+                b'A sample post-installation message\n'
             )
         )
         _uninstall_helloworld()
@@ -548,7 +563,8 @@ def test_install_no():
             stdin=no_file,
             stdout=(
                 b'This is a Community service. '
-                b'Community services are not tested for production environments. '
+                b'Community services are not tested '
+                b'for production environments. '
                 b'There may be bugs, incomplete features, '
                 b'incorrect documentation, or other discrepancies.\n'
                 b'By Deploying, you agree to the Terms '
@@ -562,6 +578,7 @@ def test_install_no():
         )
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_cli():
     _install_helloworld()
     stdout = file_json(
@@ -571,7 +588,8 @@ def test_list_cli():
 
     stdout = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
@@ -592,6 +610,7 @@ def test_list_cli():
     _uninstall_cli_helloworld()
 
 
+@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_cli_only(env):
     helloworld_path = 'tests/data/package/json/test_list_helloworld_cli.json'
     helloworld_json = file_json(helloworld_path, 4)
@@ -614,12 +633,12 @@ def test_list_cli_only(env):
 
 def test_uninstall_multiple_frameworknames():
     retcode, _, _ = exec_command([
-        'dcos', 'package', 'install', 'helloworld', '--yes',
+        'dcos', 'package', 'install', 'helloworld', '--app', '--yes',
         '--options=tests/data/package/helloworld-1.json'])
     assert retcode == 0
 
     retcode, _, _ = exec_command([
-        'dcos', 'package', 'install', 'helloworld', '--yes',
+        'dcos', 'package', 'install', 'helloworld', '--app', '--yes',
         '--options=tests/data/package/helloworld-2.json'])
     assert retcode == 0
 
@@ -758,10 +777,14 @@ def _executable_name(name):
 
 
 def _install_helloworld(
-        args=['--yes'],
+        args=[
+            '--app',  # Remove --app after resolving DCOS_OSS-5539
+            '--yes'
+        ],
         stdout=(
             b'This is a Community service. '
-            b'Community services are not tested for production environments. '
+            b'Community services are not tested '
+            b'for production environments. '
             b'There may be bugs, incomplete features, '
             b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
@@ -770,10 +793,11 @@ def _install_helloworld(
             b'A sample pre-installation message\n'
             b'Installing Marathon app for package [helloworld] '
             b'version [0.1.0]\n'
-            b'Installing CLI subcommand for package [helloworld] '
-            b'version [0.1.0]\n'
-            b'New command available: dcos ' +
-            _executable_name(b'helloworld') +
+            # Uncomment after resolving DCOS_OSS-5539
+            # b'Installing CLI subcommand for package [helloworld] '
+            # b'version [0.1.0]\n'
+            # b'New command available: dcos ' +
+            # _executable_name(b'helloworld') +
             b'\nA sample post-installation message\n'
         ),
         stderr=b'',
@@ -827,13 +851,16 @@ def _install_bad_helloworld(
         args=['--yes'],
         stdout=(
             b'This is a Community service. '
-            b'Community services are not tested for production environments. '
+            b'Community services are not tested '
+            b'for production environments. '
             b'There may be bugs, incomplete features, '
             b'incorrect documentation, or other discrepancies.\n'
             b'By Deploying, you agree to the Terms '
             b'and Conditions https://mesosphere.com/'
             b'catalog-terms-conditions/#community-services\n'
             b'A sample pre-installation message\n'
+            b'Installing Marathon app for package ['
+            b'helloworld] version [0.1.0]\n'
         ),
         stderr=''):
     cmd = ['dcos', 'package', 'install', 'helloworld'] + args
@@ -858,7 +885,8 @@ HELLOWORLD_CLI_STDOUT = (
 def _helloworld():
     stdout = (
         b'This is a Community service. '
-        b'Community services are not tested for production environments. '
+        b'Community services are not tested '
+        b'for production environments. '
         b'There may be bugs, incomplete features, '
         b'incorrect documentation, or other discrepancies.\n'
         b'By Deploying, you agree to the Terms '
@@ -883,7 +911,8 @@ def _helloworld_cli():
                     args=args,
                     stdout=(
                         b'This is a Community service. '
-                        b'Community services are not tested for production environments. '
+                        b'Community services are not tested '
+                        b'for production environments. '
                         b'There may be bugs, incomplete features, '
                         b'incorrect documentation, or other discrepancies.\n'
                         b'By Deploying, you agree to the Terms '

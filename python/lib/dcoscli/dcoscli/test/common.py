@@ -96,9 +96,9 @@ def assert_command(
 
     returncode_, stdout_, stderr_ = exec_command(cmd, env, stdin)
 
-    assert returncode_ == returncode, (returncode_, returncode)
-    assert stdout_ == stdout, (stdout_, stdout)
     assert stderr_ == stderr, (stderr_, stderr)
+    assert stdout_ == stdout, (stdout_, stdout)
+    assert returncode_ == returncode, (returncode_, returncode)
 
 
 def delete_zk_nodes():
