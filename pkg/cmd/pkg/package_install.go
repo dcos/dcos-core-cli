@@ -81,7 +81,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				}
 			}
 
-			if cliOnly && isEmptyCli(pkg.Resource.Cli) && !isEmptyCommand(pkg.Command){
+			if cliOnly && isEmptyCli(pkg.Resource.Cli) && !isEmptyCommand(pkg.Command) {
 				return fmt.Errorf("unable to install CLI subcommand. PIP subcommands are no longer supported" +
 					" see: https://godoc.org/github.com/dcos/client-go/dcos#CosmosPackageCommand")
 			}
