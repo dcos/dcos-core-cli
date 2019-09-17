@@ -90,7 +90,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
 				pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
 				if err != nil {
-					return err
+					return fmt.Errorf("cannot get plugin info: %s", err)
 				}
 
 				var checksum plugin.Checksum
@@ -104,7 +104,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 
 				cluster, err := ctx.Cluster()
 				if err != nil {
-					return err
+					return fmt.Errorf("cannot get cluster: %s", err)
 				}
 
 				err = ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
@@ -122,11 +122,16 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 					},
 				})
 				if err != nil {
-					return err
+					return fmt.Errorf("cannot install plugin: %s", err)
 				}
-				plugin, err := ctx.PluginManager(cluster).Plugin(packageName)
+				// See: https://github.com/dcos/dcos-cli/blob/72953d7eb2821f966e823294c4a451b071ee0f29/pkg/plugin/manager.go#L417
+				pluginName := packageName
+				if pluginInfo.Kind == "zip" {
+					pluginName = "dcos-" + pluginName
+				}
+				plugin, err := ctx.PluginManager(cluster).Plugin(pluginName)
 				if err != nil {
-					return err
+					return fmt.Errorf("cannot get plugin data: %s", err)
 				}
 
 				plural := ""
