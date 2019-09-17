@@ -14,22 +14,23 @@ type Job struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	// The run property of a Job represents the run configuration for that Job
 	Run struct {
-		Args           []string               `json:"args,omitempty"`
-		Artifacts      []artifact             `json:"artifacts,omitempty"`
-		Cmd            string                 `json:"cmd"`
-		Cpus           float32                `json:"cpus"`
-		Gpus           float32                `json:"gpus"`
-		Disk           int                    `json:"disk"`
-		Docker         *docker                `json:"docker,omitempty"`
-		Env            map[string]interface{} `json:"env,omitempty"`
-		MaxLaunchDelay int                    `json:"maxLaunchDelay,omitempty"`
-		Mem            int                    `json:"mem"`
-		Placement      *placement             `json:"placement,omitempty"`
-		Secrets        map[string]interface{} `json:"secrets,omitempty"`
-		UCR            *ucr                   `json:"ucr,omitempty"`
-		User           string                 `json:"user,omitempty"`
-		Restart        *restart               `json:"restart,omitempty"`
-		Volumes        []volume               `json:"volumes,omitempty"`
+		Args                       []string               `json:"args,omitempty"`
+		Artifacts                  []artifact             `json:"artifacts,omitempty"`
+		Cmd                        string                 `json:"cmd"`
+		Cpus                       float32                `json:"cpus"`
+		Gpus                       float32                `json:"gpus"`
+		Disk                       int                    `json:"disk"`
+		Docker                     *docker                `json:"docker,omitempty"`
+		Env                        map[string]interface{} `json:"env,omitempty"`
+		MaxLaunchDelay             int                    `json:"maxLaunchDelay,omitempty"`
+		Mem                        int                    `json:"mem"`
+		Placement                  *placement             `json:"placement,omitempty"`
+		Secrets                    map[string]interface{} `json:"secrets,omitempty"`
+		TaskKillGracePeriodSeconds float64                `json:"taskKillGracePeriodSeconds"`
+		UCR                        *ucr                   `json:"ucr,omitempty"`
+		User                       string                 `json:"user,omitempty"`
+		Restart                    *restart               `json:"restart,omitempty"`
+		Volumes                    []volume               `json:"volumes,omitempty"`
 	} `json:"run"`
 
 	// These properties depend on the embed parameters when querying the /v1/jobs endpoints.
@@ -49,10 +50,12 @@ type artifact struct {
 type docker struct {
 	Image          string `json:"image,omitempty"`
 	ForcePullImage bool   `json:"forcePullImage"`
+	Privileged     bool   `json:"privileged"`
 }
 
 type ucr struct {
-	Image map[string]interface{} `json:"image,omitempty"`
+	Image      map[string]interface{} `json:"image,omitempty"`
+	Privileged bool                   `json:"privileged"`
 }
 
 type placement struct {
