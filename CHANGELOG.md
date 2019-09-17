@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0-patch.x
+
+* Fixes
+
+  * Support more fields in job JSON definition.
+
 ## 2.0-patch.2
 
 This release reverts https://github.com/dcos/dcos-core-cli/pull/354.
