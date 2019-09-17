@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.13-patch.x
+
+* Fixes
+
+  * Support more fields in job JSON definition.
+
 ## 1.13-patch.6
 
 * Fixes
