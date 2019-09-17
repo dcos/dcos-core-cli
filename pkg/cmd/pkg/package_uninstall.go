@@ -87,7 +87,7 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 			// all of those being removed so we should only have to check if there was 1
 			// instance installed already
 			if !appOnly && (all || installed == 1) {
-				err = removeCLI(ctx, packageName)
+				removeCLI(ctx, packageName)
 			}
 
 			return err
