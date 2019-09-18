@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/plugin"
-	"github.com/dcos/dcos-cli/pkg/prompt"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -30,6 +30,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			packageName := args[0]
 
+			// Install both if neither flag is specified
 			if cliOnly == appOnly {
 				cliOnly = true
 				appOnly = true
@@ -55,27 +56,26 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 
 			link := "https://mesosphere.com/catalog-terms-conditions/#certified-services"
 			if !pkg.Selected {
-				fmt.Fprint(ctx.Out(), "This is a Community service. "+
+				fmt.Fprint(ctx.ErrOut(), "This is a Community service. "+
 					"Community services are not tested for production environments. "+
 					"There may be bugs, incomplete features, incorrect documentation, or other discrepancies.\n")
 				link = "https://mesosphere.com/catalog-terms-conditions/#community-services"
 			}
-			fmt.Fprintf(ctx.Out(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
+			fmt.Fprintf(ctx.ErrOut(), "By Deploying, you agree to the Terms and Conditions %s\n", link)
 			if appOnly && pkg.PreInstallNotes != "" {
-				fmt.Fprintf(ctx.Out(), "%s\n", pkg.PreInstallNotes)
+				fmt.Fprintf(ctx.ErrOut(), "%s\n", pkg.PreInstallNotes)
 			}
 
 			if !yes {
-				prompter := prompt.New(ctx.Input(), ctx.Out())
-				err = prompter.Confirm("Continue installing? [yes/no] ", "Yes")
+				err = ctx.Prompt().Confirm("Continue installing? [yes/no] ", "Yes")
 				if err != nil {
 					return err
 				}
 			}
 
 			if appOnly && description.Package.Marathon.V2AppMustacheTemplate != "" {
-				fmt.Fprintf(ctx.Out(), "Installing Marathon app for package [%s] version [%s]\n", packageName, pkg.Version)
-				err := c.PackageInstalls(appID, packageName, pkg.Version, optionsPath)
+				fmt.Fprintf(ctx.ErrOut(), "Installing Marathon app for package [%s] version [%s]\n", packageName, pkg.Version)
+				err := c.PackageInstall(appID, packageName, pkg.Version, optionsPath)
 				if err != nil {
 					return err
 				}
@@ -87,7 +87,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 			}
 
 			if cliOnly && !isEmptyCli(pkg.Resource.Cli) {
-				fmt.Fprintf(ctx.Out(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
+				fmt.Fprintf(ctx.ErrOut(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
 				pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
 				if err != nil {
 					return fmt.Errorf("cannot get plugin info: %s", err)
@@ -99,6 +99,8 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 					case dcos.SHA256:
 						checksum.Hasher = sha256.New()
 						checksum.Value = contentHash.Value
+					default:
+						fmt.Fprintf(ctx.ErrOut(), "unknown algorithm: %s\n", contentHash.Algo)
 					}
 				}
 
@@ -126,7 +128,7 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				}
 				// See: https://github.com/dcos/dcos-cli/blob/72953d7eb2821f966e823294c4a451b071ee0f29/pkg/plugin/manager.go#L417
 				pluginName := packageName
-				if pluginInfo.Kind == "zip" {
+				if pluginInfo.Kind == "zip" && !strings.HasPrefix(pluginName, "dcos-") {
 					pluginName = "dcos-" + pluginName
 				}
 				plugin, err := ctx.PluginManager(cluster).Plugin(pluginName)
@@ -142,12 +144,12 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 				for _, c := range plugin.Commands {
 					cmds = append(cmds, c.Name)
 				}
-
-				fmt.Fprintf(ctx.Out(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
+				sort.Strings(cmds)
+				fmt.Fprintf(ctx.ErrOut(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 			}
 
 			if appOnly && pkg.PostInstallNotes != "" {
-				fmt.Fprintf(ctx.Out(), "%s\n", pkg.PostInstallNotes)
+				fmt.Fprintf(ctx.ErrOut(), "%s\n", pkg.PostInstallNotes)
 			}
 			return nil
 		},

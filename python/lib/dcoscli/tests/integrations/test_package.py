@@ -190,7 +190,20 @@ def test_describe(command_to_run, expected_output_file):
 
 
 def test_bad_install():
-    stderr = 'Error: Options JSON failed validation\n'
+    stderr = (
+        b'This is a Community service. '
+        b'Community services are not tested '
+        b'for production environments. '
+        b'There may be bugs, incomplete features, '
+        b'incorrect documentation, or other discrepancies.\n'
+        b'By Deploying, you agree to the Terms '
+        b'and Conditions https://mesosphere.com/'
+        b'catalog-terms-conditions/#community-services\n'
+        b'A sample pre-installation message\n'
+        b'Installing Marathon app for package [helloworld] version '
+        b'[0.1.0]\n'
+        b'Error: Options JSON failed validation\n'
+    )
     with util.temptext(b'{"nom": "hallo"}') as options:
         args = ['--options='+options[1], '--yes']
         _install_bad_helloworld(args=args, stderr=stderr)
@@ -212,7 +225,7 @@ def test_bad_install_helloworld_msg():
         b'[0.1.0]\n'
     )
 
-    stdout = (
+    stderr = (
         terms_conditions +
         # Uncomment after DCOS_OSS-5539
         # b'Installing CLI subcommand for package [helloworld] '
@@ -226,12 +239,11 @@ def test_bad_install_helloworld_msg():
             util.temptext(b'{"name": "/foo/bar"}') as foobar:
 
         _install_helloworld(['--app', '--yes', '--options='+foo[1]],
-                            stdout=stdout)
+                            stderr=stderr)
 
-        stderr = (b'Error: Object is not valid\n')
+        stderr = terms_conditions + b'Error: Object is not valid\n'
 
         _install_helloworld(['--app', '--yes', '--options='+foobar[1]],
-                            stdout=terms_conditions,
                             stderr=stderr,
                             returncode=1)
         _uninstall_helloworld()
@@ -241,7 +253,7 @@ def test_bad_install_helloworld_msg():
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
             util.temptext(b'{"name": "/hello2"}') as opts_hello2:
-        stdout = (
+        stderr = (
             b'This is a Community service. '
             b'Community services are not tested '
             b'for production environments. '
@@ -260,18 +272,20 @@ def test_uninstall_cli_only_when_no_apps_remain():
             b'\nA sample post-installation message\n'
         )
 
-        stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
+        uninstall_stderr = (
+            b'Uninstalled package [helloworld] version [0.1.0]\n'
+        )
         with _package(name='helloworld',
                       args=['--yes', '--options='+opts_hello1[1]],
-                      stdout=stdout,
+                      stderr=stderr,
                       uninstall_app_id='/hello1',
-                      uninstall_stderr=stderr):
+                      uninstall_stderr=uninstall_stderr):
 
             with _package(name='helloworld',
                           args=['--yes', '--options='+opts_hello2[1]],
-                          stdout=stdout,
+                          stderr=stderr,
                           uninstall_app_id='/hello2',
-                          uninstall_stderr=stderr):
+                          uninstall_stderr=uninstall_stderr):
 
                 subcommand.command_executables('helloworld')
 
@@ -297,7 +311,7 @@ def test_install_missing_options_file():
 
 
 def test_install_specific_version():
-    stdout = (
+    stderr = (
         b'This is a Community service. '
         b'Community services are not tested '
         b'for production environments. '
@@ -323,7 +337,7 @@ def test_install_specific_version():
                       '--yes',
                       '--package-version=0.1.0'
                   ],
-                  stdout=stdout,
+                  stderr=stderr,
                   uninstall_stderr=uninstall_stderr):
 
         returncode, stdout, stderr = exec_command(
@@ -343,7 +357,7 @@ def test_install_bad_package_version():
 
 
 def test_install_noninteractive():
-    expected_stdout = (
+    expected_stderr = (
         b'This is a Community service. '
         b'Community services are not tested '
         b'for production environments. '
@@ -352,16 +366,17 @@ def test_install_noninteractive():
         b'By Deploying, you agree to the Terms and Conditions https://'
         b'mesosphere.com/catalog-terms-conditions/#community-services\n'
         b'This DC/OS Service is currently in preview.\n'
-        b'Continue installing? [yes/no] '
+        b"Error: couldn't get confirmation\n"
     )
+    expected_stdout = b'Continue installing? [yes/no] '
     returncode, stdout, stderr = exec_command(
         ['dcos', 'package', 'install', 'hello-world'],
         timeout=30,
         stdin=subprocess.DEVNULL)
 
     assert returncode == 1
-    assert stderr == b"Error: couldn't get confirmation\n"
-    assert expected_stdout == stdout
+    assert stderr == expected_stderr
+    assert stdout == expected_stdout
 
 
 @pytest.mark.skip(reason="DCOS_OSS-5539")
@@ -465,7 +480,7 @@ def test_uninstall_cli():
 @pytest.mark.skip(reason=("Cosmos issue, see "
                           "https://jira.mesosphere.com/browse/DCOS_OSS-5529"))
 def test_uninstall_multiple_apps():
-    stdout = (
+    stderr = (
         b'This is a Community service. '
         b'Community services are not tested '
         b'for production environments. '
@@ -485,11 +500,11 @@ def test_uninstall_multiple_apps():
 
         _install_helloworld(
             ['--yes', '--options='+hello1[1], '--app'],
-            stdout=stdout)
+            stderr=stderr)
 
         _install_helloworld(
             ['--yes', '--options='+hello2[1], '--app'],
-            stdout=stdout)
+            stderr=stderr)
 
         stderr = (b"Multiple apps named [helloworld] are installed: "
                   b"[/helloworld-1, /helloworld-2].\n"
@@ -532,7 +547,8 @@ def test_install_yes():
         _install_helloworld(
             args=['--app'],  # Remove after DCOS_OSS-5539
             stdin=yes_file,
-            stdout=(
+            stdout=b'Continue installing? [yes/no] ',
+            stderr=(
                 b'This is a Community service. '
                 b'Community services are not tested '
                 b'for production environments. '
@@ -542,7 +558,6 @@ def test_install_yes():
                 b'and Conditions https://mesosphere.com/'
                 b'catalog-terms-conditions/#community-services\n'
                 b'A sample pre-installation message\n'
-                b'Continue installing? [yes/no] '
                 b'Installing Marathon app for package [helloworld] version '
                 b'[0.1.0]\n'
                 # Uncomment after DCOS_OSS-5539
@@ -561,7 +576,8 @@ def test_install_no():
         _install_helloworld(
             args=[],
             stdin=no_file,
-            stdout=(
+            stdout=b'Continue installing? [yes/no] ',
+            stderr=(
                 b'This is a Community service. '
                 b'Community services are not tested '
                 b'for production environments. '
@@ -571,9 +587,8 @@ def test_install_no():
                 b'and Conditions https://mesosphere.com/'
                 b'catalog-terms-conditions/#community-services\n'
                 b'A sample pre-installation message\n'
-                b'Continue installing? [yes/no] '
+                b"Error: couldn't get confirmation\n"
             ),
-            stderr=b"Error: couldn't get confirmation\n",
             returncode=1
         )
 
@@ -586,7 +601,7 @@ def test_list_cli():
     _list(args=['--json'], stdout=stdout)
     _uninstall_helloworld()
 
-    stdout = (
+    stderr = (
         b'This is a Community service. '
         b'Community services are not tested '
         b'for production environments. '
@@ -601,7 +616,7 @@ def test_list_cli():
         _executable_name(b'helloworld') +
         b"\n"
     )
-    _install_helloworld(args=['--cli', '--yes'], stdout=stdout)
+    _install_helloworld(args=['--cli', '--yes'], stderr=stderr)
 
     stdout = file_json(
         'tests/data/package/json/test_list_helloworld_cli.json', 4)
@@ -781,7 +796,7 @@ def _install_helloworld(
             '--app',  # Remove --app after resolving DCOS_OSS-5539
             '--yes'
         ],
-        stdout=(
+        stderr=(
             b'This is a Community service. '
             b'Community services are not tested '
             b'for production environments. '
@@ -800,7 +815,7 @@ def _install_helloworld(
             # _executable_name(b'helloworld') +
             b'\nA sample post-installation message\n'
         ),
-        stderr=b'',
+        stdout=b'',
         returncode=0,
         stdin=None):
     assert_command(
@@ -849,7 +864,7 @@ def _uninstall_chronos(args=[], returncode=0, stdout=b'', stderr=''):
 
 def _install_bad_helloworld(
         args=['--yes'],
-        stdout=(
+        stderr=(
             b'This is a Community service. '
             b'Community services are not tested '
             b'for production environments. '
@@ -862,12 +877,12 @@ def _install_bad_helloworld(
             b'Installing Marathon app for package ['
             b'helloworld] version [0.1.0]\n'
         ),
-        stderr=''):
+        stdout=b''):
     cmd = ['dcos', 'package', 'install', 'helloworld'] + args
     returncode_, stdout_, stderr_ = exec_command(cmd)
-    assert returncode_ == 1
-    assert stderr in stderr_.decode('utf-8')
     assert stdout_ == stdout
+    assert stderr_ == stderr
+    assert returncode_ == 1
 
 
 def _list(args, stdout):
@@ -883,7 +898,7 @@ HELLOWORLD_CLI_STDOUT = (
 
 
 def _helloworld():
-    stdout = (
+    stderr = (
         b'This is a Community service. '
         b'Community services are not tested '
         b'for production environments. '
@@ -901,7 +916,7 @@ def _helloworld():
     stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
     return _package(name='helloworld',
                     args=['--yes'],
-                    stdout=stdout,
+                    stderr=stderr,
                     uninstall_stderr=stderr)
 
 
@@ -909,7 +924,7 @@ def _helloworld_cli():
     args = ['--yes', '--cli']
     return _package(name='helloworld',
                     args=args,
-                    stdout=(
+                    stderr=(
                         b'This is a Community service. '
                         b'Community services are not tested '
                         b'for production environments. '
@@ -927,6 +942,7 @@ def _helloworld_cli():
 def _package(name,
              args,
              stdout=b'',
+             stderr=b'',
              uninstall_confirmation=True,
              uninstall_app_id='',
              uninstall_stderr=b''):
@@ -938,6 +954,7 @@ def _package(name,
     :param args: extra CLI args
     :type args: [str]
     :param stdout: Expected stdout
+    :param stderr: Expected stderr
     :type stdout: bytes
     :param uninstall_app_id: App id for uninstallation
     :type uninstall_app_id: string
@@ -954,7 +971,7 @@ def _package(name,
         returncode_, stdout_, stderr_ = exec_command(command, timeout=timeout)
         installed = (returncode_ == 0)
 
-        assert stderr_ == b''
+        assert stderr_ == stderr
         assert installed
         assert stdout_ == stdout
 

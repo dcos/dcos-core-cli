@@ -160,7 +160,7 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 }
 
 // PackageInstall installs package
-func (c *Client) PackageInstalls(appID string, name string, version string, optionsPath string) error {
+func (c *Client) PackageInstall(appID string, name string, version string, optionsPath string) error {
 	var optionsInterface map[string]interface{}
 	if optionsPath != "" {
 		options, err := ioutil.ReadFile(optionsPath)
@@ -260,7 +260,8 @@ func CLIPluginInfo(pkg dcos.CosmosPackage, baseURL *url.URL) (cliArtifact dcos.C
 		cliArtifact = pkg.Resource.Cli.Binaries.Darwin.X8664
 	case "windows":
 		cliArtifact = pkg.Resource.Cli.Binaries.Windows.X8664
-
+	default:
+		return cliArtifact, fmt.Errorf("%s is not supported", runtime.GOOS)
 	}
 	// Workaround for a Cosmos bug leading to wrong schemes in plugin resource URLs.
 	// This happens on setups with TLS termination proxies, where Cosmos might rewrite
