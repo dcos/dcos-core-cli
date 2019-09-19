@@ -1,8 +1,13 @@
 package pkg
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
@@ -48,6 +53,17 @@ func newCmdPackageUninstall(ctx api.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			cliInstalled, err := cliPackageInstalled(ctx, packageName)
+			if err != nil {
+				return err
+			}
+			// handle an edge case where we call uninstall with no flags but only
+			// a cli command installed for that package
+			if !appOnly && installed == 0 && cliInstalled {
+				return removeCLI(ctx, packageName)
+			}
+
 			if installed == 0 {
 				return fmt.Errorf("Package [%s] is not installed", packageName)
 			}
@@ -124,6 +140,36 @@ func packageInstallCount(c *cosmos.Client, packageName string) (int, error) {
 	}
 
 	return 0, nil
+}
+
+func cliPackageInstalled(ctx api.Context, packageName string) (bool, error) {
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return false, err
+	}
+
+	plugins := ctx.PluginManager(cluster).Plugins()
+	for _, plugin := range plugins {
+		packagePath := path.Join(filepath.Dir(plugin.Dir()), "package.json")
+		if _, err := os.Stat(packagePath); err == nil {
+			file, err := ioutil.ReadFile(packagePath)
+			if err != nil {
+				return false, err
+			}
+
+			pkg := cosmos.Package{}
+			err = json.Unmarshal(file, &pkg)
+			if err != nil {
+				return false, err
+			}
+
+			if pkg.Name == packageName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func warningMessage(name string, all bool) string {
