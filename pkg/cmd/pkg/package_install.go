@@ -20,12 +20,12 @@ import (
 )
 
 type pkgInstallOptions struct {
-	appID      string
+	appID       string
 	optionsPath string
-	version    string
-	appOnly    bool
-	cliOnly    bool
-	yes        bool
+	version     string
+	appOnly     bool
+	cliOnly     bool
+	yes         bool
 }
 
 func newCmdPackageInstall(ctx api.Context) *cobra.Command {

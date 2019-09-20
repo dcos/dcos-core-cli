@@ -23,9 +23,11 @@ github.com/dcos/dcos-cli/pkg/prompt
 github.com/dcos/dcos-cli/pkg/setup
 github.com/dcos/dcos-cli/pkg/cli/version
 github.com/dcos/dcos-cli/pkg/fsutil
+github.com/dcos/dcos-cli/pkg/mock
 github.com/dcos/dcos-cli/pkg/login/loginserver
 github.com/dcos/dcos-cli/pkg/internal/cosmos
 github.com/dcos/dcos-cli/pkg/mesos
+github.com/dcos/dcos-cli/pkg/cluster/linker
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
@@ -113,6 +115,7 @@ github.com/rs/cors
 github.com/satori/go.uuid
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
+github.com/sirupsen/logrus/hooks/test
 # github.com/spf13/afero v1.2.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
