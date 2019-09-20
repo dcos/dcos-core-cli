@@ -60,7 +60,7 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 }
 
 // PackageList returns the packages installed in a cluster.
-func (c *Client) PackageList() (*[]Package, error) {
+func (c *Client) PackageList() ([]Package, error) {
 	desc, _, err := c.cosmos.PackageList(context.TODO(), &dcos.PackageListOpts{
 		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{})})
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *Client) PackageList() (*[]Package, error) {
 		}
 	}
 
-	return &ps, nil
+	return ps, nil
 }
 
 // PackageListVersions returns the versions of a package.
@@ -235,6 +235,17 @@ func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error
 		return nil, cosmosErrUnwrap(err)
 	}
 	return &desc, nil
+}
+
+// PackageUninstall uninstalls the given package/appID from the cluster
+func (c *Client) PackageUninstall(packageName string, all bool, appID string) (*dcos.CosmosPackageUninstallV1Response, error) {
+	reqParams := dcos.CosmosPackageUninstallV1Request{
+		All:         all,
+		AppId:       appID,
+		PackageName: packageName,
+	}
+	resp, _, err := c.cosmos.PackageUninstall(context.TODO(), reqParams, &dcos.PackageUninstallOpts{})
+	return &resp, cosmosErrUnwrap(err)
 }
 
 func cosmosErrUnwrap(err error) error {
