@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/dcos/client-go/dcos"
@@ -146,14 +145,11 @@ func pkgInstall(ctx api.Context, packageName string, opts pkgInstallOptions) err
 		}
 
 		plural := ""
-		if len(plugin.Commands) > 1 {
+		cmds := plugin.CommandNames()
+		if len(cmds) > 1 {
 			plural = "s"
 		}
-		cmds := make([]string, 0, len(plugin.Commands))
-		for _, c := range plugin.Commands {
-			cmds = append(cmds, c.Name)
-		}
-		sort.Strings(cmds)
+
 		fmt.Fprintf(ctx.ErrOut(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 	}
 	if opts.appOnly && pkg.PostInstallNotes != "" {
