@@ -310,6 +310,14 @@ def test_install_missing_options_file():
         stderr=b"Error: stat asdf.json: no such file or directory\n")
 
 
+def test_install_app_and_cli():
+    """Test that using mutually exclusive options is forbidden."""
+    assert_command(
+        ['dcos', 'package', 'install', 'helloworld', '--app', '--cli'],
+        returncode=1,
+        stderr=b"Error: --app and --cli are mutually exclusive\n")
+
+
 def test_install_specific_version():
     stderr = (
         b'This is a Community service. '

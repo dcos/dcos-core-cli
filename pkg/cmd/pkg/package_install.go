@@ -30,6 +30,10 @@ func newCmdPackageInstall(ctx api.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			packageName := args[0]
 
+			if cliOnly && appOnly {
+				return fmt.Errorf("--app and --cli are mutually exclusive")
+			}
+
 			// Install both if neither flag is specified
 			if cliOnly == appOnly {
 				cliOnly = true
