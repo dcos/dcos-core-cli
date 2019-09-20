@@ -6,7 +6,6 @@ def test_install_certified_packages_cli():
         'cassandra',
         'kubernetes',
         'confluent-kafka',
-        'dcos-enterprise-cli',
     ]
 
     for pkg in pkgs:
