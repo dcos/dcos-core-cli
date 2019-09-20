@@ -1,0 +1,325 @@
+{
+  "package": {
+    "packagingVersion": "4.0",
+    "name": "chronos",
+    "version": "2.5.1",
+    "releaseVersion": 7,
+    "maintainer": "support@mesosphere.io",
+    "description": "A fault tolerant job scheduler for Mesos which handles dependencies and ISO8601 based schedules.",
+    "tags": [
+      "cron",
+      "analytics",
+      "batch"
+    ],
+    "selected": true,
+    "scm": "https://github.com/mesos/chronos.git",
+    "framework": true,
+    "preInstallNotes": "We recommend a minimum of one node with at least 1 CPU and 2GB of RAM available for the Chronos Service.",
+    "postInstallNotes": "Chronos DCOS Service has been successfully installed!\n\n\tDocumentation: http://mesos.github.io/chronos\n\tIssues: https://github.com/mesos/chronos/issues",
+    "postUninstallNotes": "The Chronos DCOS Service has been uninstalled and will no longer run.\nPlease follow the instructions at https://docs.mesosphere.com/latest/deploying-services/uninstall/ to clean up any persisted state.",
+    "licenses": [
+      {
+        "name": "Apache License Version 2.0",
+        "url": "https://github.com/mesos/chronos/blob/master/LICENSE"
+      }
+    ],
+    "minDcosReleaseVersion": "1.9",
+    "marathon": {
+      "v2AppMustacheTemplate": "ewogICJpZCI6ICJ7e2Nocm9ub3MuaWR9fSIsCiAgImluc3RhbmNlcyI6IHt7Y2hyb25vcy5pbnN0YW5jZXN9fSwKICAiY3B1cyI6IHt7Y2hyb25vcy5jcHVzfX0sCiAgImNtZCI6ICJjaHJvbm9zIHJ1bl9qYXIgLS1tYXN0ZXIge3ttZXNvcy5tYXN0ZXJ9fSAtLXprX2hvc3RzIHt7Y2hyb25vcy56ay1ob3N0c319IC0taHR0cF9wb3J0ICRQT1JUMCAtLW1lc29zX2ZyYW1ld29ya19uYW1lIHt7Y2hyb25vcy5mcmFtZXdvcmstbmFtZX19IC0taG9zdG5hbWUge3tjaHJvbm9zLmhvc3RuYW1lfX0ge3sjY2hyb25vcy5hc3NldHMtcGF0aH19IC0tYXNzZXRzX3BhdGgge3tjaHJvbm9zLmFzc2V0c19wYXRofX0ge3svY2hyb25vcy5hc3NldHMtcGF0aH19IHt7I2Nocm9ub3MuY2Fzc2FuZHJhLWNvbnNpc3RlbmN5fX0gLS1jYXNzYW5kcmFfY29uc2lzdGVuY3kge3tjaHJvbm9zLmNhc3NhbmRyYS1jb25zaXN0ZW5jeX19IHt7L2Nocm9ub3MuY2Fzc2FuZHJhLWNvbnNpc3RlbmN5fX0ge3sjY2hyb25vcy5jYXNzYW5kcmEtY29udGFjdC1wb2ludHN9fSAtLWNhc3NhbmRyYV9jb250YWN0X3BvaW50cyB7e2Nocm9ub3MuY2Fzc2FuZHJhLWNvbnRhY3QtcG9pbnRzfX0ge3svY2hyb25vcy5jYXNzYW5kcmEtY29udGFjdC1wb2ludHN9fSB7eyNjaHJvbm9zLmNhc3NhbmRyYS1rZXlzcGFjZX19IC0tY2Fzc2FuZHJhX2tleXNwYWNlIHt7Y2hyb25vcy5jYXNzYW5kcmEta2V5c3BhY2V9fSB7ey9jaHJvbm9zLmNhc3NhbmRyYS1rZXlzcGFjZX19IHt7I2Nocm9ub3MuY2Fzc2FuZHJhLXBvcnR9fSAtLWNhc3NhbmRyYV9wb3J0IHt7Y2hyb25vcy5jYXNzYW5kcmEtcG9ydH19IHt7L2Nocm9ub3MuY2Fzc2FuZHJhLXBvcnR9fSB7eyNjaHJvbm9zLmNhc3NhbmRyYS10YWJsZX19IC0tY2Fzc2FuZHJhX3RhYmxlIHt7Y2hyb25vcy5jYXNzYW5kcmEtdGFibGV9fSB7ey9jaHJvbm9zLmNhc3NhbmRyYS10YWJsZX19IHt7I2Nocm9ub3MuY2Fzc2FuZHJhLXR0bH19IC0tY2Fzc2FuZHJhX3R0bCB7e2Nocm9ub3MuY2Fzc2FuZHJhLXR0bH19IHt7L2Nocm9ub3MuY2Fzc2FuZHJhLXR0bH19IHt7I2Nocm9ub3MuY2x1c3Rlci1uYW1lfX0gLS1jbHVzdGVyX25hbWUge3tjaHJvbm9zLmNsdXN0ZXItbmFtZX19IHt7L2Nocm9ub3MuY2x1c3Rlci1uYW1lfX0ge3sjY2hyb25vcy5kZWNsaW5lLW9mZmVyLWR1cmF0aW9ufX0gLS1kZWNsaW5lX29mZmVyX2R1cmF0aW9uIHt7Y2hyb25vcy5kZWNsaW5lLW9mZmVyLWR1cmF0aW9ufX0ge3svY2hyb25vcy5kZWNsaW5lLW9mZmVyLWR1cmF0aW9ufX0ge3sjY2hyb25vcy5kaXNhYmxlLWFmdGVyLWZhaWx1cmVzfX0gLS1kaXNhYmxlX2FmdGVyX2ZhaWx1cmVzIHt7Y2hyb25vcy5kaXNhYmxlLWFmdGVyLWZhaWx1cmVzfX0ge3svY2hyb25vcy5kaXNhYmxlLWFmdGVyLWZhaWx1cmVzfX0ge3sjY2hyb25vcy5mYWlsb3Zlci10aW1lb3V0fX0gLS1mYWlsb3Zlcl90aW1lb3V0IHt7Y2hyb25vcy5mYWlsb3Zlci10aW1lb3V0fX0ge3svY2hyb25vcy5mYWlsb3Zlci10aW1lb3V0fX0ge3sjY2hyb25vcy5mYWlsdXJlLXJldHJ5fX0gLS1mYWlsdXJlX3JldHJ5IHt7Y2hyb25vcy5mYWlsdXJlLXJldHJ5fX0ge3svY2hyb25vcy5mYWlsdXJlLXJldHJ5fX0ge3sjY2hyb25vcy5ncmFwaGl0ZS1ncm91cC1wcmVmaXh9fSAtLWdyYXBoaXRlX2dyb3VwX3ByZWZpeCB7e2Nocm9ub3MuZ3JhcGhpdGUtZ3JvdXAtcHJlZml4fX0ge3svY2hyb25vcy5ncmFwaGl0ZS1ncm91cC1wcmVmaXh9fSB7eyNjaHJvbm9zLmdyYXBoaXRlLWhvc3QtcG9ydH19IC0tZ3JhcGhpdGVfaG9zdF9wb3J0IHt7Y2hyb25vcy5ncmFwaGl0ZS1ob3N0LXBvcnR9fSB7ey9jaHJvbm9zLmdyYXBoaXRlLWhvc3QtcG9ydH19IHt7I2Nocm9ub3MuZ3JhcGhpdGUtcmVwb3J0aW5nLWludGVydmFsfX0gLS1ncmFwaGl0ZV9yZXBvcnRpbmdfaW50ZXJ2YWwge3tjaHJvbm9zLmdyYXBoaXRlLXJlcG9ydGluZy1pbnRlcnZhbH19IHt7L2Nocm9ub3MuZ3JhcGhpdGUtcmVwb3J0aW5nLWludGVydmFsfX0ge3sjY2hyb25vcy5odHRwLWNyZWRlbnRpYWxzfX0gLS1odHRwX2NyZWRlbnRpYWxzIHt7Y2hyb25vcy5odHRwLWNyZWRlbnRpYWxzfX0ge3svY2hyb25vcy5odHRwLWNyZWRlbnRpYWxzfX0ge3sjY2hyb25vcy5odHRwLXJlYWxtfX0gLS1odHRwX3JlYWxtIHt7Y2hyb25vcy5odHRwLXJlYWxtfX0ge3svY2hyb25vcy5odHRwLXJlYWxtfX0ge3sjY2hyb25vcy5sZWFkZXItbWF4LWlkbGUtdGltZX19IC0tbGVhZGVyX21heF9pZGxlX3RpbWUge3tjaHJvbm9zLmxlYWRlci1tYXgtaWRsZS10aW1lfX0ge3svY2hyb25vcy5sZWFkZXItbWF4LWlkbGUtdGltZX19IHt7I2Nocm9ub3MubWFpbC1mcm9tfX0gLS1tYWlsX2Zyb20ge3tjaHJvbm9zLm1haWwtZnJvbX19IHt7L2Nocm9ub3MubWFpbC1mcm9tfX0ge3sjY2hyb25vcy5tYWlsLXBhc3N3b3JkfX0gLS1tYWlsX3Bhc3N3b3JkIHt7Y2hyb25vcy5tYWlsLXBhc3N3b3JkfX0ge3svY2hyb25vcy5tYWlsLXBhc3N3b3JkfX0ge3sjY2hyb25vcy5tYWlsLXNlcnZlcn19IC0tbWFpbF9zZXJ2ZXIge3tjaHJvbm9zLm1haWwtc2VydmVyfX0ge3svY2hyb25vcy5tYWlsLXNlcnZlcn19IHt7I2Nocm9ub3MubWFpbC1zc2x9fSAtLW1haWxfc3NsIHt7Y2hyb25vcy5tYWlsLXNzbH19IHt7L2Nocm9ub3MubWFpbC1zc2x9fSB7eyNjaHJvbm9zLm1haWwtdXNlcn19IC0tbWFpbF91c2VyIHt7Y2hyb25vcy5tYWlsLXVzZXJ9fSB7ey9jaHJvbm9zLm1haWwtdXNlcn19IHt7I2Nocm9ub3MubWVzb3MtY2hlY2twb2ludH19IC0tbWVzb3NfY2hlY2twb2ludCB7e2Nocm9ub3MubWVzb3MtY2hlY2twb2ludH19IHt7L2Nocm9ub3MubWVzb3MtY2hlY2twb2ludH19IHt7I2Nocm9ub3MubWVzb3Mtcm9sZX19IC0tbWVzb3Nfcm9sZSB7e2Nocm9ub3MubWVzb3Mtcm9sZX19IHt7L2Nocm9ub3MubWVzb3Mtcm9sZX19IHt7I2Nocm9ub3MubWVzb3MtdGFzay1jcHV9fSAtLW1lc29zX3Rhc2tfY3B1IHt7Y2hyb25vcy5tZXNvcy10YXNrLWNwdX19IHt7L2Nocm9ub3MubWVzb3MtdGFzay1jcHV9fSB7eyNjaHJvbm9zLm1lc29zLXRhc2stZGlza319IC0tbWVzb3NfdGFza19kaXNrIHt7Y2hyb25vcy5tZXNvcy10YXNrLWRpc2t9fSB7ey9jaHJvbm9zLm1lc29zLXRhc2stZGlza319IHt7I2Nocm9ub3MubWVzb3MtdGFzay1tZW19fSAtLW1lc29zX3Rhc2tfbWVtIHt7Y2hyb25vcy5tZXNvcy10YXNrLW1lbX19IHt7L2Nocm9ub3MubWVzb3MtdGFzay1tZW19fSB7eyNjaHJvbm9zLm1pbi1yZXZpdmUtb2ZmZXJzLWludGVydmFsfX0gLS1taW5fcmV2aXZlX29mZmVyc19pbnRlcnZhbCB7e2Nocm9ub3MubWluLXJldml2ZS1vZmZlcnMtaW50ZXJ2YWx9fSB7ey9jaHJvbm9zLm1pbi1yZXZpdmUtb2ZmZXJzLWludGVydmFsfX0ge3sjY2hyb25vcy5yYXZlbi1kc259fSAtLXJhdmVuX2RzbiB7e2Nocm9ub3MucmF2ZW4tZHNufX0ge3svY2hyb25vcy5yYXZlbi1kc259fSB7eyNjaHJvbm9zLnJlY29uY2lsaWF0aW9uLWludGVydmFsfX0gLS1yZWNvbmNpbGlhdGlvbl9pbnRlcnZhbCB7e2Nocm9ub3MucmVjb25jaWxpYXRpb24taW50ZXJ2YWx9fSB7ey9jaHJvbm9zLnJlY29uY2lsaWF0aW9uLWludGVydmFsfX0ge3sjY2hyb25vcy5yZXZpdmUtb2ZmZXJzLWZvci1uZXctam9ic319IC0tcmV2aXZlX29mZmVyc19mb3JfbmV3X2pvYnMge3svY2hyb25vcy5yZXZpdmUtb2ZmZXJzLWZvci1uZXctam9ic319IHt7I2Nocm9ub3Muc2NoZWR1bGUtaG9yaXpvbn19IC0tc2NoZWR1bGVfaG9yaXpvbiB7e2Nocm9ub3Muc2NoZWR1bGUtaG9yaXpvbn19IHt7L2Nocm9ub3Muc2NoZWR1bGUtaG9yaXpvbn19IHt7I2Nocm9ub3Muc2xhY2stY2hhbm5lbH19IC0tc2xhY2tfY2hhbm5lbCB7e2Nocm9ub3Muc2xhY2stY2hhbm5lbH19IHt7L2Nocm9ub3Muc2xhY2stY2hhbm5lbH19IHt7I2Nocm9ub3Muc2xhY2stdG9rZW59fSAtLXNsYWNrX3Rva2VuIHt7Y2hyb25vcy5zbGFjay10b2tlbn19IHt7L2Nocm9ub3Muc2xhY2stdG9rZW59fSB7eyNjaHJvbm9zLnNsYWNrLXVybH19IC0tc2xhY2tfdXJsIHt7Y2hyb25vcy5zbGFjay11cmx9fSB7ey9jaHJvbm9zLnNsYWNrLXVybH19IHt7I2Nocm9ub3MudGFzay1lcHNpbG9ufX0gLS10YXNrX2Vwc2lsb24ge3tjaHJvbm9zLnRhc2stZXBzaWxvbn19IHt7L2Nocm9ub3MudGFzay1lcHNpbG9ufX0ge3sjY2hyb25vcy51c2VyfX0gLS11c2VyIHt7Y2hyb25vcy51c2VyfX0ge3svY2hyb25vcy51c2VyfX0ge3sjY2hyb25vcy53ZWJ1aS11cmx9fSAtLXdlYnVpX3VybCB7e2Nocm9ub3Mud2VidWktdXJsfX0ge3svY2hyb25vcy53ZWJ1aS11cmx9fSB7eyNjaHJvbm9zLnprLXBhdGh9fSAtLXprX3BhdGgge3tjaHJvbm9zLnprLXBhdGh9fSB7ey9jaHJvbm9zLnprLXBhdGh9fSB7eyNjaHJvbm9zLnprLXRpbWVvdXR9fSAtLXprX3RpbWVvdXQge3tjaHJvbm9zLnprLXRpbWVvdXR9fSB7ey9jaHJvbm9zLnprLXRpbWVvdXR9fSIsCiAgIm1lbSI6IHt7Y2hyb25vcy5tZW19fSwKICAicG9ydHMiOiBbCiAgICAwCiAgXSwKICAiZGlzayI6IDAuMCwKICAiZW52IjogewogICAgIk5PX09QIjogIiIKCiAgICB7eyNjaHJvbm9zLmh0dHAtY3JlZGVudGlhbHN9fQogICAgLCAiTUVTT1NQSEVSRV9IVFRQX0NSRURFTlRJQUxTIjogInt7Y2hyb25vcy5odHRwLWNyZWRlbnRpYWxzfX0iCiAgICB7ey9jaHJvbm9zLmh0dHAtY3JlZGVudGlhbHN9fQoKICB9LAogICJjb250YWluZXIiOiB7CiAgICAidHlwZSI6ICJET0NLRVIiLAogICAgImRvY2tlciI6IHsKICAgICAgImltYWdlIjogInt7cmVzb3VyY2UuYXNzZXRzLmNvbnRhaW5lci5kb2NrZXIuY2hyb25vc319IiwKICAgICAgIm5ldHdvcmsiOiAiSE9TVCIKICAgIH0KICB9LAogICJoZWFsdGhDaGVja3MiOiBbCiAgICB7CiAgICAgICJpbnRlcnZhbFNlY29uZHMiOiA2MCwKICAgICAgIm1heENvbnNlY3V0aXZlRmFpbHVyZXMiOiAyLAogICAgICAicGF0aCI6ICIvIiwKICAgICAgInBvcnRJbmRleCI6IDAsCiAgICAgICJwcm90b2NvbCI6ICJIVFRQIgogICAgfQogIF0sCiAgImxhYmVscyI6IHsKICAgICJEQ09TX1BBQ0tBR0VfRlJBTUVXT1JLX05BTUUiOiAie3tjaHJvbm9zLmZyYW1ld29yay1uYW1lfX0iLAogICAgIkRDT1NfU0VSVklDRV9OQU1FIjogInt7Y2hyb25vcy5mcmFtZXdvcmstbmFtZX19IiwKICAgICJEQ09TX1NFUlZJQ0VfU0NIRU1FIjogImh0dHAiLAogICAgIkRDT1NfU0VSVklDRV9QT1JUX0lOREVYIjogIjAiCiAgfQp9Cg=="
+    },
+    "resource": {
+      "assets": {
+        "container": {
+          "docker": {
+            "chronos": "docker.io/mesosphere/chronos:chronos-2.5.1-0.1.20171211074431.ubuntu1404-mesos-1.3.1"
+          }
+        }
+      },
+      "images": {
+        "icon-small": "https://soak114s.testing.mesosphe.re/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/chronos-icon-small.png",
+        "icon-medium": "https://soak114s.testing.mesosphe.re/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/chronos-icon-medium.png",
+        "icon-large": "https://soak114s.testing.mesosphe.re/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/chronos-icon-large.png"
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "mesos": {
+          "description": "Mesos specific configuration properties",
+          "type": "object",
+          "properties": {
+            "master": {
+              "default": "zk://master.mesos:2181/mesos",
+              "description": "The URL of the Mesos master. The format is a comma-delimited list of hosts like zk://host1:port,host2:port/mesos. If using ZooKeeper, pay particular attention to the leading zk:// and trailing /mesos! If not using ZooKeeper, standard host:port patterns, like localhost:5050 or 10.0.0.5:5050,10.0.0.6:5050, are also acceptable.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "master"
+          ]
+        },
+        "chronos": {
+          "description": "Chronos Framework Configuration Properties",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "assets-path": {
+              "description": "Set a local file system path to load assets from, instead of loading them from the packaged jar.",
+              "type": "string"
+            },
+            "cassandra-consistency": {
+              "description": "Consistency to use for Cassandra (default = ANY)",
+              "type": "string"
+            },
+            "cassandra-contact-points": {
+              "description": "Comma separated list of contact points for Cassandra",
+              "type": "string"
+            },
+            "cassandra-keyspace": {
+              "description": "Keyspace to use for Cassandra (default = metrics)",
+              "type": "string"
+            },
+            "cassandra-port": {
+              "description": "Port for Cassandra (default = 9042)",
+              "type": "integer",
+              "default": 9042,
+              "minimum": 0
+            },
+            "cassandra-table": {
+              "description": "Table to use for Cassandra (default = chronos)",
+              "type": "string"
+            },
+            "cassandra-ttl": {
+              "description": "TTL for records written to Cassandra (default = 31536000)",
+              "type": "integer",
+              "default": 31536000,
+              "minimum": 0
+            },
+            "cluster-name": {
+              "description": "The name of the cluster where Chronos is run",
+              "type": "string"
+            },
+            "cpus": {
+              "description": "CPU shares to allocate to each Chronos instance.",
+              "type": "number",
+              "minimum": 0.0,
+              "default": 1.0
+            },
+            "instances": {
+              "description": "Number of Chronos instances to run.",
+              "type": "integer",
+              "minimum": 0,
+              "default": 1
+            },
+            "decline-offer-duration": {
+              "description": "The duration (milliseconds) for which to decline offers by default. (Default: Use Mesos default of 5 seconds).",
+              "type": "integer",
+              "minimum": 0,
+              "default": 5000
+            },
+            "disable-after-failures": {
+              "description": "Disables a job after this many failures have occurred (default = 0)",
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "failover-timeout": {
+              "description": "The failover timeout in seconds for Mesos (default = 604800)",
+              "type": "integer",
+              "default": 604800,
+              "minimum": 0
+            },
+            "failure-retry": {
+              "description": "Number of ms between retries (default = 60000)",
+              "type": "integer",
+              "default": 60000,
+              "minimum": 0
+            },
+            "framework-name": {
+              "description": "The framework name (default = chronos)",
+              "type": "string",
+              "default": "chronos"
+            },
+            "graphite-group-prefix": {
+              "description": "Group prefix for Graphite (default = '')",
+              "type": "string"
+            },
+            "graphite-host-port": {
+              "description": "Host and port (in the form `host:port`) for Graphite",
+              "type": "string"
+            },
+            "graphite-reporting-interval": {
+              "description": "Graphite reporting interval (seconds) (default = 60)",
+              "type": "integer",
+              "default": 60,
+              "minimum": 0
+            },
+            "hostname": {
+              "description": "The advertised hostname stored in ZooKeeper so another standby host can redirect to this elected leader (default = localhost)",
+              "type": "string",
+              "default": "$HOST"
+            },
+            "http-credentials": {
+              "description": "Credentials for accessing the http service. If empty, anyone can access the HTTP endpoint. A username:password pair is expected where the username must not contain ':'. ",
+              "type": "string"
+            },
+            "http-realm": {
+              "description": "The security realm (aka 'area') associated with the credentials (default = Mesosphere)",
+              "type": "string"
+            },
+            "id": {
+              "description": "Unique identifier for the app consisting of a series of names separated by slashes.",
+              "type": "string",
+              "default": "/chronos"
+            },
+            "leader-max-idle-time": {
+              "description": "The look-ahead time for scheduling tasks in milliseconds (default = 5000)",
+              "type": "string"
+            },
+            "mail-from": {
+              "description": "Mail from field",
+              "type": "string"
+            },
+            "mail-password": {
+              "description": "Mail password (for auth)",
+              "type": "string"
+            },
+            "mail-server": {
+              "description": "Address of the mailserver in server:port format",
+              "type": "string"
+            },
+            "mail-ssl": {
+              "description": "Mail SSL",
+              "type": "string"
+            },
+            "mail-user": {
+              "description": "Mail user (for auth)",
+              "type": "string"
+            },
+            "mem": {
+              "description": "Memory (MB) to allocate to each Chronos instance.",
+              "type": "number",
+              "minimum": 512.0,
+              "default": 1024.0
+            },
+            "mesos-checkpoint": {
+              "description": "Enable checkpointing in Mesos",
+              "type": "string"
+            },
+            "mesos-role": {
+              "description": "The Mesos role to run tasks under (default = *)",
+              "type": "string"
+            },
+            "mesos-task-cpu": {
+              "description": "Number of CPUs to request from Mesos for each task (default = 0.1)",
+              "type": "number",
+              "default": 0.1,
+              "minimum": 0.0
+            },
+            "mesos-task-disk": {
+              "description": "Amount of disk capacity to request from Mesos for each task (MB) (default = 256.0)",
+              "type": "number",
+              "default": 256.0,
+              "minimum": 0.0
+            },
+            "mesos-task-mem": {
+              "description": "Amount of memory to request from Mesos for each task (MB) (default = 128.0)",
+              "type": "number",
+              "default": 128.0,
+              "minimum": 0.0
+            },
+            "min-revive-offers-interval": {
+              "description": "Do not ask for all offers (also already seen ones) more often than this interval (ms). (default = 5000)",
+              "type": "integer",
+              "default": 5000,
+              "minimum": 0
+            },
+            "raven-dsn": {
+              "description": "Raven DSN for connecting to a raven or sentry event service",
+              "type": "string"
+            },
+            "reconciliation-interval": {
+              "description": "Reconciliation interval in seconds (default = 600)",
+              "type": "integer",
+              "default": 600,
+              "minimum": 0
+            },
+            "revive-offers-for-new-jobs": {
+              "description": "Whether to call reviveOffers for new or changed jobs. (default: do not use reviveOffers)",
+              "type": "boolean",
+              "default": false
+            },
+            "schedule-horizon": {
+              "description": "The look-ahead time for scheduling tasks in seconds (default = 60)",
+              "type": "integer",
+              "default": 60,
+              "minimum": 0
+            },
+            "slack-channel": {
+              "description": "The channel to post to in Slack",
+              "type": "string"
+            },
+            "slack-token": {
+              "description": "Token needed for posting to Slack",
+              "type": "string"
+            },
+            "slack-url": {
+              "description": "Webhook URL for posting to Slack",
+              "type": "string"
+            },
+            "task-epsilon": {
+              "description": "The default epsilon value for tasks, in seconds (default = 60)",
+              "type": "integer",
+              "default": 60,
+              "minimum": 0
+            },
+            "user": {
+              "description": "The  user to run the processes under (default = root)",
+              "type": "string"
+            },
+            "webui-url": {
+              "description": "The http(s) url of the web ui, defaulting to the advertised hostname",
+              "type": "string"
+            },
+            "zk-hosts": {
+              "description": "The list of ZooKeeper servers for storing state (default = mesos.master:2181)",
+              "type": "string",
+              "default": "master.mesos:2181"
+            },
+            "zk-path": {
+              "description": "Path in ZooKeeper for storing state (default = /state)",
+              "type": "string"
+            },
+            "zk-timeout": {
+              "description": "The timeout for ZooKeeper in milliseconds (default = 10000)",
+              "type": "integer",
+              "default": 10000,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "cpus",
+            "framework-name",
+            "hostname",
+            "id",
+            "instances",
+            "mem",
+            "zk-hosts"
+          ]
+        }
+      },
+      "required": [
+        "mesos",
+        "chronos"
+      ]
+    },
+    "upgradesFrom": [
+      "2.4.0",
+      "2.5.0"
+    ],
+    "downgradesTo": [
+      "2.4.0",
+      "2.5.0"
+    ]
+  }
+}
