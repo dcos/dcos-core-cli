@@ -97,11 +97,11 @@ def package_install(package, deploy=False, args=[]):
     :rtype: None
     """
 
-    returncode, _, stderr = exec_command(
+    returncode, stdout, _ = exec_command(
         ['dcos', 'package', 'install', '--yes', package] + args)
 
     assert returncode == 0
-    assert stderr == b''
+    assert stdout == b''
 
     if deploy:
         watch_all_deployments()
