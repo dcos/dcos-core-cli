@@ -127,7 +127,7 @@ func pkgInstall(ctx api.Context, packageName string, opts pkgInstallOptions) err
 			return fmt.Errorf("cannot get cluster: %s", err)
 		}
 
-		err = ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
+		plugin, err := ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
 			Name:     packageName,
 			Update:   true,
 			Checksum: checksum,
@@ -143,15 +143,6 @@ func pkgInstall(ctx api.Context, packageName string, opts pkgInstallOptions) err
 		})
 		if err != nil {
 			return fmt.Errorf("cannot install plugin: %s", err)
-		}
-		// See: https://github.com/dcos/dcos-cli/blob/72953d7eb2821f966e823294c4a451b071ee0f29/pkg/plugin/manager.go#L417
-		pluginName := packageName
-		if pluginInfo.Kind == "zip" && !strings.HasPrefix(pluginName, "dcos-") {
-			pluginName = "dcos-" + pluginName
-		}
-		plugin, err := ctx.PluginManager(cluster).Plugin(pluginName)
-		if err != nil {
-			return fmt.Errorf("cannot get plugin data: %s", err)
 		}
 
 		plural := ""
