@@ -77,13 +77,13 @@ type Checksum struct {
 }
 
 // Install installs a plugin from a resource.
-func (m *Manager) Install(resource string, installOpts *InstallOpts) (err error) {
+func (m *Manager) Install(resource string, installOpts *InstallOpts) (plugin *Plugin, err error) {
 	// If it's a remote resource, download it first.
 	m.logger.Infof("Installing plugin from %s...", resource)
 	if strings.HasPrefix(resource, "https://") || strings.HasPrefix(resource, "http://") {
 		installOpts.path, err = m.downloadPlugin(resource, installOpts)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// Remove the downloaded resource from the temp dir at the end of installation.
 		defer m.fs.RemoveAll(filepath.Dir(installOpts.path))
@@ -92,7 +92,7 @@ func (m *Manager) Install(resource string, installOpts *InstallOpts) (err error)
 	}
 
 	if err := m.fs.MkdirAll(m.tempDir(), 0755); err != nil {
-		return err
+		return nil, err
 	}
 
 	// The staging dir is where the plugin will be constructed before eventually getting moved to
@@ -103,22 +103,26 @@ func (m *Manager) Install(resource string, installOpts *InstallOpts) (err error)
 	// See https://groups.google.com/forum/m/#!topic/golang-dev/5w7Jmg_iCJQ.
 	installOpts.stagingDir, err = afero.TempDir(m.fs, m.tempDir(), "dcos-cli")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer m.fs.RemoveAll(installOpts.stagingDir)
 
 	// Build the plugin into the staging directory.
 	err = m.buildPlugin(installOpts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Validate the plugin before installation.
 	err = m.validatePlugin(installOpts)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return m.installPlugin(installOpts)
+	err = m.installPlugin(installOpts)
+	if err != nil {
+		return nil, err
+	}
+	return m.loadPlugin(installOpts.Name)
 }
 
 // SetCluster sets the plugin manager's target cluster.
@@ -334,13 +338,20 @@ func (m *Manager) downloadPlugin(url string, installOpts *InstallOpts) (string, 
 		respReader = resp.Body
 	}
 
-	if installOpts.ProgressBar != nil && resp.ContentLength > 0 {
+	if installOpts.ProgressBar != nil {
 		bar := installOpts.ProgressBar.AddBar(
 			resp.ContentLength,
 			mpb.PrependDecorators(decor.Name(installOpts.Name)),
-			mpb.AppendDecorators(decor.CountersKibiByte("% 6.1f / % 6.1f")),
+			mpb.AppendDecorators(
+				decor.OnComplete(decor.CountersKibiByte("% 6.1f / % 6.1f"), " plugin is now installed"),
+			),
+			mpb.BarClearOnComplete(),
 		)
-		respReader = bar.ProxyReader(respReader)
+		if resp.ContentLength > 0 {
+			respReader = bar.ProxyReader(respReader)
+		} else {
+			respReader = newStreamReader(respReader, bar)
+		}
 	}
 
 	if err := fsutil.CopyReader(m.fs, respReader, downloadedFilePath, 0644); err != nil {
@@ -405,7 +416,11 @@ func (m *Manager) buildPlugin(installOpts *InstallOpts) error {
 		if err := m.fs.MkdirAll(binDir, 0755); err != nil {
 			return err
 		}
-		binPath := filepath.Join(binDir, filepath.Base(installOpts.path))
+		binaryFilename := filepath.Base(installOpts.path)
+		if installOpts.Name != "" {
+			binaryFilename = "dcos-" + installOpts.Name
+		}
+		binPath := filepath.Join(binDir, binaryFilename)
 		err := fsutil.CopyFile(m.fs, installOpts.path, binPath, 0751)
 		if err != nil {
 			return err
@@ -481,4 +496,29 @@ func (m *Manager) httpClient(url string) *httpclient.Client {
 		)
 	}
 	return httpclient.New("", httpOpts...)
+}
+
+// newStreamReader updates the progress bar as it reads from the io.Reader,
+// keeping the total 1 byte ahead of the current progress. When io.EOF is returned,
+// the extra byte is decremented from the total, triggering a bar completed event.
+// It is used to indicate download progress for plugins with unknown Content-Length.
+func newStreamReader(r io.Reader, bar *mpb.Bar) *streamReader {
+	return &streamReader{r, bar, 1}
+}
+
+type streamReader struct {
+	io.Reader
+	bar   *mpb.Bar
+	total int
+}
+
+func (sr *streamReader) Read(p []byte) (n int, err error) {
+	n, err = sr.Reader.Read(p)
+	sr.total += n
+	if err == io.EOF {
+		sr.total--
+	}
+	sr.bar.SetTotal(int64(sr.total), false)
+	sr.bar.IncrBy(n)
+	return
 }
