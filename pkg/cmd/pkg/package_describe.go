@@ -31,7 +31,11 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 		Short: "Get specific details for packages",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pkgDescribe(ctx, args[0], opts)
+			c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))
+			if err != nil {
+				return err
+			}
+			return pkgDescribe(ctx, args[0], opts, c)
 		},
 	}
 	cmd.Flags().BoolVar(&opts.appOnly, "app", false, "Application only")
@@ -46,11 +50,7 @@ func newCmdPackageDescribe(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
-func pkgDescribe(ctx api.Context, packageName string, opts describeOptions) error {
-	c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))
-	if err != nil {
-		return err
-	}
+func pkgDescribe(ctx api.Context, packageName string, opts describeOptions, c cosmos.Client) error {
 	enc := json.NewEncoder(ctx.Out())
 	enc.SetIndent("", "  ")
 	if opts.allVersions {
