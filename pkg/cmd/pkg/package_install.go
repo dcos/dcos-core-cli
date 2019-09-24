@@ -104,56 +104,59 @@ func pkgInstall(ctx api.Context, packageName string, opts pkgInstallOptions) err
 			" see: https://godoc.org/github.com/dcos/client-go/dcos#CosmosPackageCommand")
 	}
 	if opts.cliOnly && !isEmptyCli(pkg.Resource.Cli) {
-		fmt.Fprintf(ctx.ErrOut(), "Installing CLI subcommand for package [%s] version [%s]\n", packageName, pkg.Version)
-		pluginInfo, err := cosmos.CLIPluginInfo(description.Package, pluginutil.HTTPClient("").BaseURL())
+		err := installCliPlugin(ctx, pkg)
 		if err != nil {
-			return fmt.Errorf("cannot get plugin info: %s", err)
+			return err
 		}
-
-		var checksum plugin.Checksum
-		for _, contentHash := range pluginInfo.ContentHash {
-			switch contentHash.Algo {
-			case dcos.SHA256:
-				checksum.Hasher = sha256.New()
-				checksum.Value = contentHash.Value
-			default:
-				fmt.Fprintf(ctx.ErrOut(), "unknown algorithm: %s\n", contentHash.Algo)
-			}
-		}
-
-		cluster, err := ctx.Cluster()
-		if err != nil {
-			return fmt.Errorf("cannot get cluster: %s", err)
-		}
-
-		plugin, err := ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
-			Name:     packageName,
-			Update:   true,
-			Checksum: checksum,
-			PostInstall: func(fs afero.Fs, pluginDir string) error {
-				pkgInfoFilepath := filepath.Join(pluginDir, "package.json")
-				pkgInfoFile, err := fs.OpenFile(pkgInfoFilepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-				if err != nil {
-					return err
-				}
-				defer pkgInfoFile.Close()
-				return json.NewEncoder(pkgInfoFile).Encode(description.Package)
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("cannot install plugin: %s", err)
-		}
-
-		plural := ""
-		cmds := plugin.CommandNames()
-		if len(cmds) > 1 {
-			plural = "s"
-		}
-
-		fmt.Fprintf(ctx.ErrOut(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 	}
 	if opts.appOnly && pkg.PostInstallNotes != "" {
 		fmt.Fprintf(ctx.ErrOut(), "%s\n", pkg.PostInstallNotes)
 	}
+	return nil
+}
+
+func installCliPlugin(ctx api.Context, pkg dcos.CosmosPackage) error {
+	fmt.Fprintf(ctx.ErrOut(), "Installing CLI subcommand for package [%s] version [%s]\n", pkg.Name, pkg.Version)
+	pluginInfo, err := cosmos.CLIPluginInfo(pkg, pluginutil.HTTPClient("").BaseURL())
+	if err != nil {
+		return fmt.Errorf("cannot get plugin info: %s", err)
+	}
+	var checksum plugin.Checksum
+	for _, contentHash := range pluginInfo.ContentHash {
+		switch contentHash.Algo {
+		case dcos.SHA256:
+			checksum.Hasher = sha256.New()
+			checksum.Value = contentHash.Value
+		default:
+			fmt.Fprintf(ctx.ErrOut(), "unknown algorithm: %s\n", contentHash.Algo)
+		}
+	}
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return fmt.Errorf("cannot get cluster: %s", err)
+	}
+	plugin, err := ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
+		Name:     pkg.Name,
+		Update:   true,
+		Checksum: checksum,
+		PostInstall: func(fs afero.Fs, pluginDir string) error {
+			pkgInfoFilepath := filepath.Join(pluginDir, "package.json")
+			pkgInfoFile, err := fs.OpenFile(pkgInfoFilepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			if err != nil {
+				return err
+			}
+			defer pkgInfoFile.Close()
+			return json.NewEncoder(pkgInfoFile).Encode(pkg)
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("cannot install plugin: %s", err)
+	}
+	plural := ""
+	cmds := plugin.CommandNames()
+	if len(cmds) > 1 {
+		plural = "s"
+	}
+	fmt.Fprintf(ctx.ErrOut(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
 	return nil
 }
