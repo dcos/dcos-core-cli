@@ -4,10 +4,7 @@
 
 package sse
 
-import (
-	"strconv"
-	"time"
-)
+import "strconv"
 
 // EventLog holds all of previous events
 type EventLog []*Event
@@ -15,7 +12,6 @@ type EventLog []*Event
 // Add event to eventlog
 func (e *EventLog) Add(ev *Event) {
 	ev.ID = []byte(e.currentindex())
-	ev.timestamp = time.Now()
 	(*e) = append((*e), ev)
 }
 

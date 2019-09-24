@@ -8,16 +8,14 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"time"
 )
 
 // Event holds all of the event source fields
 type Event struct {
-	ID        []byte
-	Data      []byte
-	Event     []byte
-	Retry     []byte
-	timestamp time.Time
+	ID    []byte
+	Data  []byte
+	Event []byte
+	Retry []byte
 }
 
 // EventStreamReader scans an io.Reader looking for EventStream messages.
