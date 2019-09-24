@@ -230,7 +230,7 @@ def test_bad_install_helloworld_msg():
         # Uncomment after DCOS_OSS-5539
         # b'Installing CLI subcommand for package [helloworld] '
         # b'version [0.1.0]\n'
-        # b'New command available: dcos ' +
+        # b'New commands available: ' +
         # _executable_name(b'helloworld') +
         b'A sample post-installation message\n'
     )
@@ -267,7 +267,7 @@ def test_uninstall_cli_only_when_no_apps_remain():
             b'[0.1.0]\n'
             b'Installing CLI subcommand for package [helloworld] '
             b'version [0.1.0]\n'
-            b'New command available: dcos ' +
+            b'New commands available: ' +
             _executable_name(b'helloworld') +
             b'\nA sample post-installation message\n'
         )
@@ -332,7 +332,7 @@ def test_install_specific_version():
         # Uncomment after DCOS_OSS-5539
         # b'Installing CLI subcommand '
         # b'for package [helloworld] version [0.1.0]\n'
-        # b'New command available: dcos ' +
+        # b'New commands available: ' +
         # _executable_name(b'helloworld') +
         b'A sample post-installation message\n'
     )
@@ -571,7 +571,7 @@ def test_install_yes():
                 # Uncomment after DCOS_OSS-5539
                 # b'Installing CLI subcommand for package [helloworld] '
                 # b'version [0.1.0]\n'
-                # b'New command available: dcos ' +
+                # b'New commands available: ' +
                 # _executable_name(b'helloworld') +
                 b'A sample post-installation message\n'
             )
@@ -620,7 +620,7 @@ def test_list_cli():
         b'catalog-terms-conditions/#community-services\n'
         b"Installing CLI subcommand for package [helloworld] " +
         b"version [0.1.0]\n"
-        b"New command available: dcos " +
+        b"New commands available: " +
         _executable_name(b'helloworld') +
         b"\n"
     )
@@ -819,7 +819,7 @@ def _install_helloworld(
             # Uncomment after resolving DCOS_OSS-5539
             # b'Installing CLI subcommand for package [helloworld] '
             # b'version [0.1.0]\n'
-            # b'New command available: dcos ' +
+            # b'New commands available: ' +
             # _executable_name(b'helloworld') +
             b'\nA sample post-installation message\n'
         ),
@@ -900,7 +900,7 @@ def _list(args, stdout):
 HELLOWORLD_CLI_STDOUT = (
     b'Installing CLI subcommand for package [helloworld] '
     b'version [0.1.0]\n'
-    b'New command available: dcos ' +
+    b'New commands available: ' +
     _executable_name(b'helloworld') + b'\n'
 )
 

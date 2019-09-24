@@ -135,7 +135,7 @@ func installCliPlugin(ctx api.Context, pkg dcos.CosmosPackage) error {
 	if err != nil {
 		return fmt.Errorf("cannot get cluster: %s", err)
 	}
-	plugin, err := ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
+	p, err := ctx.PluginManager(cluster).Install(pluginInfo.Url, &plugin.InstallOpts{
 		Name:     pkg.Name,
 		Update:   true,
 		Checksum: checksum,
@@ -152,11 +152,7 @@ func installCliPlugin(ctx api.Context, pkg dcos.CosmosPackage) error {
 	if err != nil {
 		return fmt.Errorf("cannot install plugin: %s", err)
 	}
-	plural := ""
-	cmds := plugin.CommandNames()
-	if len(cmds) > 1 {
-		plural = "s"
-	}
-	fmt.Fprintf(ctx.ErrOut(), "New command%s available: dcos %s\n", plural, strings.Join(cmds, ", "))
+
+	fmt.Fprintf(ctx.ErrOut(), "New commands available: %s\n", strings.Join(p.CommandNames(), ", "))
 	return nil
 }
