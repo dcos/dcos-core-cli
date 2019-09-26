@@ -149,8 +149,8 @@ func TestDeleteWithEmptyID(t *testing.T) {
 	err := c.Delete("")
 	assert.Error(t, err)
 	httpError, ok := err.(*httpclient.HTTPError)
-	assert.True(t, ok, "unexpected error: %#v", err)
-	assert.NotNil(t, httpError.Response)
+	require.True(t, ok, "unexpected error: %#v", err)
+	require.NotNil(t, httpError.Response)
 	assert.Equal(t, httpError.Response.StatusCode, http.StatusMethodNotAllowed)
 	assert.Equal(t, "HTTP 405 error", httpError.Error())
 }
@@ -216,8 +216,8 @@ func TestCreateServerError(t *testing.T) {
 	assert.Empty(t, id)
 
 	httpError, ok := err.(*httpclient.HTTPError)
-	assert.True(t, ok, "unexpected error: %#v", err)
-	assert.NotNil(t, httpError.Response)
+	require.True(t, ok, "unexpected error: %#v", err)
+	require.NotNil(t, httpError.Response)
 	assert.Equal(t, httpError.Response.StatusCode, 500)
 	assert.Equal(t, "HTTP 500 error", httpError.Error())
 }
