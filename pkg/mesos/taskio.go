@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"sync"
@@ -77,6 +78,11 @@ func NewTaskIO(containerID mesos.ContainerID, opts TaskIOOpts) (*TaskIO, error) 
 	}
 	if opts.Stderr == nil {
 		opts.Stderr = os.Stderr
+	}
+	if opts.Logger == nil {
+		logger := logrus.New()
+		logger.Out = ioutil.Discard
+		opts.Logger = logger
 	}
 	if opts.HeartbeatInterval == 0 {
 		opts.HeartbeatInterval = defaultHeartbeatInterval
