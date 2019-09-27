@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_pkgDescribe(t *testing.T) {
+func TesPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
@@ -75,7 +75,7 @@ func Test_pkgDescribe(t *testing.T) {
 	}
 }
 
-func Test_pkgDescribe_cli_only(t *testing.T) {
+func TestPkgDescribeShouldDetectIfPackageSupportsCli(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
@@ -122,7 +122,7 @@ func Test_pkgDescribe_cli_only(t *testing.T) {
 	}
 }
 
-func Test_pkgDescribe_cosmos_render_error(t *testing.T) {
+func TestPkgDescribeShouldReturnCosmosErrorOnRender(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
@@ -142,7 +142,7 @@ func Test_pkgDescribe_cosmos_render_error(t *testing.T) {
 	assert.Empty(t, string(out.Bytes()))
 }
 
-func Test_pkgDescribe_cosmos_error(t *testing.T) {
+func TestPkgDescribeShouldReturnCosmosErrorWhenCosmosFails(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
@@ -179,7 +179,7 @@ func Test_pkgDescribe_cosmos_error(t *testing.T) {
 	}
 }
 
-func Test_pkgDescribe_error_on_decode_base64(t *testing.T) {
+func TestPkgDescribeShouldReturnErrorWhenUnableToDecodeMarathonConfiguration(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
