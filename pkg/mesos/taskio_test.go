@@ -185,6 +185,34 @@ func TestExec(t *testing.T) {
 	assert.Equal(t, 10, exitCode)
 }
 
+func TestLaunchNestedContainerSessionCall(t *testing.T) {
+	containerID := mesos.ContainerID{
+		Value: "my_container",
+	}
+
+	opts := TaskIOOpts{
+		User: "mario",
+		TTY:  true,
+	}
+
+	taskIO, err := NewTaskIO(containerID, opts)
+	require.NoError(t, err)
+
+	call := taskIO.launchNestedContainerSessionCall("exit", "10")
+
+	// ContainerID
+	assert.Equal(t, "my_container", call.LaunchNestedContainerSession.ContainerID.Parent.Value)
+
+	// Command
+	assert.Equal(t, &opts.User, call.LaunchNestedContainerSession.Command.User)
+	assert.Equal(t, "exit", *call.LaunchNestedContainerSession.Command.Value)
+	assert.Equal(t, []string{"exit", "10"}, call.LaunchNestedContainerSession.Command.Arguments)
+
+	// Container
+	assert.Equal(t, mesos.ContainerInfo_MESOS.Enum(), call.LaunchNestedContainerSession.Container.Type)
+	assert.NotNil(t, &opts.User, call.LaunchNestedContainerSession.Container.TTYInfo)
+}
+
 func processIOData(kind agent.ProcessIO_Data_Type, data []byte) agent.ProcessIO {
 	return agent.ProcessIO{
 		Type: agent.ProcessIO_DATA,
