@@ -1,0 +1,37 @@
+{
+  "package": {
+    "command": {},
+    "config": {
+      "foo": "bar"
+    },
+    "description": "Package stub with only required fields",
+    "maintainer": "John Doe",
+    "marathon": {
+      "v2AppMustacheTemplate": "ewogICAgImlkIjogInt7aGVsbG93b3JsZC5pZH19IiwKICAgICJjbWQiOiAiZWNobyAnSGVsbG8gV29ybGQnIgp9"
+    },
+    "name": "helloworld",
+    "packagingVersion": "0.0.1",
+    "releaseVersion": 9223372036854775807,
+    "resource": {
+      "assets": {
+        "container": {}
+      },
+      "cli": {
+        "binaries": {
+          "darwin": {
+            "x86-64": {}
+          },
+          "linux": {
+            "x86-64": {}
+          },
+          "windows": {
+            "x86-64": {}
+          }
+        }
+      },
+      "images": {}
+    },
+    "version": "0.0.2",
+    "manager": {}
+  }
+}

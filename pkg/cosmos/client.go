@@ -18,13 +18,26 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 )
 
-// Client is a diagnostics client for DC/OS.
-type Client struct {
+// Client is a Cosmos client abstraction
+type Client interface {
+	PackageDescribe(name string, version string) (*Description, error)
+	PackageList() ([]Package, error)
+	PackageListVersions(name string) ([]string, error)
+	PackageRender(appID string, name string, version string, optionsPath string) (map[string]interface{}, error)
+	PackageSearch(query string) (*SearchResult, error)
+	PackageAddRepo(name string, uri string, index *int) ([]dcos.CosmosPackageRepo, error)
+	PackageDeleteRepo(name string) error
+	PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error)
+	PackageInstall(appID string, name string, version string, optionsPath string) error
+	PackageUninstall(packageName string, all bool, appID string) (*dcos.CosmosPackageUninstallV1Response, error)
+}
+
+type client struct {
 	cosmos *dcos.CosmosApiService
 }
 
 // NewClient creates a new Cosmos client.
-func NewClient(ctx api.Context, baseClient *httpclient.Client) (*Client, error) {
+func NewClient(ctx api.Context, baseClient *httpclient.Client) (Client, error) {
 	dcosConfigStore := dcos.NewConfigStore(&dcos.ConfigStoreOpts{
 		Fs: ctx.Fs(),
 	})
@@ -36,13 +49,13 @@ func NewClient(ctx api.Context, baseClient *httpclient.Client) (*Client, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+	return &client{
 		cosmos: dcosClient.Cosmos,
 	}, nil
 }
 
 // PackageDescribe returns the content of '/package/describe'.
-func (c *Client) PackageDescribe(name string, version string) (*Description, error) {
+func (c *client) PackageDescribe(name string, version string) (*Description, error) {
 	desc, _, err := c.cosmos.PackageDescribe(context.TODO(), &dcos.PackageDescribeOpts{
 		CosmosPackageDescribeV1Request: optional.NewInterface(dcos.CosmosPackageDescribeV1Request{
 			PackageName:    name,
@@ -60,7 +73,7 @@ func (c *Client) PackageDescribe(name string, version string) (*Description, err
 }
 
 // PackageList returns the packages installed in a cluster.
-func (c *Client) PackageList() ([]Package, error) {
+func (c *client) PackageList() ([]Package, error) {
 	desc, _, err := c.cosmos.PackageList(context.TODO(), &dcos.PackageListOpts{
 		CosmosPackageListV1Request: optional.NewInterface(dcos.CosmosPackageListV1Request{})})
 	if err != nil {
@@ -108,7 +121,7 @@ func (c *Client) PackageList() ([]Package, error) {
 }
 
 // PackageListVersions returns the versions of a package.
-func (c *Client) PackageListVersions(name string) ([]string, error) {
+func (c *client) PackageListVersions(name string) ([]string, error) {
 	list, _, err := c.cosmos.PackageListVersions(context.TODO(), dcos.CosmosPackageListVersionsV1Request{
 		PackageName:            name,
 		IncludePackageVersions: true,
@@ -129,7 +142,7 @@ func (c *Client) PackageListVersions(name string) ([]string, error) {
 }
 
 // PackageRender returns a rendered package.
-func (c *Client) PackageRender(appID string, name string, version string, optionsPath string) (map[string]interface{}, error) {
+func (c *client) PackageRender(appID string, name string, version string, optionsPath string) (map[string]interface{}, error) {
 	var optionsInterface map[string]interface{}
 	if optionsPath != "" {
 		options, err := ioutil.ReadFile(optionsPath)
@@ -160,7 +173,7 @@ func (c *Client) PackageRender(appID string, name string, version string, option
 }
 
 // PackageInstall installs package
-func (c *Client) PackageInstall(appID string, name string, version string, optionsPath string) error {
+func (c *client) PackageInstall(appID string, name string, version string, optionsPath string) error {
 	var optionsInterface map[string]interface{}
 	if optionsPath != "" {
 		options, err := ioutil.ReadFile(optionsPath)
@@ -184,7 +197,7 @@ func (c *Client) PackageInstall(appID string, name string, version string, optio
 }
 
 // PackageSearch returns the packages found using the given query.
-func (c *Client) PackageSearch(query string) (*SearchResult, error) {
+func (c *client) PackageSearch(query string) (*SearchResult, error) {
 	desc, _, err := c.cosmos.PackageSearch(context.TODO(), dcos.CosmosPackageSearchV1Request{Query: query})
 	if err != nil {
 		return nil, err
@@ -197,7 +210,7 @@ func (c *Client) PackageSearch(query string) (*SearchResult, error) {
 }
 
 // PackageAddRepo adds a package repository.
-func (c *Client) PackageAddRepo(name string, uri string, index *int) ([]dcos.CosmosPackageRepo, error) {
+func (c *client) PackageAddRepo(name string, uri string, index *int) ([]dcos.CosmosPackageRepo, error) {
 	addRepoRequest := dcos.CosmosPackageAddRepoV1Request{
 		Name: name,
 		Uri:  uri,
@@ -218,7 +231,7 @@ func (c *Client) PackageAddRepo(name string, uri string, index *int) ([]dcos.Cos
 }
 
 // PackageDeleteRepo deletes a package repository.
-func (c *Client) PackageDeleteRepo(name string) error {
+func (c *client) PackageDeleteRepo(name string) error {
 	_, _, err := c.cosmos.PackageRepositoryDelete(context.TODO(), &dcos.PackageRepositoryDeleteOpts{
 		CosmosPackageDeleteRepoV1Request: optional.NewInterface(dcos.CosmosPackageDeleteRepoV1Request{
 			Name: name,
@@ -229,7 +242,7 @@ func (c *Client) PackageDeleteRepo(name string) error {
 }
 
 // PackageListRepo returns a list of package repositories.
-func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error) {
+func (c *client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error) {
 	desc, _, err := c.cosmos.PackageRepositoryList(context.TODO(), nil)
 	if err != nil {
 		return nil, cosmosErrUnwrap(err)
@@ -238,7 +251,7 @@ func (c *Client) PackageListRepo() (*dcos.CosmosPackageListRepoV1Response, error
 }
 
 // PackageUninstall uninstalls the given package/appID from the cluster
-func (c *Client) PackageUninstall(packageName string, all bool, appID string) (*dcos.CosmosPackageUninstallV1Response, error) {
+func (c *client) PackageUninstall(packageName string, all bool, appID string) (*dcos.CosmosPackageUninstallV1Response, error) {
 	reqParams := dcos.CosmosPackageUninstallV1Request{
 		All:         all,
 		AppId:       appID,

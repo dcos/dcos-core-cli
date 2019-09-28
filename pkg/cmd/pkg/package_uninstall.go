@@ -127,7 +127,7 @@ func removeCLI(ctx api.Context, packageName string) error {
 	return manager.Remove(packageName)
 }
 
-func packageInstallCount(c *cosmos.Client, packageName string) (int, error) {
+func packageInstallCount(c cosmos.Client, packageName string) (int, error) {
 	packages, err := c.PackageList()
 	if err != nil {
 		return 0, err
