@@ -28,7 +28,7 @@ func TestJob(t *testing.T) {
 
 	job, err := c.Job("test-job")
 	require.NoError(t, err)
-	require.Equal(t, &expectedJob, job)
+	assert.Equal(t, &expectedJob, job)
 }
 
 func TestJobs(t *testing.T) {
@@ -58,7 +58,7 @@ func TestJobs(t *testing.T) {
 
 	jobs, err := c.Jobs()
 	require.NoError(t, err)
-	require.Equal(t, expectedJobs, jobs)
+	assert.Equal(t, expectedJobs, jobs)
 }
 
 func TestAddJob(t *testing.T) {
@@ -82,7 +82,7 @@ func TestAddJob(t *testing.T) {
 
 	job, err := c.AddJob(&expectedJob)
 	require.NoError(t, err)
-	require.Equal(t, &expectedJob, job)
+	assert.Equal(t, &expectedJob, job)
 }
 
 func TestUpdateJob(t *testing.T) {
@@ -106,7 +106,7 @@ func TestUpdateJob(t *testing.T) {
 
 	job, err := c.UpdateJob(&expectedJob)
 	require.NoError(t, err)
-	require.Equal(t, &expectedJob, job)
+	assert.Equal(t, &expectedJob, job)
 }
 
 func TestRunJob(t *testing.T) {
@@ -127,7 +127,7 @@ func TestRunJob(t *testing.T) {
 
 	run, err := c.RunJob("test-job")
 	require.NoError(t, err)
-	require.Equal(t, &expectedRun, run)
+	assert.Equal(t, &expectedRun, run)
 }
 
 func TestRun(t *testing.T) {
@@ -147,7 +147,7 @@ func TestRun(t *testing.T) {
 
 	run, err := c.Run("test-job", "20190307204634kC8Rs")
 	require.NoError(t, err)
-	require.Equal(t, &expectedRun, run)
+	assert.Equal(t, &expectedRun, run)
 }
 
 func TestRuns(t *testing.T) {
@@ -174,7 +174,7 @@ func TestRuns(t *testing.T) {
 
 	runs, err := c.Runs("test-job")
 	require.NoError(t, err)
-	require.Equal(t, expectedRuns, runs)
+	assert.Equal(t, expectedRuns, runs)
 }
 
 func TestKill(t *testing.T) {
@@ -231,7 +231,7 @@ func TestSchedules(t *testing.T) {
 
 	schedules, err := c.Schedules("test-job")
 	require.NoError(t, err)
-	require.Equal(t, expectedSchedules, schedules)
+	assert.Equal(t, expectedSchedules, schedules)
 }
 
 func TestAddSchedule(t *testing.T) {
@@ -255,7 +255,7 @@ func TestAddSchedule(t *testing.T) {
 
 	schedule, err := c.AddSchedule("test-job", &expectedSchedule)
 	require.NoError(t, err)
-	require.Equal(t, &expectedSchedule, schedule)
+	assert.Equal(t, &expectedSchedule, schedule)
 }
 
 func TestUpdateSchedule(t *testing.T) {
@@ -279,7 +279,7 @@ func TestUpdateSchedule(t *testing.T) {
 
 	schedule, err := c.UpdateSchedule("test-job", &expectedSchedule)
 	require.NoError(t, err)
-	require.Equal(t, &expectedSchedule, schedule)
+	assert.Equal(t, &expectedSchedule, schedule)
 }
 
 func TestRemoveSchedule(t *testing.T) {
@@ -312,12 +312,12 @@ func TestQueued(t *testing.T) {
 
 	q1, err := c.Queued("")
 	require.NoError(t, err)
-	require.Equal(t, expectedQueues, q1)
+	assert.Equal(t, expectedQueues, q1)
 
 	q2, err := c.Queued("test-job")
 	require.NoError(t, err)
-	require.Equal(t, expectedQueues, q2)
+	assert.Equal(t, expectedQueues, q2)
 
 	_, err = c.Queued("not-existing-job")
-	require.Errorf(t, err, `job "not-existing-job" does not exist`)
+	assert.Errorf(t, err, `job "not-existing-job" does not exist`)
 }
