@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseJSONJob(t *testing.T) {
@@ -28,17 +29,17 @@ func TestParseJSONJob(t *testing.T) {
 	job, err := parseJSONJob(reader)
 	require.NoError(t, err)
 
-	require.Equal(t, "sleepy-test-docker", job.ID)
-	require.Equal(t, "A job that sleeps", job.Description)
+	assert.Equal(t, "sleepy-test-docker", job.ID)
+	assert.Equal(t, "A job that sleeps", job.Description)
 
 	// Run
-	require.Equal(t, "echo 'Snoozing ...'; sleep 10; echo 'Awake now!'", job.Run.Cmd)
-	require.Equal(t, float32(2), job.Run.Cpus)
-	require.Equal(t, 32, job.Run.Mem)
-	require.Equal(t, 10, job.Run.Disk)
+	assert.Equal(t, "echo 'Snoozing ...'; sleep 10; echo 'Awake now!'", job.Run.Cmd)
+	assert.Equal(t, float32(2), job.Run.Cpus)
+	assert.Equal(t, 32, job.Run.Mem)
+	assert.Equal(t, 10, job.Run.Disk)
 
 	// Docker
-	require.Equal(t, "alpine:latest", job.Run.Docker.Image)
-	require.True(t, job.Run.Docker.ForcePullImage)
-	require.True(t, job.Run.Docker.Privileged)
+	assert.Equal(t, "alpine:latest", job.Run.Docker.Image)
+	assert.True(t, job.Run.Docker.ForcePullImage)
+	assert.True(t, job.Run.Docker.Privileged)
 }

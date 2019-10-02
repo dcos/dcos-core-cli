@@ -3,7 +3,7 @@ package mesos
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIP(t *testing.T) {
@@ -12,5 +12,5 @@ func TestIP(t *testing.T) {
 
 	slaveIP := slave.IP()
 
-	require.Equal(t, slaveIP, "172.31.15.225")
+	assert.Equal(t, slaveIP, "172.31.15.225")
 }
