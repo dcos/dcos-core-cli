@@ -125,10 +125,10 @@ func TestPrintComponent(t *testing.T) {
 		switch fixture.format {
 		case "json", "json-pretty":
 			var entry JournalctlJSONEntry
-			require.NoError(t, json.Unmarshal([]byte(b.String()), &entry))
-			require.Equal(t, entry, infoEntry.JournalctlJSON())
+			assert.NoError(t, json.Unmarshal([]byte(b.String()), &entry))
+			assert.Equal(t, entry, infoEntry.JournalctlJSON())
 		default:
-			require.Equal(t, fixture.expectedOutput, b.String())
+			assert.Equal(t, fixture.expectedOutput, b.String())
 		}
 
 		ts.Close()
@@ -199,7 +199,7 @@ func TestPrintTask(t *testing.T) {
 		err := c.PrintTask(fixture.task, fixture.file, opts)
 		require.NoError(t, err)
 
-		require.Equal(t, fixture.expectedOutput, b.String())
+		assert.Equal(t, fixture.expectedOutput, b.String())
 
 		ts.Close()
 	}

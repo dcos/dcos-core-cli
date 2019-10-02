@@ -40,5 +40,5 @@ func TestNode(t *testing.T) {
 
 	node, err := c.Node("mesosID")
 	require.NoError(t, err)
-	require.Equal(t, &expectedNode, node)
+	assert.Equal(t, &expectedNode, node)
 }

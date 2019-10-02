@@ -33,7 +33,7 @@ func TestHosts(t *testing.T) {
 
 	hosts, err := c.Hosts("8.8.8.8")
 	require.NoError(t, err)
-	require.Equal(t, expectedHosts, hosts)
+	assert.Equal(t, expectedHosts, hosts)
 }
 
 func TestLeader(t *testing.T) {
@@ -55,7 +55,7 @@ func TestLeader(t *testing.T) {
 
 	leader, err := c.Leader()
 	require.NoError(t, err)
-	require.Equal(t, &expectedHosts[0], leader)
+	assert.Equal(t, &expectedHosts[0], leader)
 }
 
 func TestMasters(t *testing.T) {
@@ -77,7 +77,7 @@ func TestMasters(t *testing.T) {
 
 	masters, err := c.Masters()
 	require.NoError(t, err)
-	require.Equal(t, expectedHosts, masters)
+	assert.Equal(t, expectedHosts, masters)
 }
 
 func TestState(t *testing.T) {
@@ -99,7 +99,7 @@ func TestState(t *testing.T) {
 
 	s, err := c.State()
 	require.NoError(t, err)
-	require.Equal(t, &expectedState, s)
+	assert.Equal(t, &expectedState, s)
 }
 
 func TestStateSummary(t *testing.T) {
@@ -126,9 +126,9 @@ func TestStateSummary(t *testing.T) {
 
 	ss, err := c.StateSummary()
 	require.NoError(t, err)
-	require.Equal(t, expectedState.Hostname, ss.Hostname)
-	require.Equal(t, expectedState.Cluster, ss.Cluster)
-	require.Equal(t, expectedState.Slaves, ss.Slaves)
+	assert.Equal(t, expectedState.Hostname, ss.Hostname)
+	assert.Equal(t, expectedState.Cluster, ss.Cluster)
+	assert.Equal(t, expectedState.Slaves, ss.Slaves)
 }
 
 func TestAgents(t *testing.T) {
@@ -160,7 +160,7 @@ func TestAgents(t *testing.T) {
 
 	agents, err := c.Agents()
 	require.NoError(t, err)
-	require.Equal(t, expectedAgents.GetAgents.Agents, agents)
+	assert.Equal(t, expectedAgents.GetAgents.Agents, agents)
 }
 
 func TestMarkAgentGone(t *testing.T) {

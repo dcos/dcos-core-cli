@@ -33,5 +33,5 @@ func TestNodes(t *testing.T) {
 
 	nodes, err := c.Nodes()
 	require.NoError(t, err)
-	require.Equal(t, expectedNodes, nodes)
+	assert.Equal(t, expectedNodes, nodes)
 }
