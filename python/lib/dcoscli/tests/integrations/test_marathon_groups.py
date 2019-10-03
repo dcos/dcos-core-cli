@@ -35,6 +35,11 @@ def test_add_existing_group():
                            stdin=fd)
 
 
+def test_add_non_root_group_from_stdin():
+    _add_group_by_stdin('tests/data/marathon/groups/simple.json')
+    remove_group('/x')
+
+
 def test_add_bad_complicated_group():
     with open('tests/data/marathon/groups/complicated_bad.json') as fd:
         returncode, stdout, stderr = exec_command(
