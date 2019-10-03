@@ -36,7 +36,10 @@ def test_add_existing_group():
 
 
 def test_add_non_root_group_from_stdin():
+    # For: https://jira.mesosphere.com/browse/DCOS-59486
+    # Try to deploy nested non top level group /x/y
     _add_group_by_stdin('tests/data/marathon/groups/simple.json')
+    # When everything is OK cleanup the test
     remove_group('/x')
 
 
