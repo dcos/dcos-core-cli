@@ -10,14 +10,23 @@ import (
 )
 
 func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
-	opts := diagnostics.Options{}
+	var masters bool
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a diagnostics bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := pluginutil.HTTPClient("")
 			client := diagnostics.NewClient(c)
-
+			opts := diagnostics.Options{
+				Masters: true,
+				Agents:  true,
+			}
+			if masters {
+				opts = diagnostics.Options{
+					Masters: true,
+					Agents:  false,
+				}
+			}
 			id, err := client.Create(opts)
 			if err != nil {
 				return err
@@ -27,8 +36,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().BoolVar(&opts.Masters, "masters", true, "Enable bundle collection on masters")
-	cmd.Flags().BoolVar(&opts.Agents, "agents", true, "Enable bundle collection on agents")
+	cmd.Flags().BoolVar(&masters, "masters", true, "Collect data from masters only")
 
 	return cmd
 }
