@@ -198,7 +198,7 @@ func TestCreateHappyPath(t *testing.T) {
 	defer ts.Close()
 
 	c := NewClient(pluginutil.HTTPClient(ts.URL))
-	id, err := c.Create()
+	id, err := c.Create(Options{})
 	assert.NoError(t, err)
 
 	assert.Equal(t, newID.String(), id)
@@ -211,7 +211,7 @@ func TestCreateServerError(t *testing.T) {
 	defer ts.Close()
 
 	c := NewClient(pluginutil.HTTPClient(ts.URL))
-	id, err := c.Create()
+	id, err := c.Create(Options{})
 	assert.Error(t, err)
 	assert.Empty(t, id)
 
