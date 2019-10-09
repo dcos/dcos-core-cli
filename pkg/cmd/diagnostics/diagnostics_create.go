@@ -10,7 +10,7 @@ import (
 )
 
 func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
-	var masters bool
+	var mastersOnly bool
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a diagnostics bundle",
@@ -19,13 +19,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			client := diagnostics.NewClient(c)
 			opts := diagnostics.Options{
 				Masters: true,
-				Agents:  true,
-			}
-			if masters {
-				opts = diagnostics.Options{
-					Masters: true,
-					Agents:  false,
-				}
+				Agents:  !mastersOnly,
 			}
 			id, err := client.Create(opts)
 			if err != nil {
@@ -36,7 +30,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().BoolVar(&masters, "masters", true, "Collect data from masters only")
+	cmd.Flags().BoolVar(&mastersOnly, "masters", false, "Collect data from masters only")
 
 	return cmd
 }

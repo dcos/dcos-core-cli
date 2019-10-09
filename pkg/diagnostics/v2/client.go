@@ -96,7 +96,7 @@ func (c *Client) Download(id string, dst io.Writer) error {
 func (c *Client) Create(options Options) (string, error) {
 	opts, err := json.Marshal(options)
 	if err != nil {
-		return "", fmt.Errorf("could not marashal options: %s", opts)
+		return "", fmt.Errorf("could not marshal options: %s", opts)
 	}
 	req, err := c.http.NewRequest("PUT",
 		fmt.Sprintf("%s/%s", baseURL, uuid.NewV4().String()),
