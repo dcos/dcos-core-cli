@@ -210,8 +210,8 @@ func TestCreateHappyPath(t *testing.T) {
 	}{
 		{expected: `{"masters":false,"agents":false}`, given: Options{}},
 		{expected: `{"masters":true,"agents":false}`, given: Options{Masters: true}},
-		{expected: `{"masters":false,"agents":true}`, given: Options{Agents:true}},
-		{expected: `{"masters":true,"agents":true}`, given: Options{Masters: true, Agents:true}},
+		{expected: `{"masters":false,"agents":true}`, given: Options{Agents: true}},
+		{expected: `{"masters":true,"agents":true}`, given: Options{Masters: true, Agents: true}},
 	} {
 		t.Run(tc.expected, func(t *testing.T) {
 			ts := httptest.NewServer(handler(t, tc.expected))

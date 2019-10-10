@@ -19,7 +19,7 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			client := diagnostics.NewClient(c)
 			opts := diagnostics.Options{
 				Masters: masters || !masters && !agents,
-				Agents: agents || !masters && !agents,
+				Agents:  agents || !masters && !agents,
 			}
 			id, err := client.Create(opts)
 			if err != nil {
