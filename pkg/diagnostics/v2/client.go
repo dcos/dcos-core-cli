@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,12 @@ type Bundle struct {
 	Started time.Time `json:"started_at,omitempty"`
 	Stopped time.Time `json:"stopped_at,omitempty"`
 	Errors  []string  `json:"errors,omitempty"`
+}
+
+// Options represents a bundle creation options passed to the diagnostics Create API
+type Options struct {
+	Masters bool `json:"masters"`
+	Agents  bool `json:"agents"`
 }
 
 // IsFinished returns if the bundle has a status that indicating that it is finished.
@@ -86,8 +93,15 @@ func (c *Client) Download(id string, dst io.Writer) error {
 }
 
 // Create creates a new cluster bundle and returns its ID.
-func (c *Client) Create() (string, error) {
-	req, err := c.http.NewRequest("PUT", fmt.Sprintf("%s/%s", baseURL, uuid.NewV4().String()), nil)
+func (c *Client) Create(options Options) (string, error) {
+	opts, err := json.Marshal(options)
+	if err != nil {
+		return "", fmt.Errorf("could not marshal options: %s", opts)
+	}
+	req, err := c.http.NewRequest("PUT",
+		fmt.Sprintf("%s/%s", baseURL, uuid.NewV4().String()),
+		bytes.NewBuffer(opts),
+	)
 	if err != nil {
 		return "", err
 	}

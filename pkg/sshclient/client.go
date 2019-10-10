@@ -106,7 +106,7 @@ func (c *Client) Run(command []string) error {
 	}
 
 	args := append(c.args, command...)
-	cmd := exec.Command(c.opts.BinaryPath, args...)
+	cmd := exec.Command(c.opts.BinaryPath, args...) // nolint: gosec
 	c.logger.Debugf("Running: %v\n", cmd.Args)
 
 	cmd.Stdin = c.opts.Input

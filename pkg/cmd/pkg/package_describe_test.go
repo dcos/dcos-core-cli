@@ -3,12 +3,13 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"github.com/dcos/client-go/dcos"
-	"github.com/dcos/dcos-core-cli/pkg/cosmos"
-	"github.com/dcos/dcos-core-cli/pkg/cosmos/mocks"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/dcos/client-go/dcos"
+	"github.com/dcos/dcos-core-cli/pkg/cosmos"
+	"github.com/dcos/dcos-core-cli/pkg/cosmos/mocks"
 
 	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/spf13/afero"
@@ -35,8 +36,7 @@ func TesPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
 			ReleaseVersion:   9223372036854775807,
 			Version:          "0.0.2",
 			Marathon: dcos.CosmosPackageMarathon{
-				V2AppMustacheTemplate:
-				"ewogICAgImlkIjogInt7aGVsbG93b3JsZC5pZH19IiwKICAgICJjbWQiOiAiZWNobyAnSGVsbG8gV29ybGQnIgp9",
+				V2AppMustacheTemplate: "ewogICAgImlkIjogInt7aGVsbG93b3JsZC5pZH19IiwKICAgICJjbWQiOiAiZWNobyAnSGVsbG8gV29ybGQnIgp9",
 			},
 			Config: map[string]interface{}{
 				"foo": "bar",
