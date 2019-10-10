@@ -185,23 +185,43 @@ func TestDeleteWithDeletedBundle(t *testing.T) {
 
 func TestCreateHappyPath(t *testing.T) {
 	var newID uuid.UUID
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		re := regexp.MustCompile("^/system/health/v1/diagnostics/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
-		urlMatch := re.FindStringSubmatch(r.URL.Path)
-		idMatch := urlMatch[1]
-		var err error
-		newID, err = uuid.FromString(idMatch)
-		assert.NoError(t, err)
-		assert.Equal(t, "PUT", r.Method)
-		fmt.Fprint(w, fmt.Sprintf(`{"id":"%s","status":"Started","started_at":"2019-08-19T08:07:24.404239211Z","stopped_at":"0001-01-01T00:00:00Z"}`, newID))
-	}))
-	defer ts.Close()
+	re := regexp.MustCompile("^/system/health/v1/diagnostics/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
+	handler := func(t *testing.T, expectedBody string) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			urlMatch := re.FindStringSubmatch(r.URL.Path)
+			idMatch := urlMatch[1]
+			var err error
+			newID, err = uuid.FromString(idMatch)
+			body, err := ioutil.ReadAll(r.Body)
 
-	c := NewClient(pluginutil.HTTPClient(ts.URL))
-	id, err := c.Create()
-	assert.NoError(t, err)
+			assert.NoError(t, err)
+			assert.Equal(t, "PUT", r.Method)
+			assert.NoError(t, err)
+			assert.Equal(t, expectedBody, string(body))
 
-	assert.Equal(t, newID.String(), id)
+			_, err = fmt.Fprint(w, fmt.Sprintf(`{"id":"%s","status":"Started","started_at":"2019-08-19T08:07:24.404239211Z","stopped_at":"0001-01-01T00:00:00Z"}`, newID))
+			assert.NoError(t, err)
+		})
+	}
+
+	for _, tc := range []struct {
+		expected string
+		given    Options
+	}{
+		{expected: `{"masters":false,"agents":false}`, given: Options{}},
+		{expected: `{"masters":true,"agents":false}`, given: Options{Masters: true}},
+		{expected: `{"masters":false,"agents":true}`, given: Options{Agents: true}},
+		{expected: `{"masters":true,"agents":true}`, given: Options{Masters: true, Agents: true}},
+	} {
+		t.Run(tc.expected, func(t *testing.T) {
+			ts := httptest.NewServer(handler(t, tc.expected))
+			defer ts.Close()
+			c := NewClient(pluginutil.HTTPClient(ts.URL))
+			id, err := c.Create(tc.given)
+			assert.NoError(t, err)
+			assert.Equal(t, newID.String(), id)
+		})
+	}
 }
 
 func TestCreateServerError(t *testing.T) {
@@ -211,7 +231,7 @@ func TestCreateServerError(t *testing.T) {
 	defer ts.Close()
 
 	c := NewClient(pluginutil.HTTPClient(ts.URL))
-	id, err := c.Create()
+	id, err := c.Create(Options{})
 	assert.Error(t, err)
 	assert.Empty(t, id)
 
