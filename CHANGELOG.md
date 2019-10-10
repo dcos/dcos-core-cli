@@ -4,6 +4,12 @@
 
 * Fixes
 
+## 2.0-patch.3
+
+* Fixes
+
+  * Add option to create master/agents only diagnostics bundle #372
+  * Fixed creation of nested groups, the regression was introduced in #322
   * Support more fields in job JSON definition.
 
 ## 2.0-patch.2
