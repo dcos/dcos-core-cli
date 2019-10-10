@@ -10,7 +10,7 @@ import (
 )
 
 func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
-	var mastersOnly bool
+	var agents, masters bool
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a diagnostics bundle",
@@ -18,8 +18,8 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			c := pluginutil.HTTPClient("")
 			client := diagnostics.NewClient(c)
 			opts := diagnostics.Options{
-				Masters: true,
-				Agents:  !mastersOnly,
+				Masters: masters || !masters && !agents,
+				Agents: agents || !masters && !agents,
 			}
 			id, err := client.Create(opts)
 			if err != nil {
@@ -30,7 +30,8 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().BoolVar(&mastersOnly, "masters", false, "Collect data from masters only")
+	cmd.Flags().BoolVar(&masters, "masters", false, "Collect data from masters")
+	cmd.Flags().BoolVar(&agents, "agents", false, "Collect data from agents")
 
 	return cmd
 }
