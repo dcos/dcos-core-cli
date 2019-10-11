@@ -214,17 +214,4 @@ run:
 
 ### Releasing
 
-Releasing a new version of the DC/OS CLI is only possible through an
-[automated TeamCity
-build](https://teamcity.mesosphere.io/viewType.html?buildTypeId=DcosIo_DcosCli_Release)
-which is triggered automatically when a new tag is added.
-
-The tag is used as the version number and must adhere to the
-conventional [PEP-440 version
-scheme](https://www.python.org/dev/peps/pep-0440/).
-
-The automated build starts up three jobs to build the platform dependent
-executables (for Windows, macOS, and Linux).
-
-The executables are pushed to s3 and available at
-<https://downloads.dcos.io/binaries/cli/>\<platform\>/x86-64/\<tag\>/dcos.
+Documented [here](https://github.com/dcos/dcos-cli/blob/master/design/release.md#dcos-core-cli)
