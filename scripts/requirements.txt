@@ -1,11 +1,9 @@
---find-links git+https://github.com/dcos/dcos-e2e.git@2019.10.11.0#egg=dcos-e2e-2019.10.11.0
---find-links git+https://github.com/dcos/dcos-launch.git@08bafb72fe7b0f2a8013d6ec9460e4aeb0e27406#egg=dcos-launch-0.1-dev
---find-links git+https://github.com/dcos/dcos-test-utils.git@9a9cafdd509bc9b8c76ab5e9f59849e7f3ace765#egg=dcos-test-utils-0.1
+git+https://github.com/dcos/dcos-e2e.git@2019.10.11.0
+git+https://github.com/dcos/dcos-launch.git@4600f4c2f77712b4abb81908328230b49b95f257
+git+https://github.com/dcos/dcos-test-utils.git@9a9cafdd509bc9b8c76ab5e9f59849e7f3ace765
 boto3==1.9.126
 click==6.7
-dcos-e2e==2019.04.02.1
 dcos_launch==0.1-dev
-dcos-test-utils==0.1
 requests==2.21.0
 urllib3==1.24.2
 -e ../python/lib/dcos
