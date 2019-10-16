@@ -1,6 +1,7 @@
 os:
  - linux
  - osx
+ - windows
 
 language: go
 
@@ -12,8 +13,19 @@ env:
  - NO_DOCKER=1 GO111MODULE=on
 
 before_install:
- - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
+ - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
-script:
- - make
- - make test
+script: # Disable automatic make detection
+
+jobs:
+ include:
+ - stage: Windows
+   if: os = windows
+   script:
+    - mingw32-make windows
+    - mingw32-make test
+ - stage: Linux/OSX
+   if: os != windows
+   script:
+    - make
+    - make test
