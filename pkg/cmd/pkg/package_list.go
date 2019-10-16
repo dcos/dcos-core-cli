@@ -3,7 +3,6 @@ package pkg
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -20,168 +19,163 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type listOptions struct {
+	appID string
+	query string
+
+	cliOnly    bool
+	jsonOutput bool
+}
+
 func newCmdPackageList(ctx api.Context) *cobra.Command {
-	var cliOnly, jsonOutput bool
-	var appID string
+	var opts listOptions
 
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Print a list of the installed DC/OS packages",
 		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if appID != "" {
+			if opts.appID != "" {
 				if len(args) > 0 {
 					return errors.New("cannot use the flags `--app-id` and an argument at the same time")
 				}
 
-				if cliOnly && !jsonOutput {
+				if opts.cliOnly && !opts.jsonOutput {
 					return errors.New("cannot use the flags `--app-id` and `--cli` at the same time")
 				}
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := ""
 			if len(args) == 1 {
-				query = args[0]
+				opts.query = args[0]
 			}
-			var list []cosmos.Package
-			pkgNames := make(map[string]bool)
-
-			// Get the commands installed locally, those do not have app IDs thus we can skip if one was provided using `app-id`.
-			cluster, err := ctx.Cluster()
+			c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))
 			if err != nil {
 				return err
 			}
-
-			plugins := ctx.PluginManager(cluster).Plugins()
-			for _, plugin := range plugins {
-				packagePath := path.Join(filepath.Dir(plugin.Dir()), "package.json")
-				if _, err := os.Stat(packagePath); err == nil {
-					file, err := ioutil.ReadFile(packagePath)
-					if err != nil {
-						return err
-					}
-
-					pkg := cosmos.Package{}
-					err = json.Unmarshal(file, &pkg)
-					if err != nil {
-						return err
-					}
-
-					if pkg.Name != "" {
-						if len(pkg.Apps) == 0 && !strings.Contains(pkg.Name, "/") {
-							pkg.Apps = append(pkg.Apps, "/"+pkg.Name)
-						}
-
-						pkg.Command = &dcos.CosmosPackageCommand{
-							Name: pkg.Name,
-						}
-
-						if !pkgNames[pkg.Name] {
-							pkgNames[pkg.Name] = true
-							list = append(list, pkg)
-						}
-					}
-				}
-			}
-
-			// Get the list of packages from Cosmos.
-			if !cliOnly {
-				c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))
-				if err != nil {
-					return err
-				}
-
-				cosmosPackages, err := c.PackageList()
-				if err != nil {
-					return err
-				}
-
-				for _, cosmosPkg := range cosmosPackages {
-					if !pkgNames[cosmosPkg.Name] {
-						pkgNames[cosmosPkg.Name] = true
-						list = append(list, cosmosPkg)
-					}
-				}
-			}
-
-			// Filter the packages to only keep the ones with a matching app name.
-			var filteredList []cosmos.Package
-			if appID != "" {
-				for _, pkg := range list {
-					for _, app := range pkg.Apps {
-						if app == appID {
-							filteredList = append(filteredList, pkg)
-							break
-						}
-					}
-				}
-				if !jsonOutput && (len(filteredList) == 0) {
-					return errors.New("cannot find packages matching the provided filter")
-				}
-				list = filteredList
-			}
-
-			if query != "" {
-				for _, pkg := range list {
-					for _, app := range pkg.Apps {
-						if strings.Contains(app, query) {
-							filteredList = append(filteredList, pkg)
-							break
-						}
-					}
-				}
-				if !jsonOutput && (len(filteredList) == 0) {
-					return errors.New("cannot find packages matching the provided filter")
-				}
-				list = filteredList
-			}
-
-			if jsonOutput {
-				if len(list) == 0 {
-					fmt.Fprintln(ctx.Out(), "[]")
-					return nil
-				}
-
-				enc := json.NewEncoder(ctx.Out())
-				enc.SetIndent("", "    ")
-				return enc.Encode(&list)
-			}
-
-			if len(list) == 0 {
-				return errors.New("there are currently no installed packages")
-			}
-
-			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "CERTIFIED", "APP", "COMMAND", "DESCRIPTION"})
-			for _, p := range list {
-				apps := "---"
-				if len(p.Apps) > 0 {
-					apps = strings.Join(p.Apps, "\n")
-				}
-				command := "---"
-				if p.Command != nil && p.Command.Name != "" {
-					command = p.Command.Name
-				}
-
-				description := p.Description
-				if strings.Index(description, "\n") > -1 {
-					i := strings.Index(description, "\n")
-					description = description[:i] + "..."
-				}
-				if utf8.RuneCountInString(description) > 70 {
-					description = description[0:66] + "..."
-				}
-
-				table.Append([]string{p.Name, p.Version, strconv.FormatBool(p.Selected), apps, command, description})
-			}
-			table.Render()
-
-			return nil
+			return listPackages(ctx, opts, c)
 		},
 	}
-	cmd.Flags().StringVar(&appID, "app-id", "", "The application ID")
-	cmd.Flags().BoolVar(&cliOnly, "cli", false, "Command line only")
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().StringVar(&opts.appID, "app-id", "", "The application ID")
+	cmd.Flags().BoolVar(&opts.cliOnly, "cli", false, "Command line only")
+	cmd.Flags().BoolVar(&opts.jsonOutput, "json", false, "Print in json format")
 	return cmd
+}
+
+func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
+	packages, err := getPackagesInstalledLocally(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !opts.cliOnly {
+		cosmosPackages, err := c.PackageList()
+		if err != nil {
+			return err
+		}
+
+		for _, pkg := range cosmosPackages {
+			packages[pkg.Name] = pkg
+		}
+	}
+
+	filter := func(app string) bool { return true }
+	if opts.appID != "" {
+		filter = func(app string) bool { return opts.appID == app }
+	}
+	if opts.query != "" {
+		filter = func(app string) bool { return strings.Contains(app, opts.query) }
+	}
+	list := filterPackages(packages, filter)
+
+	if opts.jsonOutput {
+		enc := json.NewEncoder(ctx.Out())
+		enc.SetIndent("", "    ")
+		return enc.Encode(&list)
+	}
+
+	if len(list) == 0 {
+		return errors.New("cannot find packages matching the provided filter")
+	}
+
+	renderTable(ctx, list)
+
+	return nil
+}
+
+func getPackagesInstalledLocally(ctx api.Context) (map[string]cosmos.Package, error) {
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return nil, err
+	}
+	packages := make(map[string]cosmos.Package)
+	plugins := ctx.PluginManager(cluster).Plugins()
+	for _, plugin := range plugins {
+		packagePath := path.Join(filepath.Dir(plugin.Dir()), "package.json")
+		if _, err := os.Stat(packagePath); err == nil {
+			file, err := ioutil.ReadFile(packagePath)
+			if err != nil {
+				return nil, err
+			}
+
+			pkg := cosmos.Package{}
+			err = json.Unmarshal(file, &pkg)
+			if err != nil {
+				return nil, err
+			}
+
+			if pkg.Name != "" {
+				if len(pkg.Apps) == 0 && !strings.Contains(pkg.Name, "/") {
+					pkg.Apps = append(pkg.Apps, "/"+pkg.Name)
+				}
+
+				pkg.Command = &dcos.CosmosPackageCommand{
+					Name: pkg.Name,
+				}
+
+				packages[pkg.Name] = pkg
+			}
+		}
+	}
+	return packages, nil
+}
+
+func renderTable(ctx api.Context, list []cosmos.Package) {
+	table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "CERTIFIED", "APP", "COMMAND", "DESCRIPTION"})
+	for _, p := range list {
+		apps := "---"
+		if len(p.Apps) > 0 {
+			apps = strings.Join(p.Apps, "\n")
+		}
+		command := "---"
+		if p.Command != nil && p.Command.Name != "" {
+			command = p.Command.Name
+		}
+
+		description := p.Description
+		if strings.Index(description, "\n") > -1 {
+			i := strings.Index(description, "\n")
+			description = description[:i] + "..."
+		}
+		if utf8.RuneCountInString(description) > 70 {
+			description = description[0:66] + "..."
+		}
+
+		table.Append([]string{p.Name, p.Version, strconv.FormatBool(p.Selected), apps, command, description})
+	}
+	table.Render()
+}
+
+func filterPackages(packages map[string]cosmos.Package, filter func(app string) bool) []cosmos.Package {
+	filteredList := make([]cosmos.Package, 0, len(packages))
+	for _, pkg := range packages {
+		for _, app := range pkg.Apps {
+			if filter(app) {
+				filteredList = append(filteredList, pkg)
+				break
+			}
+		}
+	}
+	return filteredList
 }
