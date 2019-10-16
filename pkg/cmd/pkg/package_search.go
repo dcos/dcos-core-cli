@@ -45,7 +45,7 @@ func newCmdPackageSearch(ctx api.Context) *cobra.Command {
 				return errors.New("no packages found")
 			}
 
-			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "SELECTED", "FRAMEWORK", "DESCRIPTION"})
+			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "CERTIFIED", "FRAMEWORK", "DESCRIPTION"})
 			for _, cosmosPackage := range searchResult.Packages {
 				description := cosmosPackage.Description
 				if utf8.RuneCountInString(cosmosPackage.Description) >= 80 {

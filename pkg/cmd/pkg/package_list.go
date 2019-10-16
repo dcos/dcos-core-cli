@@ -134,7 +134,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 				return errors.New("there are currently no installed packages")
 			}
 
-			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "SELECTED", "APP", "COMMAND", "DESCRIPTION"})
+			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "CERTIFIED", "APP", "COMMAND", "DESCRIPTION"})
 			for _, p := range list {
 				apps := "---"
 				if len(p.Apps) > 0 {
