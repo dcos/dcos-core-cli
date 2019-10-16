@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -167,9 +168,13 @@ func renderTable(ctx api.Context, list []cosmos.Package) {
 	table.Render()
 }
 
-func filterPackages(packages map[string]cosmos.Package, filter func(app string) bool) []cosmos.Package {
-	filteredList := make([]cosmos.Package, 0, len(packages))
-	for _, pkg := range packages {
+func filterPackages(pkgs map[string]cosmos.Package, filter func(app string) bool) []cosmos.Package {
+	filteredList := make([]cosmos.Package, 0, len(pkgs))
+	for _, pkg := range pkgs {
+		if filter(pkg.Name) {
+			filteredList = append(filteredList, pkg)
+			continue
+		}
 		for _, app := range pkg.Apps {
 			if filter(app) {
 				filteredList = append(filteredList, pkg)
@@ -177,5 +182,13 @@ func filterPackages(packages map[string]cosmos.Package, filter func(app string) 
 			}
 		}
 	}
+
+	sort.Sort(packages(filteredList))
 	return filteredList
 }
+
+type packages []cosmos.Package
+
+func (p packages) Len() int           { return len(p) }
+func (p packages) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p packages) Less(i, j int) bool { return p[i].Name < p[j].Name }
