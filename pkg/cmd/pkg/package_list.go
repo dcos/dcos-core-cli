@@ -27,7 +27,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Print a list of the installed DC/OS packages",
-		Args:  cobra.RangeArgs(0, 1),
+		Args:  cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if appID != "" {
 				if len(args) > 0 {
@@ -41,6 +41,10 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			query := ""
+			if len(args) == 1 {
+				query = args[0]
+			}
 			var list []cosmos.Package
 			pkgNames := make(map[string]bool)
 
@@ -104,10 +108,25 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 
 			// Filter the packages to only keep the ones with a matching app name.
 			var filteredList []cosmos.Package
-			if appID != "" || len(args) > 0 {
+			if appID != "" {
 				for _, pkg := range list {
 					for _, app := range pkg.Apps {
-						if (len(args) > 0 && strings.Contains(app, appID)) || (app == appID) {
+						if app == appID {
+							filteredList = append(filteredList, pkg)
+							break
+						}
+					}
+				}
+				if !jsonOutput && (len(filteredList) == 0) {
+					return errors.New("cannot find packages matching the provided filter")
+				}
+				list = filteredList
+			}
+
+			if query != "" {
+				for _, pkg := range list {
+					for _, app := range pkg.Apps {
+						if strings.Contains(app, query) {
 							filteredList = append(filteredList, pkg)
 							break
 						}
