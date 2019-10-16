@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -133,7 +134,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 				return errors.New("there are currently no installed packages")
 			}
 
-			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "APP", "COMMAND", "DESCRIPTION"})
+			table := cli.NewTable(ctx.Out(), []string{"NAME", "VERSION", "SELECTED", "APP", "COMMAND", "DESCRIPTION"})
 			for _, p := range list {
 				apps := "---"
 				if len(p.Apps) > 0 {
@@ -153,7 +154,7 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 					description = description[0:66] + "..."
 				}
 
-				table.Append([]string{p.Name, p.Version, apps, command, description})
+				table.Append([]string{p.Name, p.Version, strconv.FormatBool(p.Selected), apps, command, description})
 			}
 			table.Render()
 
