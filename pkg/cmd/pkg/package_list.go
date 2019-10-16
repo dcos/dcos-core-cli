@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -60,14 +61,14 @@ func newCmdPackageList(ctx api.Context) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&opts.appID, "app-id", "", "The application ID")
 	cmd.Flags().BoolVar(&opts.cliOnly, "cli", false, "Command line only")
-	cmd.Flags().BoolVar(&opts.jsonOutput, "json", false, "Print in json format")
+	cmd.Flags().BoolVar(&opts.jsonOutput, "json", false, "Print options json format")
 	return cmd
 }
 
 func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
 	packages, err := getPackagesInstalledLocally(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot read cluster data: %s", err)
 	}
 
 	if !opts.cliOnly {

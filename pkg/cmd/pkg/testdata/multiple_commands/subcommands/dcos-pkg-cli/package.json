@@ -1,0 +1,7 @@
+{
+  "description": "Some CLI APP",
+  "framework": true,
+  "name": "cli-app",
+  "selected": true,
+  "version": "alpha"
+}
