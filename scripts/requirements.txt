@@ -4,6 +4,6 @@ git+https://github.com/dcos/dcos-test-utils.git@9a9cafdd509bc9b8c76ab5e9f59849e7
 boto3==1.9.126
 click==6.7
 requests==2.21.0
-urllib3==1.25.3
+urllib3>=1.21.1,<1.25
 -e ../python/lib/dcos
 -e ../python/lib/dcoscli
