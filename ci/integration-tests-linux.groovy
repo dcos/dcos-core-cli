@@ -37,16 +37,17 @@ pipeline {
           variable: 'DCOS_TEST_LICENSE'],
           [$class: 'UsernamePasswordMultiBinding',
           credentialsId: '323df884-742b-4099-b8b7-d764e5eb9674',
-          usernameVariable: 'DCOS_TEST_ADMIN_USERNAME',
-          passwordVariable: 'DCOS_TEST_ADMIN_PASSWORD']
+          usernameVariable: 'DCOS_USERNAME',
+          passwordVariable: 'DCOS_PASSWORD']
         ]) {
           unstash 'dcos-linux'
 
           sh '''
             docker run --rm -v $PWD:/usr/src -w /usr/src \
+              -v ${DCOS_TEST_SSH_KEY_PATH}:${DCOS_TEST_SSH_KEY_PATH} \
               -e DCOS_TEST_INSTALLER_URL \
               -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-              -e DCOS_TEST_ADMIN_USERNAME -e DCOS_TEST_ADMIN_PASSWORD \
+              -e DCOS_USERNAME -e DCOS_PASSWORD \
               -e DCOS_TEST_LICENSE -e DCOS_TEST_SSH_KEY_PATH \
               python:3.7-stretch bash -exc " \
                 mkdir -p build/linux; \
@@ -58,7 +59,7 @@ pipeline {
                 pip install -r requirements.txt; \
                 wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos; \
                 dcos cluster remove --all; \
-                ./run_integration_tests.py --e2e-backend=dcos_launch"
+                ./run_integration_tests.py"
           '''
         }
       }
