@@ -307,7 +307,7 @@ def test_install_missing_options_file():
         ['dcos', 'package', 'install', 'helloworld', '--yes',
          '--options=asdf.json'],
         returncode=1,
-        stderr=b"Error: stat asdf.json: no such file or directory\n")
+        stderr=b"Error: couldn't find options file 'asdf.json'\n")
 
 
 def test_install_app_and_cli():
