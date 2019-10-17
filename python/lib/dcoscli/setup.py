@@ -69,7 +69,7 @@ setup(
         'pkginfo==1.2.1',
         'toml>=0.9, <1.0',
         'virtualenv>=13.0, <16.0',
-        'cryptography==2.3',
+        'cryptography==2.7',
         'sseclient==0.0.19',
         'retrying==1.3.3',
     ],
