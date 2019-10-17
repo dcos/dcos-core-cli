@@ -63,7 +63,8 @@ func pkgInstall(ctx api.Context, packageName string, opts pkgInstallOptions) err
 	if opts.optionsPath != "" {
 		_, err := os.Stat(opts.optionsPath)
 		if err != nil {
-			return err
+			ctx.Logger().Debug(err)
+			return fmt.Errorf("couldn't find options file '%s'", opts.optionsPath)
 		}
 	}
 	c, err := cosmos.NewClient(ctx, pluginutil.HTTPClient(""))

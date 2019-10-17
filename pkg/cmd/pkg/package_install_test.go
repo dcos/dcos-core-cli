@@ -13,7 +13,7 @@ func TestPkgInstallMutuallyExclusiveOptionsShouldFail(t *testing.T) {
 }
 
 func TestPkgInstallNotExistingOptionsPathShouldFail(t *testing.T) {
-	err := pkgInstall(nil, "helloworld", pkgInstallOptions{optionsPath: "not existing path"})
+	err := pkgInstall(mock.NewContext(nil), "helloworld", pkgInstallOptions{optionsPath: "not existing path"})
 	assert.Error(t, err)
 }
 
