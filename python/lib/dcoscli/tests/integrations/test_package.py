@@ -163,7 +163,6 @@ def test_describe_options():
 
 
 @pytest.mark.parametrize("command_to_run,expected_output_file", [
-    ('helloworld --cli', 'test_describe_cli_helloworld.json'),
     ('helloworld --app', 'test_describe_app_helloworld.json'),
     ('helloworld --config', 'test_describe_helloworld_config.json'),
     ('helloworld --app --render', 'test_describe_helloworld_app_render.json'),
@@ -172,7 +171,6 @@ def test_describe_options():
     ('helloworld --app --cli', 'test_describe_app_cli.json'),
     ('helloworld --package-versions',
      'test_describe_helloworld_versions.json'),
-    ('helloworld --package-version=0.1.0', 'test_describe_helloworld.json'),
 ])
 def test_describe(command_to_run, expected_output_file):
     stdout = file_json('tests/data/package/json/' + expected_output_file)
@@ -187,6 +185,26 @@ def test_describe(command_to_run, expected_output_file):
 
     actual_stdout = json.loads(stdout.decode('utf-8'))
     assert expected_stdout == actual_stdout
+
+
+@pytest.mark.parametrize("command_to_run,expected_output_file", [
+    ('helloworld --cli', 'test_describe_cli_helloworld.json'),
+    ('helloworld --package-version=0.1.0', 'test_describe_helloworld.json'),
+])
+def test_describe_cli(command_to_run, expected_output_file):
+    stdout = file_json('tests/data/package/json/' + expected_output_file)
+    expected_stdout = json.loads(stdout.decode('utf-8'))
+
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'package', 'describe'] + command_to_run.split(' '),
+        )
+
+    assert returncode == 0
+    assert stderr == b''
+
+    actual_stdout = json.loads(stdout.decode('utf-8'))
+    diff = set(expected_stdout) - set(actual_stdout)
+    assert diff == set()
 
 
 def test_bad_install():
