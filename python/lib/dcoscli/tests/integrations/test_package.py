@@ -453,14 +453,14 @@ def test_uninstall_missing():
         stderr=stderr)
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
+@pytest.mark.skip(reason="DCOS_OSS-5619")
 def test_uninstall_subcommand():
     _install_helloworld()
     _uninstall_helloworld()
     _list(args=['--json'], stdout=b'[]\n')
 
 
-# @pytest.mark.skip(reason="DCOS_OSS-5539")
+@pytest.mark.skip(reason="DCOS_OSS-5619")
 def test_uninstall_cli():
     _install_helloworld()
     _uninstall_cli_helloworld()
