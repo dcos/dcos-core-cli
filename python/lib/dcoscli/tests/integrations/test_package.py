@@ -227,7 +227,6 @@ def test_bad_install():
         _install_bad_helloworld(args=args, stderr=stderr)
 
 
-# @pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_bad_install_helloworld_msg():
     terms_conditions = (
         b'This is a Community service. '
@@ -245,29 +244,27 @@ def test_bad_install_helloworld_msg():
 
     stderr = (
         terms_conditions +
-        # Uncomment after DCOS_OSS-5539
-        # b'Installing CLI subcommand for package [helloworld] '
-        # b'version [0.1.0]\n'
-        # b'New commands available: ' +
-        # _executable_name(b'helloworld') +
-        b'A sample post-installation message\n'
+        b'Installing CLI subcommand for package [helloworld] '
+        b'version [0.1.0]\n'
+        b'New commands available: ' +
+        _executable_name(b'http') +
+        b'\nA sample post-installation message\n'
     )
 
     with util.temptext(b'{"name": "/foo"}') as foo, \
             util.temptext(b'{"name": "/foo/bar"}') as foobar:
 
-        _install_helloworld(['--app', '--yes', '--options='+foo[1]],
+        _install_helloworld(['--yes', '--options='+foo[1]],
                             stderr=stderr)
 
         stderr = terms_conditions + b'Error: Object is not valid\n'
 
-        _install_helloworld(['--app', '--yes', '--options='+foobar[1]],
+        _install_helloworld(['--yes', '--options='+foobar[1]],
                             stderr=stderr,
                             returncode=1)
         _uninstall_helloworld()
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
             util.temptext(b'{"name": "/hello2"}') as opts_hello2:
@@ -286,7 +283,7 @@ def test_uninstall_cli_only_when_no_apps_remain():
             b'Installing CLI subcommand for package [helloworld] '
             b'version [0.1.0]\n'
             b'New commands available: ' +
-            _executable_name(b'helloworld') +
+            _executable_name(b'http') +
             b'\nA sample post-installation message\n'
         )
 
@@ -305,11 +302,11 @@ def test_uninstall_cli_only_when_no_apps_remain():
                           uninstall_app_id='/hello2',
                           uninstall_stderr=uninstall_stderr):
 
-                subcommand.command_executables('helloworld')
+                subcommand.command_executables('http')
 
             # helloworld subcommand should still be there as there is the
             # /hello1 app installed
-            subcommand.command_executables('helloworld')
+            subcommand.command_executables('http')
 
         # helloworld subcommand should have been removed
         with pytest.raises(errors.DCOSException) as exc_info:
@@ -347,19 +344,17 @@ def test_install_specific_version():
         b'mesosphere.com/catalog-terms-conditions/#community-services\n'
         b'A sample pre-installation message\n'
         b'Installing Marathon app for package [helloworld] version [0.1.0]\n'
-        # Uncomment after DCOS_OSS-5539
-        # b'Installing CLI subcommand '
-        # b'for package [helloworld] version [0.1.0]\n'
-        # b'New commands available: ' +
-        # _executable_name(b'helloworld') +
-        b'A sample post-installation message\n'
+        b'Installing CLI subcommand '
+        b'for package [helloworld] version [0.1.0]\n'
+        b'New commands available: ' +
+        _executable_name(b'http') +
+        b'\nA sample post-installation message\n'
     )
 
     uninstall_stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
 
     with _package(name='helloworld',
                   args=[
-                      '--app',  # Remove after DCOS_OSS-5539
                       '--yes',
                       '--package-version=0.1.0'
                   ],
@@ -405,7 +400,6 @@ def test_install_noninteractive():
     assert stdout == expected_stdout
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_package_metadata():
     _install_helloworld()
 
@@ -430,13 +424,15 @@ def test_package_metadata():
         'tests/data/package/json/test_package_metadata.json')
     package = json.loads(package.decode("UTF-8"))
 
-    helloworld_subcommand = subcommand.InstalledSubcommand("helloworld")
+    cmd = subcommand.InstalledSubcommand("dcos-http")
 
     # test local package.json
-    assert helloworld_subcommand.package_json() == package
+    assert cmd.package_json()['marathon'] == package['marathon']
 
     # uninstall helloworld
     _uninstall_helloworld()
+    # TODO(janisz): Remove after DCOS_OSS-5619
+    assert_command(['dcos', 'plugin', 'remove', 'dcos-http'])
 
 
 def test_install_missing_package():
@@ -464,7 +460,7 @@ def test_uninstall_subcommand():
     _list(args=['--json'], stdout=b'[]\n')
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
+# @pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_uninstall_cli():
     _install_helloworld()
     _uninstall_cli_helloworld()
@@ -542,14 +538,18 @@ def test_uninstall_multiple_apps():
         _uninstall_helloworld(args=['--all'])
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
+@pytest.mark.parametrize("args", [
+    '--json',
+    'xyzzy --json',
+    '--app-id=/xyzzy --json',
+    '--json ceci-nest-pas-une-package',
+    '--json --app-id=/' + 'ceci-nest-pas-une-package',
+])
+def test_list_empty(args):
+    _list(args=args.split(' '), stdout=b'[]\n')
+
+
 def test_list():
-    empty = b'[]\n'
-
-    _list(args=['--json'], stdout=empty)
-    _list(args=['xyzzy', '--json'], stdout=empty)
-    _list(args=['--app-id=/xyzzy', '--json'], stdout=empty)
-
     with _helloworld():
         expected_output = file_json(
             'tests/data/package/json/test_list_helloworld.json', 4)
@@ -557,12 +557,7 @@ def test_list():
         _list(args=['--json', 'helloworld'], stdout=expected_output)
         _list(args=['--json', '--app-id=/helloworld'], stdout=expected_output)
 
-    le_package = 'ceci-nest-pas-une-package'
-    _list(args=['--json', le_package], stdout=empty)
-    _list(args=['--json', '--app-id=/' + le_package], stdout=empty)
 
-
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_table():
     with _helloworld():
         assert_lines(['dcos', 'package', 'list'], 2)
@@ -571,7 +566,7 @@ def test_list_table():
 def test_install_yes():
     with open('tests/data/package/assume_yes.txt') as yes_file:
         _install_helloworld(
-            args=['--app'],  # Remove after DCOS_OSS-5539
+            args=[],
             stdin=yes_file,
             stdout=b'Continue installing? [yes/no] ',
             stderr=(
@@ -586,12 +581,11 @@ def test_install_yes():
                 b'A sample pre-installation message\n'
                 b'Installing Marathon app for package [helloworld] version '
                 b'[0.1.0]\n'
-                # Uncomment after DCOS_OSS-5539
-                # b'Installing CLI subcommand for package [helloworld] '
-                # b'version [0.1.0]\n'
-                # b'New commands available: ' +
-                # _executable_name(b'helloworld') +
-                b'A sample post-installation message\n'
+                b'Installing CLI subcommand for package [helloworld] '
+                b'version [0.1.0]\n'
+                b'New commands available: ' +
+                _executable_name(b'http') +
+                b'\nA sample post-installation message\n'
             )
         )
         _uninstall_helloworld()
@@ -619,7 +613,6 @@ def test_install_no():
         )
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_cli():
     _install_helloworld()
     stdout = file_json(
@@ -639,7 +632,7 @@ def test_list_cli():
         b"Installing CLI subcommand for package [helloworld] " +
         b"version [0.1.0]\n"
         b"New commands available: " +
-        _executable_name(b'helloworld') +
+        _executable_name(b'http') +
         b"\n"
     )
     _install_helloworld(args=['--cli', '--yes'], stderr=stderr)
@@ -651,7 +644,6 @@ def test_list_cli():
     _uninstall_cli_helloworld()
 
 
-@pytest.mark.skip(reason="DCOS_OSS-5539")
 def test_list_cli_only(env):
     helloworld_path = 'tests/data/package/json/test_list_helloworld_cli.json'
     helloworld_json = file_json(helloworld_path, 4)
@@ -818,10 +810,7 @@ def _executable_name(name):
 
 
 def _install_helloworld(
-        args=[
-            '--app',  # Remove --app after resolving DCOS_OSS-5539
-            '--yes'
-        ],
+        args=None,
         stderr=(
             b'This is a Community service. '
             b'Community services are not tested '
@@ -834,16 +823,17 @@ def _install_helloworld(
             b'A sample pre-installation message\n'
             b'Installing Marathon app for package [helloworld] '
             b'version [0.1.0]\n'
-            # Uncomment after resolving DCOS_OSS-5539
-            # b'Installing CLI subcommand for package [helloworld] '
-            # b'version [0.1.0]\n'
-            # b'New commands available: ' +
-            # _executable_name(b'helloworld') +
+            b'Installing CLI subcommand for package [helloworld] '
+            b'version [0.1.0]\n'
+            b'New commands available: ' +
+            _executable_name(b'http') +
             b'\nA sample post-installation message\n'
         ),
         stdout=b'',
         returncode=0,
         stdin=None):
+    if args is None:
+        args = ['--yes']
     assert_command(
         ['dcos', 'package', 'install', 'helloworld'] + args,
         stdout=stdout,
@@ -872,11 +862,17 @@ def _uninstall_cli_helloworld(
         stdout=b'',
         stderr=b'',
         returncode=0):
-    assert_command(['dcos', 'package', 'uninstall', 'helloworld',
-                    '--cli'] + args,
+    # TODO(janisz): Remove after DCOS_OSS-5619
+    assert_command(['dcos', 'plugin', 'remove', 'dcos-http'],
                    stdout=stdout,
                    stderr=stderr,
                    returncode=returncode)
+    # TODO(janisz): Uncomment after DCOS_OSS-5619
+    # assert_command(['dcos', 'package', 'uninstall', 'helloworld',
+    #                 '--cli'] + args,
+    #                stdout=stdout,
+    #                stderr=stderr,
+    #                returncode=returncode)
 
 
 def _uninstall_chronos(args=[], returncode=0, stdout=b'', stderr=''):
@@ -919,7 +915,7 @@ HELLOWORLD_CLI_STDOUT = (
     b'Installing CLI subcommand for package [helloworld] '
     b'version [0.1.0]\n'
     b'New commands available: ' +
-    _executable_name(b'helloworld') + b'\n'
+    _executable_name(b'http') + b'\n'
 )
 
 
@@ -939,29 +935,32 @@ def _helloworld():
         b'A sample post-installation message\n'
     )
 
-    stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
+    uninstall_stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
     return _package(name='helloworld',
                     args=['--yes'],
                     stderr=stderr,
-                    uninstall_stderr=stderr)
+                    uninstall_stderr=uninstall_stderr)
 
 
+@contextlib.contextmanager
 def _helloworld_cli():
     args = ['--yes', '--cli']
-    return _package(name='helloworld',
-                    args=args,
-                    stderr=(
-                        b'This is a Community service. '
-                        b'Community services are not tested '
-                        b'for production environments. '
-                        b'There may be bugs, incomplete features, '
-                        b'incorrect documentation, or other discrepancies.\n'
-                        b'By Deploying, you agree to the Terms '
-                        b'and Conditions https://mesosphere.com/'
-                        b'catalog-terms-conditions/#community-services\n' +
-                        HELLOWORLD_CLI_STDOUT
-                    ),
-                    uninstall_stderr=b'')
+    command = ['dcos', 'package', 'install', 'helloworld'] + args
+
+    installed = False
+    timeout = http.DEFAULT_READ_TIMEOUT
+    try:
+        returncode_, _, _ = exec_command(command, timeout=timeout)
+        installed = (returncode_ == 0)
+        assert installed
+
+        yield
+    finally:
+        if installed:
+            # TODO(janisz): Cahnge back to package uninstall after DCOS_OSS-5619
+            command = ['dcos', 'plugin', 'remove', 'dcos-http']
+            assert_command(command)
+            watch_all_deployments()
 
 
 @contextlib.contextmanager
