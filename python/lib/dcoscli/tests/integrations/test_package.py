@@ -2,6 +2,7 @@ import contextlib
 import json
 import os
 import subprocess
+import sys
 
 import pytest
 import six
@@ -263,6 +264,7 @@ def test_bad_install_helloworld_msg():
         _uninstall_helloworld()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='DCOS_OSS-5624')
 def test_uninstall_cli_only_when_no_apps_remain():
     with util.temptext(b'{"name": "/hello1"}') as opts_hello1, \
             util.temptext(b'{"name": "/hello2"}') as opts_hello2:
