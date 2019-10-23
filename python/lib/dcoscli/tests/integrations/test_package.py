@@ -312,22 +312,20 @@ def test_uninstall_cli_only_when_no_apps_remain():
         assert str(exc_info.value) == "'helloworld' is not a dcos command."
 
 
-def test_install_missing_options_file():
-    """Test that a missing options file results in the expected stderr
-    message."""
-    assert_command(
-        ['dcos', 'package', 'install', 'helloworld', '--yes',
-         '--options=asdf.json'],
-        returncode=1,
-        stderr=b"Error: couldn't find options file 'asdf.json'\n")
+@pytest.mark.parametrize("command_to_run,expected_error", [
+    ('helloworld --yes --options=asdf.json', b"Error: couldn't find options file 'asdf.json'\n"),
+    ('helloworld --app --cli', b'Error: --app and --cli are mutually exclusive\n'),
+    ('cassandra --package-version=a.b.c', b'Error: Version [a.b.c] of package [cassandra] not found\n'),
+    ('missing-package', b'Error: Package [missing-package] not found\n'),
+])
+def test_install_error(command_to_run, expected_error):
+    returncode, stdout, stderr = exec_command(
+        ['dcos', 'package', 'install'] + command_to_run.split(' '),
+    )
 
-
-def test_install_app_and_cli():
-    """Test that using mutually exclusive options is forbidden."""
-    assert_command(
-        ['dcos', 'package', 'install', 'helloworld', '--app', '--cli'],
-        returncode=1,
-        stderr=b"Error: --app and --cli are mutually exclusive\n")
+    assert returncode == 1
+    assert stdout == b''
+    assert stderr == expected_error
 
 
 def test_install_specific_version():
@@ -362,15 +360,6 @@ def test_install_specific_version():
         assert returncode == 0
         assert stderr == b''
         assert json.loads(stdout.decode('utf-8'))[0]['version'] == "0.1.0"
-
-
-def test_install_bad_package_version():
-    stderr = b'Error: Version [a.b.c] of package [cassandra] not found\n'
-    assert_command(
-        ['dcos', 'package', 'install', 'cassandra',
-         '--package-version=a.b.c'],
-        returncode=1,
-        stderr=stderr)
 
 
 def test_install_noninteractive():
@@ -429,13 +418,6 @@ def test_package_metadata():
     _uninstall_helloworld()
     # TODO(janisz): Remove after DCOS_OSS-5619
     assert_command(['dcos', 'plugin', 'remove', 'dcos-http'])
-
-
-def test_install_missing_package():
-    stderr = b'Error: Package [missing-package] not found\n'
-    assert_command(['dcos', 'package', 'install', 'missing-package'],
-                   returncode=1,
-                   stderr=stderr)
 
 
 def test_uninstall_missing():
