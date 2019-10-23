@@ -2,7 +2,6 @@ import contextlib
 import json
 import os
 import subprocess
-import sys
 
 import pytest
 import six
@@ -246,9 +245,8 @@ def test_bad_install_helloworld_msg():
         terms_conditions +
         b'Installing CLI subcommand for package [helloworld] '
         b'version [0.1.0]\n'
-        b'New commands available: ' +
-        _executable_name(b'http') +
-        b'\nA sample post-installation message\n'
+        b'New commands available: http\n'
+        b'A sample post-installation message\n'
     )
 
     with util.temptext(b'{"name": "/foo"}') as foo, \
@@ -282,9 +280,8 @@ def test_uninstall_cli_only_when_no_apps_remain():
             b'[0.1.0]\n'
             b'Installing CLI subcommand for package [helloworld] '
             b'version [0.1.0]\n'
-            b'New commands available: ' +
-            _executable_name(b'http') +
-            b'\nA sample post-installation message\n'
+            b'New commands available: http\n'
+            b'A sample post-installation message\n'
         )
 
         uninstall_stderr = (
@@ -346,9 +343,8 @@ def test_install_specific_version():
         b'Installing Marathon app for package [helloworld] version [0.1.0]\n'
         b'Installing CLI subcommand '
         b'for package [helloworld] version [0.1.0]\n'
-        b'New commands available: ' +
-        _executable_name(b'http') +
-        b'\nA sample post-installation message\n'
+        b'New commands available: http\n'
+        b'A sample post-installation message\n'
     )
 
     uninstall_stderr = b'Uninstalled package [helloworld] version [0.1.0]\n'
@@ -583,9 +579,8 @@ def test_install_yes():
                 b'[0.1.0]\n'
                 b'Installing CLI subcommand for package [helloworld] '
                 b'version [0.1.0]\n'
-                b'New commands available: ' +
-                _executable_name(b'http') +
-                b'\nA sample post-installation message\n'
+                b'New commands available: http\n'
+                b'A sample post-installation message\n'
             )
         )
         _uninstall_helloworld()
@@ -629,11 +624,9 @@ def test_list_cli():
         b'By Deploying, you agree to the Terms '
         b'and Conditions https://mesosphere.com/'
         b'catalog-terms-conditions/#community-services\n'
-        b"Installing CLI subcommand for package [helloworld] " +
-        b"version [0.1.0]\n"
-        b"New commands available: " +
-        _executable_name(b'http') +
-        b"\n"
+        b'Installing CLI subcommand for package [helloworld] '
+        b'version [0.1.0]\n'
+        b'New commands available: http\n'
     )
     _install_helloworld(args=['--cli', '--yes'], stderr=stderr)
 
@@ -802,13 +795,6 @@ def _get_app_labels(app_id):
     return app_json.get('labels')
 
 
-def _executable_name(name):
-    if sys.platform == 'win32':
-        return name + b'.exe'
-    else:
-        return name
-
-
 def _install_helloworld(
         args=None,
         stderr=(
@@ -825,9 +811,8 @@ def _install_helloworld(
             b'version [0.1.0]\n'
             b'Installing CLI subcommand for package [helloworld] '
             b'version [0.1.0]\n'
-            b'New commands available: ' +
-            _executable_name(b'http') +
-            b'\nA sample post-installation message\n'
+            b'New commands available: http\n'
+            b'A sample post-installation message\n'
         ),
         stdout=b'',
         returncode=0,
@@ -858,7 +843,6 @@ def _uninstall_helloworld(
 
 
 def _uninstall_cli_helloworld(
-        args=[],
         stdout=b'',
         stderr=b'',
         returncode=0):
@@ -914,8 +898,7 @@ def _list(args, stdout):
 HELLOWORLD_CLI_STDOUT = (
     b'Installing CLI subcommand for package [helloworld] '
     b'version [0.1.0]\n'
-    b'New commands available: ' +
-    _executable_name(b'http') + b'\n'
+    b'New commands available: http\n'
 )
 
 
