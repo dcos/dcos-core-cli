@@ -1,11 +1,12 @@
 package diagnostics
 
 import (
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_CreateErrorsWhenGot503WithStatus(t *testing.T) {
@@ -71,7 +72,9 @@ func TestClient_Create(t *testing.T) {
 
 	expected := BundleCreateResponseJSONStruct{
 		Status: "Job has been successfully started",
-		Extra: struct {BundleName string `json:"bundle_name"`}{"bundle-2019-10-24-1571919252.zip",},
+		Extra: struct {
+			BundleName string `json:"bundle_name"`
+		}{"bundle-2019-10-24-1571919252.zip"},
 	}
 	assert.NoError(t, err)
 	assert.Equal(t, &expected, got)

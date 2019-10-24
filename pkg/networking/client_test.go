@@ -14,7 +14,7 @@ import (
 
 func TestNodes(t *testing.T) {
 	expectedNodes := []Node{
-		Node{
+		{
 			Updated:   time.Date(1996, 3, 6, 20, 34, 58, 651387237, time.UTC),
 			PublicIPs: []string{"192.168.0.1", "192.168.1.1"},
 			PrivateIP: "1.1.1.1",

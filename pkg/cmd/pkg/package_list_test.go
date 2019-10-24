@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/dcos/dcos-cli/pkg/config"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/dcos/client-go/dcos"
+	"github.com/dcos/dcos-cli/pkg/config"
 	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos/mocks"
@@ -28,12 +28,12 @@ func TestListPackages(t *testing.T) {
 		{
 			Name:        "package-1",
 			Apps:        []string{"a", "b", "c"},
-			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus nec diam non fringilla. Duis consectetur sem vitae mi congue, et ultrices mauris mattis. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse maximus bibendum neque, eget congue augue tristique sit amet. Duis porta molestie eros, et pellentesque tellus condimentum vel. Curabitur maximus velit condimentum justo bibendum, vel sollicitudin nibh varius. Duis euismod iaculis sem, ut lobortis ex venenatis nec. Proin at semper eros, et dignissim lorem. Vivamus id scelerisque risus. Nullam auctor et est ut aliquet. Donec sit amet sem velit. ",
+			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus nec diam non fringilla.",
 			Version:     "0.0.0.1",
 		},
 		{
 			Name:        "package-3",
-			Description: "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit. \nMaecenas cursus nec diam non fringilla. Duis consectetur sem vitae mi congue, et ultrices mauris mattis. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse maximus bibendum neque, eget congue augue tristique sit amet. Duis porta molestie eros, et pellentesque tellus condimentum vel. Curabitur maximus velit condimentum justo bibendum, vel sollicitudin nibh varius. Duis euismod iaculis sem, ut lobortis ex venenatis nec. Proin at semper eros, et dignissim lorem. Vivamus id scelerisque risus. Nullam auctor et est ut aliquet. Donec sit amet sem velit. ",
+			Description: "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit. \nMaecenas cursus nec diam non fringilla.",
 			Version:     "0.1",
 		},
 		{
@@ -58,6 +58,59 @@ func TestListPackages(t *testing.T) {
 `, out.String())
 }
 
+var testCases = []struct {
+	cluster string
+	options listOptions
+	out     string
+}{
+	{NoPlugins, listOptions{jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
+{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{query: "package-2", jsonOutput: true},
+		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{query: "-2", jsonOutput: true},
+		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{query: "package", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
+{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{query: "a", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
+{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{query: "some-app", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
+	{NoPlugins, listOptions{appID: "some-app", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
+	{NoPlugins, listOptions{appID: "a", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
+	{NoPlugins, listOptions{appID: "b", jsonOutput: true},
+		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
+	{NoPlugins, listOptions{appID: "package-2", jsonOutput: true},
+		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
+	{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, `[]`},
+	{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, `[]`},
+	{NoPlugins, listOptions{query: "not found", jsonOutput: true}, `[]`},
+	{MultipleCommands, listOptions{cliOnly: true, jsonOutput: true},
+		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
+"name":"cli-app","selected":true,"version":"alpha"},
+{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,
+"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
+	{MultipleCommands, listOptions{query: "cli", cliOnly: true, jsonOutput: true},
+		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
+"name":"cli-app","selected":true,"version":"alpha"},
+{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,
+"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
+	{MultipleCommands, listOptions{query: "app", jsonOutput: true},
+		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
+"name":"cli-app","selected":true,"version":"alpha"},
+{"apps":["a","b","some-app"],"description":"package-2","framework":false,
+"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
+	{MultipleCommands, listOptions{appID: "app", jsonOutput: true}, `[]`},
+	{MultipleCommands, listOptions{appID: "cli-app", jsonOutput: true},
+		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
+"name":"cli-app","selected":true,"version":"alpha"}]`},
+	{MultipleCommands, listOptions{query: "package", cliOnly: true, jsonOutput: true}, `[]`},
+}
+
 func TestListPackagesFilterJson(t *testing.T) {
 	client := &mocks.Client{}
 	packages := []cosmos.Package{
@@ -66,32 +119,6 @@ func TestListPackagesFilterJson(t *testing.T) {
 	}
 	client.On("PackageList").Return(packages, nil)
 
-
-	var testCases = []struct {
-		cluster string
-		options listOptions
-		out     string
-	}{
-		{NoPlugins, listOptions{jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{query: "package-2", jsonOutput: true}, `[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{query: "-2", jsonOutput: true}, `[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{query: "package", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{query: "a", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{query: "some-app", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-		{NoPlugins, listOptions{appID: "some-app", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-		{NoPlugins, listOptions{appID: "a", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-		{NoPlugins, listOptions{appID: "b", jsonOutput: true}, `[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-		{NoPlugins, listOptions{appID: "package-2", jsonOutput: true}, `[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-		{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, `[]`},
-		{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, `[]`},
-		{NoPlugins, listOptions{query: "not found", jsonOutput: true}, `[]`},
-		{MultipleCommands, listOptions{cliOnly: true, jsonOutput:true}, `[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,"name":"cli-app","selected":true,"version":"alpha"},{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
-		{MultipleCommands, listOptions{query: "cli", cliOnly:true, jsonOutput:true}, `[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,"name":"cli-app","selected":true,"version":"alpha"},{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
-		{MultipleCommands, listOptions{query: "app", jsonOutput:true}, `[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,"name":"cli-app","selected":true,"version":"alpha"},{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-		{MultipleCommands, listOptions{appID: "app", jsonOutput:true}, `[]`},
-		{MultipleCommands, listOptions{appID: "cli-app", jsonOutput:true}, `[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,"name":"cli-app","selected":true,"version":"alpha"}]`},
-		{MultipleCommands, listOptions{query: "package", cliOnly:true, jsonOutput:true}, `[]`},
-	}
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%s_%#v", tt.cluster, tt.options), func(t *testing.T) {
 			out, ctx := setupCluster(tt.cluster)
