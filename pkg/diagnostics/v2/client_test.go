@@ -192,6 +192,7 @@ func TestCreateHappyPath(t *testing.T) {
 			idMatch := urlMatch[1]
 			var err error
 			newID, err = uuid.FromString(idMatch)
+			require.NoError(t, err)
 			body, err := ioutil.ReadAll(r.Body)
 
 			assert.NoError(t, err)
@@ -199,7 +200,13 @@ func TestCreateHappyPath(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, expectedBody, string(body))
 
-			_, err = fmt.Fprint(w, fmt.Sprintf(`{"id":"%s","status":"Started","started_at":"2019-08-19T08:07:24.404239211Z","stopped_at":"0001-01-01T00:00:00Z"}`, newID))
+			_, err = fmt.Fprint(w, fmt.Sprintf(
+				`{
+						  "id":"%s",
+						  "status":"Started",
+						  "started_at":"2019-08-19T08:07:24.404239211Z",
+						  "stopped_at":"0001-01-01T00:00:00Z"
+						}`, newID))
 			assert.NoError(t, err)
 		})
 	}

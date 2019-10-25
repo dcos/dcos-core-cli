@@ -19,15 +19,13 @@ func TestNode(t *testing.T) {
 		Hostname  string `json:"hostname"`
 	}
 	expectedNode := Node{
-		Datapoints: []Datapoint{
-			Datapoint{
-				Name:      "datapoint",
-				Value:     0,
-				Unit:      "percentage",
-				Timestamp: time.Date(1996, 3, 6, 20, 34, 58, 651387237, time.UTC),
-				Tags:      map[string]string{"hello": "world"},
-			},
-		},
+		Datapoints: []Datapoint{{
+			Name:      "datapoint",
+			Value:     0,
+			Unit:      "percentage",
+			Timestamp: time.Date(1996, 3, 6, 20, 34, 58, 651387237, time.UTC),
+			Tags:      map[string]string{"hello": "world"},
+		}},
 		Dimensions: dimensions,
 	}
 
