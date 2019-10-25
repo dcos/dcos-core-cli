@@ -2,18 +2,21 @@ package pkg
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-cli/pkg/config"
 	"github.com/dcos/dcos-cli/pkg/mock"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
+
+	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos/mocks"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,54 +64,53 @@ func TestListPackages(t *testing.T) {
 var testCases = []struct {
 	cluster string
 	options listOptions
-	out     string
+	out     []cosmos.Package
 }{
-	{NoPlugins, listOptions{jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
-{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{query: "package-2", jsonOutput: true},
-		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{query: "-2", jsonOutput: true},
-		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{query: "package", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
-{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{query: "a", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"},
-{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{query: "some-app", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-	{NoPlugins, listOptions{appID: "some-app", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-	{NoPlugins, listOptions{appID: "a", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-	{NoPlugins, listOptions{appID: "b", jsonOutput: true},
-		`[{"apps":["a","b","some-app"],"description":"package-2","framework":false,"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-	{NoPlugins, listOptions{appID: "package-2", jsonOutput: true},
-		`[{"command":{"name":"xyz"},"description":"XYZ","framework":false,"name":"package-2","selected":false,"version":"0.0.1"}]`},
-	{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, `[]`},
-	{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, `[]`},
-	{NoPlugins, listOptions{query: "not found", jsonOutput: true}, `[]`},
-	{MultipleCommands, listOptions{cliOnly: true, jsonOutput: true},
-		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
-"name":"cli-app","selected":true,"version":"alpha"},
-{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,
-"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
-	{MultipleCommands, listOptions{query: "cli", cliOnly: true, jsonOutput: true},
-		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
-"name":"cli-app","selected":true,"version":"alpha"},
-{"apps":["/pkg-cli"],"command":{"name":"pkg-cli"},"description":"Some CLI Package","framework":true,
-"name":"pkg-cli","selected":true,"version":"2.4.4-1.15.4"}]`},
-	{MultipleCommands, listOptions{query: "app", jsonOutput: true},
-		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
-"name":"cli-app","selected":true,"version":"alpha"},
-{"apps":["a","b","some-app"],"description":"package-2","framework":false,
-"name":"package-1","selected":false,"version":"0.0.0.1"}]`},
-	{MultipleCommands, listOptions{appID: "app", jsonOutput: true}, `[]`},
-	{MultipleCommands, listOptions{appID: "cli-app", jsonOutput: true},
-		`[{"apps":["/cli-app"],"command":{"name":"cli-app"},"description":"Some CLI APP","framework":true,
-"name":"cli-app","selected":true,"version":"alpha"}]`},
-	{MultipleCommands, listOptions{query: "package", cliOnly: true, jsonOutput: true}, `[]`},
+	{NoPlugins, listOptions{jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{query: "package-2", jsonOutput: true}, []cosmos.Package{
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{query: "-2", jsonOutput: true}, []cosmos.Package{
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{query: "package", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{query: "a", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{query: "some-app", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
+	{NoPlugins, listOptions{appID: "some-app", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
+	{NoPlugins, listOptions{appID: "a", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
+	{NoPlugins, listOptions{appID: "b", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
+	{NoPlugins, listOptions{appID: "package-2", jsonOutput: true}, []cosmos.Package{
+		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
+	{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, []cosmos.Package{}},
+	{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, []cosmos.Package{}},
+	{NoPlugins, listOptions{query: "not found", jsonOutput: true}, []cosmos.Package{}},
+	{MultipleCommands, listOptions{cliOnly: true, jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
+			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
+		{Apps: []string{"/pkg-cli"}, Command: &dcos.CosmosPackageCommand{Name: "pkg-cli"}, Description: "Some CLI Package",
+			Framework: true, Name: "pkg-cli", Selected: true, Version: "2.4.4-1.15.4"}}},
+	{MultipleCommands, listOptions{query: "cli", cliOnly: true, jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
+			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
+		{Apps: []string{"/pkg-cli"}, Command: &dcos.CosmosPackageCommand{Name: "pkg-cli"}, Description: "Some CLI Package",
+			Framework: true, Name: "pkg-cli", Selected: true, Version: "2.4.4-1.15.4"}}},
+	{MultipleCommands, listOptions{query: "app", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
+			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
+		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
+	{MultipleCommands, listOptions{appID: "app", jsonOutput: true}, []cosmos.Package{}},
+	{MultipleCommands, listOptions{query: "package", cliOnly: true, jsonOutput: true}, []cosmos.Package{}},
+	{MultipleCommands, listOptions{appID: "cli-app", jsonOutput: true}, []cosmos.Package{
+		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
+			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"}}},
 }
 
 func TestListPackagesFilterJson(t *testing.T) {
@@ -125,7 +127,11 @@ func TestListPackagesFilterJson(t *testing.T) {
 
 			err := listPackages(ctx, tt.options, client)
 			assert.NoError(t, err)
-			assert.JSONEq(t, tt.out, out.String(), out.String())
+
+			expectedJSON, err := json.MarshalIndent(tt.out, "", "    ")
+			require.NoError(t, err)
+
+			assert.Equal(t, string(expectedJSON)+"\n", out.String())
 		})
 	}
 }

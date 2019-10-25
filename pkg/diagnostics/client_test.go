@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClient_CreateErrorsWhenGot503WithStatus(t *testing.T) {
+func TestClientCreateErrorsWhenGot503WithStatus(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/system/health/v1/report/diagnostics/create", r.URL.String())
 		assert.Equal(t, "POST", r.Method)
@@ -32,7 +32,7 @@ func TestClient_CreateErrorsWhenGot503WithStatus(t *testing.T) {
 	assert.EqualError(t, err, "unexpected status code 503 Service Unavailable: requested nodes: [] not found")
 }
 
-func TestClient_CreateErrorsWhenGot500WithoutStatus(t *testing.T) {
+func TestClientCreateErrorsWhenGot500WithoutStatus(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/system/health/v1/report/diagnostics/create", r.URL.String())
 		assert.Equal(t, "POST", r.Method)
@@ -49,7 +49,7 @@ func TestClient_CreateErrorsWhenGot500WithoutStatus(t *testing.T) {
 	assert.EqualError(t, err, "HTTP 500 error")
 }
 
-func TestClient_Create(t *testing.T) {
+func TestClientCreate(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/system/health/v1/report/diagnostics/create", r.URL.String())
 		assert.Equal(t, "POST", r.Method)
