@@ -1,0 +1,37 @@
+[run]
+concurrency = 4
+deadline = "10m"
+
+modules-download-mode = "vendor"
+
+[linters]
+disable-all = true
+enable = [
+    "deadcode",
+    "goconst",
+    "gocyclo",
+    "gofmt",
+    "goimports",
+    "golint",
+    "gosec",
+    "govet",
+    "ineffassign",
+    "interfacer",
+    "lll",
+    "misspell",
+    "structcheck",
+    "typecheck",
+    "unconvert",
+    "unparam",
+    "unused",
+    "varcheck"
+]
+
+[linters-settings.lll]
+line-length = 150
+
+[linters-settings.gocyclo]
+min-complexity = 40
+
+[linters-settings.govet]
+check-shadowing = false
