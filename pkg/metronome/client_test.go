@@ -33,15 +33,15 @@ func TestJob(t *testing.T) {
 
 func TestJobs(t *testing.T) {
 	expectedJobs := []Job{
-		Job{
+		{
 			ID:          "test-job-1",
 			Description: "Job that sleeps 10 seconds",
 		},
-		Job{
+		{
 			ID:          "test-job-2",
 			Description: "Job that sleeps 20 seconds",
 		},
-		Job{
+		{
 			ID:          "test-job-3",
 			Description: "Job that sleeps 30 seconds",
 		},
@@ -152,13 +152,13 @@ func TestRun(t *testing.T) {
 
 func TestRuns(t *testing.T) {
 	expectedRuns := []Run{
-		Run{
+		{
 			JobID: "test-job",
 		},
-		Run{
+		{
 			JobID: "test-job",
 		},
-		Run{
+		{
 			JobID: "test-job",
 		},
 	}
@@ -206,15 +206,15 @@ func TestRemoveJob(t *testing.T) {
 
 func TestSchedules(t *testing.T) {
 	expectedSchedules := []Schedule{
-		Schedule{
+		{
 			ID:      "test-schedule-1",
 			Enabled: true,
 		},
-		Schedule{
+		{
 			ID:      "test-schedule-2",
 			Enabled: false,
 		},
-		Schedule{
+		{
 			ID:      "test-schedule-3",
 			Enabled: false,
 		},
@@ -297,7 +297,7 @@ func TestRemoveSchedule(t *testing.T) {
 
 func TestQueued(t *testing.T) {
 	expectedQueues := []Queue{
-		Queue{
+		{
 			JobID: "test-job",
 		},
 	}

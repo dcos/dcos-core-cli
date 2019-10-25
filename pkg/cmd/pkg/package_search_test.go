@@ -2,11 +2,12 @@ package pkg
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/dcos/client-go/dcos"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos"
 	"github.com/dcos/dcos-core-cli/pkg/cosmos/mocks"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSearchPackages(t *testing.T) {
@@ -15,21 +16,21 @@ func TestSearchPackages(t *testing.T) {
 	client := &mocks.Client{}
 	searchResult := cosmos.SearchResult{Packages: []dcos.CosmosPackageSearchDetails{
 		{
-			Name:        "package-1",
-			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus nec diam non fringilla. Duis consectetur sem vitae mi congue, et ultrices mauris mattis. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse maximus bibendum neque, eget congue augue tristique sit amet. Duis porta molestie eros, et pellentesque tellus condimentum vel. Curabitur maximus velit condimentum justo bibendum, vel sollicitudin nibh varius. Duis euismod iaculis sem, ut lobortis ex venenatis nec. Proin at semper eros, et dignissim lorem. Vivamus id scelerisque risus. Nullam auctor et est ut aliquet. Donec sit amet sem velit. ",
+			Name:           "package-1",
+			Description:    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus nec diam non fringilla.",
 			CurrentVersion: "1",
 		},
 		{
-			Name:        "package-3",
-			Description: "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit. \nMaecenas cursus nec diam non fringilla. Duis consectetur sem vitae mi congue, et ultrices mauris mattis. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse maximus bibendum neque, eget congue augue tristique sit amet. Duis porta molestie eros, et pellentesque tellus condimentum vel. Curabitur maximus velit condimentum justo bibendum, vel sollicitudin nibh varius. Duis euismod iaculis sem, ut lobortis ex venenatis nec. Proin at semper eros, et dignissim lorem. Vivamus id scelerisque risus. Nullam auctor et est ut aliquet. Donec sit amet sem velit. ",
+			Name:           "package-3",
+			Description:    "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit. \nMaecenas cursus nec diam non fringilla.",
 			CurrentVersion: "3",
-			Framework: true,
+			Framework:      true,
 		},
 		{
-			Name:        "package-2",
-			Description: "XYZ",
+			Name:           "package-2",
+			Description:    "XYZ",
 			CurrentVersion: "2",
-			Selected: true,
+			Selected:       true,
 		},
 	},
 	}

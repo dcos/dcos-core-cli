@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TesPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
+func TestPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
 	var out bytes.Buffer
 	env := mock.NewEnvironment()
 	env.Fs = afero.NewCopyOnWriteFs(
@@ -100,12 +100,18 @@ func TestPkgDescribeShouldDetectIfPackageSupportsCli(t *testing.T) {
 			Resource: dcos.CosmosPackageResource{Cli: dcos.CosmosPackageResourceCli{Binaries: dcos.CosmosPackageResourceCliBinaries{
 				Linux: dcos.CosmosPackageResourceCliOsBinaries{X8664: dcos.CosmosPackageResourceCliArtifact{
 					Kind: "zip", Url: "http://exmaple.com"}}}}}}},
-			"{\n  \"binaries\": {\n    \"darwin\": {\n      \"x86-64\": {}\n    },\n    \"linux\": {\n      \"x86-64\": {\n        \"kind\": \"zip\",\n        \"url\": \"http://exmaple.com\"\n      }\n    },\n    \"windows\": {\n      \"x86-64\": {}\n    }\n  }\n}\n"},
+			"{\n  \"binaries\": {" +
+				"\n    \"darwin\": {\n      \"x86-64\": {}\n    }," +
+				"\n    \"linux\": {\n      \"x86-64\": {\n        \"kind\": \"zip\",\n        \"url\": \"http://exmaple.com\"\n      }\n    }," +
+				"\n    \"windows\": {\n      \"x86-64\": {}\n    }\n  }\n}\n"},
 		{cosmos.Description{Package: dcos.CosmosPackage{
 			Resource: dcos.CosmosPackageResource{Cli: dcos.CosmosPackageResourceCli{Binaries: dcos.CosmosPackageResourceCliBinaries{
 				Linux: dcos.CosmosPackageResourceCliOsBinaries{X8664: dcos.CosmosPackageResourceCliArtifact{
 					Kind: "zip", Url: "http://exmaple.com"}}}}}}},
-			"{\n  \"binaries\": {\n    \"darwin\": {\n      \"x86-64\": {}\n    },\n    \"linux\": {\n      \"x86-64\": {\n        \"kind\": \"zip\",\n        \"url\": \"http://exmaple.com\"\n      }\n    },\n    \"windows\": {\n      \"x86-64\": {}\n    }\n  }\n}\n"},
+			"{\n  \"binaries\": {" +
+				"\n    \"darwin\": {\n      \"x86-64\": {}\n    }," +
+				"\n    \"linux\": {\n      \"x86-64\": {\n        \"kind\": \"zip\",\n        \"url\": \"http://exmaple.com\"\n      }\n    }," +
+				"\n    \"windows\": {\n      \"x86-64\": {}\n    }\n  }\n}\n"},
 	}
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%#v", tt.in), func(t *testing.T) {

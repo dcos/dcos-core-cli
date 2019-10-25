@@ -90,10 +90,13 @@ func (c *Client) Create(nodes []string) (*BundleCreateResponseJSONStruct, error)
 		return &createdBundle, err
 	case 409:
 		return nil, fmt.Errorf("another bundle already in progress")
-	case 503:
-		return nil, fmt.Errorf("Requested nodes %v not found", nodes)
 	default:
-		return nil, httpResponseToError(resp)
+		var createdBundle BundleCreateResponseJSONStruct
+		err = json.NewDecoder(resp.Body).Decode(&createdBundle)
+		if err != nil {
+			return nil, httpResponseToError(resp)
+		}
+		return nil, fmt.Errorf("unexpected status code %s: %s", resp.Status, createdBundle.Status)
 	}
 }
 
