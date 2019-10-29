@@ -2,7 +2,6 @@
 
 import os
 import sys
-import time
 
 import pytest
 
@@ -12,10 +11,10 @@ os.environ["CLI_TEST_SSH_USER"] = "centos"
 os.environ["CLI_TEST_MASTER_PROXY"] = "1"
 os.environ["CLI_TEST_SSH_KEY_PATH"] = os.environ.get('DCOS_TEST_SSH_KEY_PATH')
 
-code, out, _ = exec_command(['./launch_aws_cluster.sh'])
+code, _, _ = exec_command(['./launch_aws_cluster.sh'])
 assert code == 0
 
-master_ip = out.decode()
+master_ip = os.environ['MASTER_PUBLIC_IP']
 
 with dcos_tempdir():
     code, _, _ = exec_command(['dcos', 'cluster', 'setup', '--no-check', master_ip])
@@ -33,10 +32,5 @@ with dcos_tempdir():
         '-p', 'no:cacheprovider',
         'tests/integrations'
     ])
-
-if retcode != 0:
-    print("Sleeping for 5 minutes to leave room for manual debugging...")
-    print(master_ip)
-    time.sleep(300)
 
 sys.exit(retcode)

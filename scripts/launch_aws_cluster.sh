@@ -98,5 +98,6 @@ fi
 echo -e "Start the cluster:\n\n  ./terraform apply"
 ./terraform apply --auto-approve -no-color
 
-MASTER_PUBLIC_IP=$(./terraform output --json -module dcos.dcos-infrastructure masters.public_ips | jq -r '.value[0]')
+curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./jq
+export MASTER_PUBLIC_IP=$(./terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r '.value[0]')
 echo ${MASTER_PUBLIC_IP}
