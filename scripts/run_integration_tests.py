@@ -12,7 +12,7 @@ from dcoscli.test.common import dcos_tempdir, exec_command
 @atexit.register
 def clenup():
     print("Destroying cluster")
-    exec_command(['./terraform', 'destroy', '-auto-approve'])
+    exec_command(['./terraform', 'destroy', '-auto-approve', '-no-color'])
 
 
 os.environ["CLI_TEST_SSH_USER"] = "centos"
