@@ -76,7 +76,7 @@ fi
 
 if [ -f main.tf ]; then
     for _ in $(seq 1 10); do
-        ./terraform init && break
+        ./terraform init -input=false -no-color && break
         echo "Terraform init failed Retrying.."
         sleep 2
     done
