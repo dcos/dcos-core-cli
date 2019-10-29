@@ -4,7 +4,7 @@
 
 * Fixes
 
-  * Add better erros descriptions for `nodes diagnostics` command.
+  * Add better error descriptions for `node diagnostics` command.
 
 ## 2.0-patch.3
 
