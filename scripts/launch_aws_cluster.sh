@@ -96,7 +96,7 @@ else
 fi
 
 echo -e "Start the cluster:\n\n  ./terraform apply"
-./terraform apply
+./terraform apply --auto-approve -no-color
 
 MASTER_PUBLIC_IP=$(./terraform output --json -module dcos.dcos-infrastructure masters.public_ips | jq -r '.value[0]')
 echo ${MASTER_PUBLIC_IP}
