@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 
+import atexit
 import os
 import sys
 
 import pytest
 
 from dcoscli.test.common import dcos_tempdir, exec_command
+
+
+@atexit.register
+def clenup():
+    print("Destroying cluster")
+    exec_command(['./terraform', 'destroy', '-auto-approve'])
+
 
 os.environ["CLI_TEST_SSH_USER"] = "centos"
 os.environ["CLI_TEST_MASTER_PROXY"] = "1"
