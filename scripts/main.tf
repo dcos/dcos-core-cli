@@ -35,14 +35,14 @@ module "dcos" {
   }
 }
 
-output "masters-ips" {
-  value = module.dcos.masters-ips
-}
+ output "masters-ips" {
+   value = "${module.dcos.masters-ips}"
+ }
 
-output "cluster-address" {
-  value = module.dcos.masters-loadbalancer
-}
+ output "cluster-address" {
+   value = "${module.dcos.masters-loadbalancer}"
+ }
 
-output "public-agents-loadbalancer" {
-  value = module.dcos.public-agents-loadbalancer
-}
+ output "public-agents-loadbalancer" {
+   value = "${module.dcos.public-agents-loadbalancer}"
+ }
