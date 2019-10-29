@@ -44,7 +44,7 @@ function fetch {
 
     if ! checksum "$filename" "$2"; then
         for _ in $(seq 1 10); do
-            wget "$1" -O "$filename" && break
+            wget -q "$1" -O "$filename" && break
             echo "$filename download failed. Retrying.."
             sleep 2
         done
@@ -76,7 +76,7 @@ fi
 
 if [ -f main.tf ]; then
     for _ in $(seq 1 10); do
-        ./terraform init -input=false -no-color && break
+        ./terraform init -input=false -no-color | grep --invert --extended-regexp '^(\- module\.|\s+Getting source\s)' && break
         echo "Terraform init failed Retrying.."
         sleep 2
     done
