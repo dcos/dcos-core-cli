@@ -59,6 +59,9 @@ pipeline {
                 pip install -r requirements.txt; \
                 wget -O env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos; \
                 dcos cluster remove --all; \
+                ./launch_aws_cluster.sh; \
+                curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./jq; \
+                export MASTER_PUBLIC_IP=$(./terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r '.value[0]')
                 ./run_integration_tests.py"
           '''
         }
