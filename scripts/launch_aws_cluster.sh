@@ -69,33 +69,16 @@ fi
 fetch "$URL_terraform" "$CHECKSUM_terraform"
 fetch "$URL_terraform_provider_aws" "$CHECKSUM_terraform_provider_aws"
 
-if [ ! -f ./id_rsa ]; then
-    ssh-keygen -t rsa -f id_rsa
-    cat id_rsa
-fi
+for _ in $(seq 1 10); do
+    ./terraform init -input=false -no-color | grep --invert --extended-regexp '^(\- module\.|\s+Getting source\s)' && break
+    echo "Terraform init failed Retrying.."
+    sleep 2
+done
 
-if [ -f main.tf ]; then
-    for _ in $(seq 1 10); do
-        ./terraform init -input=false -no-color | grep --invert --extended-regexp '^(\- module\.|\s+Getting source\s)' && break
-        echo "Terraform init failed Retrying.."
-        sleep 2
-    done
-else
-    echo -e "Download your main.tf file either from your build's artifacts or follow the DC/OS documentation to create one: https://docs.mesosphere.com/1.13/installing/evaluation/aws/#creating-a-dcos-cluster\n"
-    echo -e "Once you have done that, run:\n\n  ./terraform init\n"
-fi
+ssh-add ${DCOS_TEST_SSH_KEY_PATH}
+ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub
 
-if [ "$AWS_PROFILE" == "" ]; then
-    echo -e "Login to AWS with maws:\n\n  eval \$(maws login \"account\")\n"
-fi
-
-if [ "$SSH_AUTH_SOCK" == "" ]; then
-    echo -e "Load the SSH key into your SSH agent:\n\n  eval \$(ssh-agent)\n  ssh-add ./id_rsa\n"
-else
-    ssh-add ./id_rsa
-fi
-
-echo -e "Start the cluster:\n\n  ./terraform apply"
+echo -e "Start the cluster:  ./terraform apply"
 ./terraform apply --auto-approve -no-color
 
 curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./jq

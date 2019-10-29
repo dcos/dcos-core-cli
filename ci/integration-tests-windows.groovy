@@ -50,7 +50,7 @@ node('py36') {
                     source env/bin/activate; \
                     pip install --upgrade pip==18.1 >&2; \
                     pip install -r requirements.txt >&2; \
-                    ./launch_aws_cluster.sh"
+                    # ./launch_aws_cluster.sh"
                 ''',
                 returnStdout: true
             ).trim()
