@@ -1,0 +1,40 @@
+Deploy and manage applications to DC/OS
+
+Usage:
+    dcos marathon [command]
+
+Commands:
+    about
+        Print info.json for DC/OS Marathon.
+    app
+        Manage apps
+    debug
+        Debug app deployments.
+    delay
+        Control Marathon deployment delay.
+    deployment
+        Manage deployments.
+    group
+        Manage groups.
+    leader
+        Manage leader.
+    ping
+        Ensure Marathon is up and responding.
+    plugin
+        Manage Marathon plugins.
+    pod
+        Manage pods.
+    task
+        Manage tasks.
+
+Options:
+    --config-schema
+        Show the configuration schema for the Marathon subcommand.
+    -h, --help
+        help for marathon
+    --info
+        Print a short description of this subcommand.
+    --version
+        Print version information
+
+Use "dcos marathon [command] --help" for more information about a command.
