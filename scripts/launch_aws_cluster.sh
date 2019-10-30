@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 # COPS-4642: using fork of terraform-aws-instance as spot instances are unsupported in dcos-terraform.
@@ -72,6 +71,3 @@ curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./j
 
 ssh-add ${DCOS_TEST_SSH_KEY_PATH}
 ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub
-
-echo -e "Start the cluster:  ./terraform apply"
-./terraform apply --auto-approve -no-color
