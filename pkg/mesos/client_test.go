@@ -16,7 +16,7 @@ import (
 
 func TestHosts(t *testing.T) {
 	expectedHosts := []Host{
-		Host{
+		{
 			Host: "dcos.example.org",
 			IP:   "8.8.8.8",
 		},
@@ -38,7 +38,7 @@ func TestHosts(t *testing.T) {
 
 func TestLeader(t *testing.T) {
 	expectedHosts := []Master{
-		Master{
+		{
 			Host: "leader.mesos",
 			IP:   "10.0.0.10",
 		},
@@ -60,7 +60,7 @@ func TestLeader(t *testing.T) {
 
 func TestMasters(t *testing.T) {
 	expectedHosts := []Master{
-		Master{
+		{
 			Host: "master.mesos",
 			IP:   "10.0.0.10",
 		},
@@ -107,7 +107,7 @@ func TestStateSummary(t *testing.T) {
 		Hostname: "master.mesos",
 		Cluster:  "cluster-ops-cli-test-cluster-fcdb4f27",
 		Slaves: []Slave{
-			Slave{
+			{
 				ID:       "2a2a4995-3a44-41b8-9610-1e0bca965e88-S0",
 				PID:      "10.0.0.23@2a2a4995-3a44-41b8-9610-1e0bca965e88-S0",
 				Hostname: "10.0.0.23",
@@ -135,7 +135,7 @@ func TestAgents(t *testing.T) {
 	expectedAgents := master.Response{
 		GetAgents: &master.Response_GetAgents{
 			Agents: []master.Response_GetAgents_Agent{
-				master.Response_GetAgents_Agent{
+				{
 					Active: true,
 					AgentInfo: mesos.AgentInfo{
 						Hostname: "10.0.0.23",

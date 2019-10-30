@@ -1,9 +1,6 @@
 [run]
 concurrency = 4
 deadline = "10m"
-skip-files = [
-    "_(string|test)\\.go"
-]
 
 modules-download-mode = "vendor"
 
