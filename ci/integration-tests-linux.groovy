@@ -33,11 +33,6 @@ pipeline {
         }
       }
     }
-    stage('Terraform Init') {
-      steps {
-        sh "./terraform init scripts"
-      }
-    }
     stage('Terraform Apply') {
       steps {
         withCredentials([
@@ -50,6 +45,7 @@ pipeline {
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
           sh "ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub"
+          sh "./terraform init scripts"
           sh "./terraform apply -auto-approve scripts"
           script {
             MASTER_PUBLIC_IP = sh(
