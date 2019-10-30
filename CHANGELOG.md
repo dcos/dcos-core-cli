@@ -4,6 +4,7 @@
 
 * Fixes
 
+  * Add better error descriptions for `node diagnostics` command.
   * Support more fields in job JSON definition.
 
 ## 1.13-patch.6
