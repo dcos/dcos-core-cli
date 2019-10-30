@@ -5,7 +5,6 @@ pipeline {
 
     environment {
       MASTER_PUBLIC_IP = ''
-      TF_IN_AUTOMATION = 'true'
       TF_INPUT=0
       TF_CLI_ARGS="-no-color"
     }
