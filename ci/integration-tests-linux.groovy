@@ -6,8 +6,8 @@ pipeline {
     environment {
       MASTER_PUBLIC_IP = ''
       TF_IN_AUTOMATION = 'true'
-      AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
+      TF_INPUT=0
+      TF_CLI_ARGS="-no-colors"
     }
 
   options {
@@ -35,7 +35,7 @@ pipeline {
     }
     stage('Terraform Init') {
       steps {
-        sh "./terraform init -no-color -input=false"
+        sh "./terraform init"
       }
     }
     stage('Terraform Plan') {
@@ -49,7 +49,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./terraform plan -no-color -out=tfplan -input=false"
+          sh "./terraform plan -out=tfplan"
         }
       }
     }
@@ -64,7 +64,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./terraform apply -no-color -input=false -auto-approve tfplan"
+          sh "./terraform apply -auto-approve tfplan"
         }
         environment {
           MASTER_PUBLIC_IP = sh(
@@ -127,7 +127,7 @@ pipeline {
   post {
     always {
       echo 'Destroy Cluster'
-      sh "./terraform destroy -no-color -input=false -auto-approve tfplan"
+      sh "./terraform destroy -auto-approve tfplan"
     }
   }
 
