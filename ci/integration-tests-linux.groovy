@@ -43,8 +43,9 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./terraform init scripts"
-          sh "ssh-keygen -t rsa -f id_rsa"
+          sh './terraform init scripts'
+          sh 'eval "\$(ssh-agent -s)"'
+          sh 'ssh-keygen -t rsa -f id_rsa'
           sh 'ssh-agent sh -c "ssh-add ./id_rsa && ./terraform apply -auto-approve scripts"'
           script {
             MASTER_PUBLIC_IP = sh(
