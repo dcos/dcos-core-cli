@@ -49,6 +49,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
+          sh "ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub"
           sh "./terraform apply -auto-approve scripts"
           script {
             MASTER_PUBLIC_IP = sh(
