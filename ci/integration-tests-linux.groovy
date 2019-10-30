@@ -7,7 +7,7 @@ pipeline {
       MASTER_PUBLIC_IP = ''
       TF_IN_AUTOMATION = 'true'
       TF_INPUT=0
-      TF_CLI_ARGS="-no-colors"
+      TF_CLI_ARGS="-no-color"
     }
 
   options {
@@ -35,7 +35,7 @@ pipeline {
     }
     stage('Terraform Init') {
       steps {
-        sh "./terraform init ./scripts/"
+        sh "./terraform init scripts"
       }
     }
     stage('Terraform Plan') {
@@ -49,7 +49,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./terraform plan -out=tfplan ./scripts/"
+          sh "./terraform plan -out=tfplan scripts"
         }
       }
     }
