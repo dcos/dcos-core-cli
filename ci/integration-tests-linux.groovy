@@ -44,6 +44,7 @@ pipeline {
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
           sh "ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub"
+          sh "ssh-add ${DCOS_TEST_SSH_KEY_PATH}"
           sh "./terraform init scripts"
           sh "./terraform apply -auto-approve scripts"
           script {
