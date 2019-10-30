@@ -65,11 +65,11 @@ pipeline {
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
           sh "./terraform apply -auto-approve tfplan"
-        }
-        environment {
-          MASTER_PUBLIC_IP = sh(
-                  script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
-                  returnStdout: true).trim()
+          script {
+            MASTER_PUBLIC_IP = sh(
+                    script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
+                    returnStdout: true).trim()
+          }
         }
       }
     }
