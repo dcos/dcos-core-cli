@@ -68,3 +68,6 @@ fi
 fetch "$URL_terraform" "$CHECKSUM_terraform"
 fetch "$URL_terraform_provider_aws" "$CHECKSUM_terraform_provider_aws"
 curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./jq
+
+ssh-add ${DCOS_TEST_SSH_KEY_PATH}
+ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub

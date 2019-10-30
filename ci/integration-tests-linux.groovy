@@ -3,19 +3,12 @@
 pipeline {
   agent { label 'mesos-ubuntu' }
 
-  withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding',
-           credentialsId: 'a20fbd60-2528-4e00-9175-ebe2287906cf',
-           accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-           secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-  ]) {
     environment {
       MASTER_PUBLIC_IP = ''
       TF_IN_AUTOMATION = 'true'
       AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
     }
-  }
 
   options {
     timeout(time: 6, unit: 'HOURS')
@@ -31,7 +24,13 @@ pipeline {
 
     stage("Terraform install") {
       steps {
-        sh "./launch_aws_cluster.sh"
+        withCredentials([
+                [$class       : 'FileBinding',
+                 credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
+                 variable     : 'DCOS_TEST_SSH_KEY_PATH']
+        ]) {
+          sh "./launch_aws_cluster.sh"
+        }
       }
     }
     stage('Terraform Init') {
@@ -41,17 +40,37 @@ pipeline {
     }
     stage('Terraform Plan') {
       steps {
-        sh "./terraform plan -no-color -out=tfplan -input=false"
+        withCredentials([
+                [$class           : 'AmazonWebServicesCredentialsBinding',
+                 credentialsId    : 'a20fbd60-2528-4e00-9175-ebe2287906cf',
+                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+                [$class       : 'FileBinding',
+                 credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
+                 variable     : 'DCOS_TEST_SSH_KEY_PATH']
+        ]) {
+          sh "./terraform plan -no-color -out=tfplan -input=false"
+        }
       }
     }
     stage('Terraform Apply') {
       steps {
-        sh "./terraform apply -no-color -input=false -auto-approve tfplan"
-      }
-      environment {
-        MASTER_PUBLIC_IP = sh(
-                script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
-                returnStdout: true).trim()
+        withCredentials([
+                [$class           : 'AmazonWebServicesCredentialsBinding',
+                 credentialsId    : 'a20fbd60-2528-4e00-9175-ebe2287906cf',
+                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+                [$class       : 'FileBinding',
+                 credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
+                 variable     : 'DCOS_TEST_SSH_KEY_PATH']
+        ]) {
+          sh "./terraform apply -no-color -input=false -auto-approve tfplan"
+        }
+        environment {
+          MASTER_PUBLIC_IP = sh(
+                  script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
+                  returnStdout: true).trim()
+        }
       }
     }
 
