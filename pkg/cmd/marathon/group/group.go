@@ -22,4 +22,3 @@ func NewCmdMarathonGroup(ctx api.Context) *cobra.Command {
 
 	return cmd
 }
-

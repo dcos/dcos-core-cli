@@ -18,4 +18,3 @@ func NewCmdMarathonLeader(ctx api.Context) *cobra.Command {
 
 	return cmd
 }
-

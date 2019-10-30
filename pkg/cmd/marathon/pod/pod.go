@@ -22,4 +22,3 @@ func NewCmdMarathonPod(ctx api.Context) *cobra.Command {
 
 	return cmd
 }
-
