@@ -29,7 +29,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./launch_aws_cluster.sh"
+          sh "scripts/launch_aws_cluster.sh"
         }
       }
     }
