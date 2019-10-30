@@ -4,6 +4,7 @@ import (
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/diagnostics"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/job"
+	"github.com/dcos/dcos-core-cli/pkg/cmd/marathon"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/node"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/pkg"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/quota"
@@ -27,6 +28,7 @@ func NewDCOSCommand(ctx api.Context) *cobra.Command {
 		service.NewCommand(ctx),
 		task.NewCommand(ctx),
 		diagnostics.NewCommand(ctx),
+		marathon.NewCommand(ctx),
 	)
 
 	cmd.SetUsageFunc(pluginutil.Usage)
