@@ -38,21 +38,6 @@ pipeline {
         sh "./terraform init scripts"
       }
     }
-    stage('Terraform Plan') {
-      steps {
-        withCredentials([
-                [$class           : 'AmazonWebServicesCredentialsBinding',
-                 credentialsId    : 'a20fbd60-2528-4e00-9175-ebe2287906cf',
-                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-                [$class       : 'FileBinding',
-                 credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
-                 variable     : 'DCOS_TEST_SSH_KEY_PATH']
-        ]) {
-          sh "./terraform plan -out=tfplan scripts"
-        }
-      }
-    }
     stage('Terraform Apply') {
       steps {
         withCredentials([
@@ -64,7 +49,7 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh "./terraform apply -auto-approve tfplan"
+          sh "./terraform apply -auto-approve scripts"
           script {
             MASTER_PUBLIC_IP = sh(
                     script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
@@ -127,7 +112,7 @@ pipeline {
   post {
     always {
       echo 'Destroy Cluster'
-      sh "./terraform destroy -auto-approve tfplan"
+      sh "./terraform destroy -auto-approve scripts"
     }
   }
 
