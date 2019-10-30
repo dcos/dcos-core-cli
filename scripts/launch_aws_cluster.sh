@@ -68,12 +68,7 @@ fi
 
 fetch "$URL_terraform" "$CHECKSUM_terraform"
 fetch "$URL_terraform_provider_aws" "$CHECKSUM_terraform_provider_aws"
-
-for _ in $(seq 1 10); do
-    ./terraform init -input=false -no-color | grep --invert --extended-regexp '^(\- module\.|\s+Getting source\s)' && break
-    echo "Terraform init failed Retrying.."
-    sleep 2
-done
+curl -s https://stedolan.github.io/jq/download/linux64/jq > ./jq && chmod +x ./jq
 
 ssh-add ${DCOS_TEST_SSH_KEY_PATH}
 ssh-keygen -y -f ${DCOS_TEST_SSH_KEY_PATH} > ./id_rsa.pub
