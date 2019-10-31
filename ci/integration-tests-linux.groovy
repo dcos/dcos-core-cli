@@ -45,8 +45,8 @@ pipeline {
         ]) {
           dir("scripts") {
             sh 'ssh-keygen -t rsa -f id_rsa'
-            sh 'docker run -it -v $(pwd):/workpace -w /workpace hashicorp/terraform:0.11.14 init'
-            sh 'docker run -it -v $(pwd):/workpace -w /workpace -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY  hashicorp/terraform:0.11.14 apply'
+            sh 'docker run -it -v $(pwd):/workpace -w /workpace -e TF_INPUT hashicorp/terraform:0.11.14 init -no-color'
+            sh 'docker run -it -v $(pwd):/workpace -w /workpace -e TF_INPUT -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY  hashicorp/terraform:0.11.14 apply -auto-approve -no-color'
             script {
               MASTER_PUBLIC_IP = sh(
                       script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
