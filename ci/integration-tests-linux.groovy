@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 pipeline {
-  agent { label 'mesos-ubuntu' }
+  agent { label 'mesos' }
 
     environment {
       MASTER_PUBLIC_IP = ''
