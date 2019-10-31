@@ -47,7 +47,7 @@ pipeline {
             sh './terraform init'
             sh 'eval "\$(ssh-agent -s)"'
             sh 'ssh-keygen -t rsa -f id_rsa'
-            sh 'ssh-add ./id_rsa'
+//            sh 'ssh-add ./id_rsa'
             sh './terraform apply -auto-approve'
             script {
               MASTER_PUBLIC_IP = sh(
