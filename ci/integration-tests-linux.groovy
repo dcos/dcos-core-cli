@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 pipeline {
-  agent { label 'mesos' }
+  agent { label 'mesos-ubuntu' }
 
     environment {
       MASTER_PUBLIC_IP = ''
@@ -47,7 +47,8 @@ pipeline {
             sh './terraform init'
             sh 'eval "\$(ssh-agent -s)"'
             sh 'ssh-keygen -t rsa -f id_rsa'
-            sh 'ssh-agent sh -c "ssh-add ./id_rsa && ./terraform apply -auto-approve"'
+            sh 'ssh-add ./id_rsa'
+            sh './terraform apply -auto-approve'
             script {
               MASTER_PUBLIC_IP = sh(
                       script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
