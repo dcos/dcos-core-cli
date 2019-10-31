@@ -43,15 +43,16 @@ pipeline {
                  credentialsId: '23743034-1ac4-49f7-b2e6-a661aee2d11b',
                  variable     : 'DCOS_TEST_SSH_KEY_PATH']
         ]) {
-          sh 'cd scripts'
-          sh './terraform init'
-          sh 'eval "\$(ssh-agent -s)"'
-          sh 'ssh-keygen -t rsa -f id_rsa'
-          sh 'ssh-agent sh -c "ssh-add ./id_rsa && ./terraform apply -auto-approve"'
-          script {
-            MASTER_PUBLIC_IP = sh(
-                    script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
-                    returnStdout: true).trim()
+          dir("scripts") {
+            sh './terraform init'
+            sh 'eval "\$(ssh-agent -s)"'
+            sh 'ssh-keygen -t rsa -f id_rsa'
+            sh 'ssh-agent sh -c "ssh-add ./id_rsa && ./terraform apply -auto-approve"'
+            script {
+              MASTER_PUBLIC_IP = sh(
+                      script: './terraform output --json -module dcos.dcos-infrastructure masters.public_ips | ./jq -r \'.value[0]\'',
+                      returnStdout: true).trim()
+            }
           }
         }
       }
@@ -110,7 +111,9 @@ pipeline {
   post {
     always {
       echo 'Destroy Cluster'
-      sh "cd scripts && ./terraform destroy -auto-approve"
+      dir("scripts") {
+        sh "./terraform destroy -auto-approve"
+      }
     }
   }
 
