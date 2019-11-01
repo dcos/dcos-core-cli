@@ -10,8 +10,9 @@ func newCmdMarathonGroupScale(ctx api.Context) *cobra.Command {
 	var force bool
 
 	cmd := &cobra.Command{
-		Use:   "scale",
-		Short: "Scale a group.",
+		Use:                "scale",
+		Short:              "Scale a group.",
+		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return python.InvokePythonCLI(ctx)
 		},
