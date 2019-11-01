@@ -8,7 +8,7 @@ def test_help_job():
 
 
 def test_help_marathon():
-    with open('dcoscli/data/help/marathon.txt') as content:
+    with open('tests/data/marathon/help.txt') as content:
         assert_command(['dcos', 'help', 'marathon'],
                        stdout=content.read().encode('utf-8'))
 

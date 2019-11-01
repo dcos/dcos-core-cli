@@ -26,7 +26,7 @@ _ZERO_INSTANCE_APP_INSTANCES = 100
 
 
 def test_help():
-    with open('dcoscli/data/help/marathon.txt') as content:
+    with open('tests/data/marathon/help.txt') as content:
         assert_command(['dcos', 'marathon', '--help'],
                        stdout=content.read().encode('utf-8'))
 

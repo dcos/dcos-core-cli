@@ -18,7 +18,7 @@ description = "Deploy and manage jobs in DC/OS"
 
 [[commands]]
 name = "marathon"
-path = "bin/dcos_py{0}"
+path = "bin/dcos{0}"
 description = "Deploy and manage applications to DC/OS"
 
 [[commands]]
