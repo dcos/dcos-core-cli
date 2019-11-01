@@ -7,6 +7,8 @@ import (
 )
 
 func newCmdMarathonPodRemove(ctx api.Context) *cobra.Command {
+	var force bool
+
 	cmd := &cobra.Command{
 		Use:   "remove",
 		Short: "Remove a pod.",
@@ -14,5 +16,8 @@ func newCmdMarathonPodRemove(ctx api.Context) *cobra.Command {
 			return python.InvokePythonCLI(ctx)
 		},
 	}
+
+	cmd.Flags().BoolVar(&force, "force", false, "Disable checks in Marathon during updates.")
+
 	return cmd
 }
