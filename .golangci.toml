@@ -31,7 +31,7 @@ enable = [
 line-length = 150
 
 [linters-settings.gocyclo]
-min-complexity = 40
+min-complexity = 30
 
 [linters-settings.govet]
 check-shadowing = false

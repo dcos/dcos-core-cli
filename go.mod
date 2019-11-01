@@ -22,6 +22,7 @@ require (
 	github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.4
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0

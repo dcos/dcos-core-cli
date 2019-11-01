@@ -2,9 +2,14 @@
 
 ## 2.0-patch.x
 
+* Features
+
+  * Add a `CERTIFIED` column to `dcos package list` and `dcos package search` commands
+
 * Fixes
 
   * Add better error descriptions for `node diagnostics` command.
+  * Fix the `--app-id` filter in `dcos package list`
 
 ## 2.0-patch.3
 

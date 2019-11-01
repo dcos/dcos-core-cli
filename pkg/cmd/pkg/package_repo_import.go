@@ -52,7 +52,7 @@ func newCmdPackageRepoImport(ctx api.Context) *cobra.Command {
 					continue
 				}
 
-				_, err = c.PackageAddRepo(repo.Name, repo.Uri, index)
+				_, err = c.PackageAddRepo(repo.Name, repo.Uri, &index)
 				if err != nil {
 					ctx.Logger().Warn(fmt.Sprintf("Error (%s) while adding repo '%s' (%s). Skipping.\n", err.Error(), repo.Name, repo.Uri))
 					continue
