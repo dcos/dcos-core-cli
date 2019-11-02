@@ -14,7 +14,7 @@ func newCmdNodeDiagnostics(ctx api.Context) *cobra.Command {
 		Use:   "diagnostics",
 		Short: "Use diagnostics bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics' instead.")
+			err := ctx.Deprecated("This command is deprecated since DC/OS 2.0, please use 'dcos diagnostics' instead.")
 			if err != nil {
 				return err
 			}
