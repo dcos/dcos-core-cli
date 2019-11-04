@@ -13,7 +13,7 @@ func newCmdNodeDiagnosticsDelete(ctx api.Context) *cobra.Command {
 		Short: "Delete a diagnostics bundle",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ctx.Deprecated("This command is deprecated since DC/OS 1.14, please use 'dcos diagnostics delete' instead.")
+			err := ctx.Deprecated("This command is deprecated since DC/OS 2.0, please use 'dcos diagnostics delete' instead.")
 			if err != nil {
 				return err
 			}
