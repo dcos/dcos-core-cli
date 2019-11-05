@@ -1,5 +1,5 @@
 set -o errexit -o nounset
-if [ "$(uname)" != "Windows_NT" ]; then
+if [[ ! "$(uname)" =~ ^MINGW64_NT ]]; then
   set -o pipefail
 fi
 
@@ -13,11 +13,10 @@ fi
 : ${DIST_DOCKER:=dist-docker}
 : ${TOX_DOCKER:=.tox-docker}
 
-if [ "$(uname)" = "Windows_NT" ]; then
+if [[ "$(uname)" =~ ^MINGW64_NT ]]; then
   BIN=Scripts
   EXE=.exe
   : ${PYTHON:=python${EXE}}
-  : ${VIRTUALENV:=virtualenv${EXE}}
 else
   BIN=bin
   EXE=

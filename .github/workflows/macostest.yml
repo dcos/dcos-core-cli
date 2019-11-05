@@ -1,0 +1,37 @@
+name: Build macOS legacy binary
+on: [push]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest]
+        include:
+          - os: macos-latest
+            platform_name: darwin
+            python_version: 3.7
+            env_bindir: bin
+            sudo: sudo
+    runs-on: ${{matrix.os}}
+    name: Build and publish binary
+    steps:
+      - run: |
+          sudo sh -c 'find / -name "MacOSX*.sdk" 2>/dev/null | xargs ls -lh'
+      - uses: actions/checkout@master
+      - name: Download Python source code
+        run: curl -o python.tar.gz https://www.python.org/ftp/python/3.7.5/Python-3.7.5.tgz && tar xzf python.tar.gz
+      - name: Build Python
+        run: |
+          cd Python-3.7.5
+          mkdir -p ${HOME}/env-osx1013
+          ./configure --prefix=${HOME}/env-osx1013/ \
+            --enable-ipv6 \
+            --enable-framework=${HOME}/env-osx1013/Frameworks/ \
+            --without-gcc || cat config.log
+          make
+          make install PYTHONAPPSDIR=${HOME}/env-osx1013/Applications
+        env:
+          PATH: "${HOME}/env-osx1013/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
+          MACOSXSDK: /Applications/Xcode_11.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+          CFLAGS: "-isysroot $MACOSXSDK  -I${MACOSXSDK}/usr/include -I${MACOSXSDK}/System/Library/Frameworks/Tk.framework/Versions/8.5/Headers"
+          LDFLAGS: "-isysroot $MACOSXSDK"
