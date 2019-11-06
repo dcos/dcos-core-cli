@@ -3,9 +3,13 @@ package marathon
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	marathon "github.com/gambol99/go-marathon"
 )
@@ -64,5 +68,40 @@ func (c *Client) GroupsWithoutRootSlash() (map[string]bool, error) {
 	default:
 		return nil, errors.New("unable to get Marathon groups")
 	}
+}
 
+// Info returns the content of the Marathon endpoint 'v2/info'.
+func (c *Client) Info() (map[string]interface{}, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/info")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not read response body: %s", err)
+		}
+
+		var result map[string]interface{}
+		err = json.Unmarshal(data, &result)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal response body: %s", err)
+		}
+		return result, nil
+	default:
+		return nil, httpResponseToError(resp)
+	}
+}
+
+func httpResponseToError(resp *http.Response) error {
+	if resp.StatusCode < 400 {
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
+	return &httpclient.HTTPError{
+		Response: resp,
+	}
 }
