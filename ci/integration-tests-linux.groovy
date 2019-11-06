@@ -38,7 +38,7 @@ pipeline {
             }
         }
 
-        stage("Lanuch AWS Cluster") {
+        stage("Launch AWS Cluster") {
             steps {
                 withCredentials(credentials) {
                     script {
