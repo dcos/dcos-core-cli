@@ -61,69 +61,63 @@ func TestListPackages(t *testing.T) {
 `, out.String())
 }
 
+var abPackage = cosmos.Package{
+	Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1",
+}
+var xyzPackage = cosmos.Package{
+	Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1",
+}
+var cliApp = cosmos.Package{
+	Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
+	Framework: true, Name: "cli-app", Selected: true, Version: "alpha",
+}
+var pkgCli = cosmos.Package{
+	Apps: []string{"/pkg-cli"}, Command: &dcos.CosmosPackageCommand{Name: "pkg-cli"}, Description: "Some CLI Package",
+	Framework: true, Name: "pkg-cli", Selected: true, Version: "2.4.4-1.15.4",
+}
+var mockPackages = []cosmos.Package{abPackage, xyzPackage}
 var testCases = []struct {
-	cluster string
-	options listOptions
-	out     []cosmos.Package
+	cluster        string
+	options        listOptions
+	cosmosResposne []cosmos.Package
+	out            []cosmos.Package
 }{
-	{NoPlugins, listOptions{jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{query: "package-2", jsonOutput: true}, []cosmos.Package{
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{query: "-2", jsonOutput: true}, []cosmos.Package{
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{query: "package", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{query: "a", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"},
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{query: "some-app", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
-	{NoPlugins, listOptions{appID: "some-app", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
-	{NoPlugins, listOptions{appID: "a", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
-	{NoPlugins, listOptions{appID: "b", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
-	{NoPlugins, listOptions{appID: "package-2", jsonOutput: true}, []cosmos.Package{
-		{Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Name: "package-2", Version: "0.0.1"}}},
-	{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, []cosmos.Package{}},
-	{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, []cosmos.Package{}},
-	{NoPlugins, listOptions{query: "not found", jsonOutput: true}, []cosmos.Package{}},
-	{MultipleCommands, listOptions{cliOnly: true, jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
-			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
-		{Apps: []string{"/pkg-cli"}, Command: &dcos.CosmosPackageCommand{Name: "pkg-cli"}, Description: "Some CLI Package",
-			Framework: true, Name: "pkg-cli", Selected: true, Version: "2.4.4-1.15.4"}}},
-	{MultipleCommands, listOptions{query: "cli", cliOnly: true, jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
-			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
-		{Apps: []string{"/pkg-cli"}, Command: &dcos.CosmosPackageCommand{Name: "pkg-cli"}, Description: "Some CLI Package",
-			Framework: true, Name: "pkg-cli", Selected: true, Version: "2.4.4-1.15.4"}}},
-	{MultipleCommands, listOptions{query: "app", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
-			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"},
-		{Apps: []string{"a", "b", "some-app"}, Description: "package-2", Name: "package-1", Version: "0.0.0.1"}}},
-	{MultipleCommands, listOptions{appID: "app", jsonOutput: true}, []cosmos.Package{}},
-	{MultipleCommands, listOptions{query: "package", cliOnly: true, jsonOutput: true}, []cosmos.Package{}},
-	{MultipleCommands, listOptions{appID: "cli-app", jsonOutput: true}, []cosmos.Package{
-		{Apps: []string{"/cli-app"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"}, Description: "Some CLI APP",
-			Framework: true, Name: "cli-app", Selected: true, Version: "alpha"}}},
+	{NoPlugins, listOptions{jsonOutput: true}, mockPackages, mockPackages},
+	{NoPlugins, listOptions{query: "package-2", jsonOutput: true}, mockPackages, []cosmos.Package{xyzPackage}},
+	{NoPlugins, listOptions{query: "-2", jsonOutput: true}, mockPackages, []cosmos.Package{xyzPackage}},
+	{NoPlugins, listOptions{query: "package", jsonOutput: true}, mockPackages, mockPackages},
+	{NoPlugins, listOptions{query: "a", jsonOutput: true}, mockPackages, mockPackages},
+	{NoPlugins, listOptions{query: "some-app", jsonOutput: true}, mockPackages, []cosmos.Package{abPackage}},
+	{NoPlugins, listOptions{appID: "some-app", jsonOutput: true}, mockPackages, []cosmos.Package{abPackage}},
+	{NoPlugins, listOptions{appID: "a", jsonOutput: true}, mockPackages, []cosmos.Package{abPackage}},
+	{NoPlugins, listOptions{appID: "b", jsonOutput: true}, mockPackages, []cosmos.Package{abPackage}},
+	{NoPlugins, listOptions{appID: "package-2", jsonOutput: true}, mockPackages,
+		[]cosmos.Package{xyzPackage}},
+	{NoPlugins, listOptions{cliOnly: true, jsonOutput: true}, mockPackages, []cosmos.Package{}},
+	{NoPlugins, listOptions{appID: "not found", jsonOutput: true}, mockPackages, []cosmos.Package{}},
+	{NoPlugins, listOptions{query: "not found", jsonOutput: true}, mockPackages, []cosmos.Package{}},
+	{MultipleCommands, listOptions{cliOnly: true, jsonOutput: true}, mockPackages, []cosmos.Package{cliApp, pkgCli}},
+	{MultipleCommands, listOptions{query: "cli", cliOnly: true, jsonOutput: true}, mockPackages, []cosmos.Package{cliApp, pkgCli}},
+	{MultipleCommands, listOptions{query: "app", jsonOutput: true}, mockPackages, []cosmos.Package{cliApp, abPackage}},
+	{MultipleCommands, listOptions{appID: "app", jsonOutput: true}, mockPackages, []cosmos.Package{}},
+	{MultipleCommands, listOptions{query: "package", cliOnly: true, jsonOutput: true}, mockPackages, []cosmos.Package{}},
+	{MultipleCommands, listOptions{appID: "cli-app", jsonOutput: true}, mockPackages, []cosmos.Package{cliApp}},
+	{MultipleCommands, listOptions{jsonOutput: true}, []cosmos.Package{
+		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "0.0.0.1"},
+		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"},
+	}, []cosmos.Package{cliApp, pkgCli}},
+	{MultipleCommands, listOptions{jsonOutput: true, cliOnly: true}, []cosmos.Package{
+		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "0.0.0.1"},
+		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"},
+	}, []cosmos.Package{cliApp, pkgCli}},
 }
 
 func TestListPackagesFilterJson(t *testing.T) {
-	client := &mocks.Client{}
-	packages := []cosmos.Package{
-		{Name: "package-1", Apps: []string{"a", "b", "some-app"}, Description: "package-2", Version: "0.0.0.1"},
-		{Name: "package-2", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"},
-	}
-	client.On("PackageList").Return(packages, nil)
-
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%s_%#v", tt.cluster, tt.options), func(t *testing.T) {
 			out, ctx := setupCluster(tt.cluster)
+			client := &mocks.Client{}
+			client.On("PackageList").Return(tt.cosmosResposne, nil)
 
 			err := listPackages(ctx, tt.options, client)
 			assert.NoError(t, err)
