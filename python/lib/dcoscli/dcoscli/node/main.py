@@ -927,11 +927,8 @@ def _ssh(leader, slave, option, config_file, user, master_proxy, proxy_ip,
     if command is None:
         command = ''
 
-    ssh_options = ssh_util.get_ssh_options(
-        config_file, option, user, proxy_ip, master_proxy)
-    cmd = "ssh {0} {1} -- '{2}'".format(ssh_options, host, command)
-    if ssh_options != '':
-        cmd = cmd + "\""
+    cmd = _get_ssh_command(config_file, option, user, proxy_ip, master_proxy,
+                           host, command)
 
     emitter.publish(DefaultError("Running `{}`".format(cmd)))
     if not master_proxy and not proxy_ip:
@@ -941,6 +938,14 @@ def _ssh(leader, slave, option, config_file, user, master_proxy, proxy_ip,
                          "`--master-proxy` or `--proxy-ip`"))
 
     return subprocess.Subproc().call(cmd, shell=True)
+
+
+def _get_ssh_command(config_file, option, user, proxy_ip, master_proxy,
+                     host, command):
+    ssh_options = ssh_util.get_ssh_options(
+        config_file, option, user, proxy_ip, master_proxy)
+
+    return "ssh {0} {1} -- '{2}'".format(ssh_options, host, command)
 
 
 def _decommission(mesos_id):

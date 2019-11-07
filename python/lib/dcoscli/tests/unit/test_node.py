@@ -400,3 +400,41 @@ def test_list_components_leader(mocked_get, mocked_dns,
     main._list_components(True, False, False)
     mocked_get.assert_called_with(
         'http://10.10.10.10/system/health/v1/nodes/10.10.0.1/units')
+
+
+@pytest.mark.parametrize(
+    "conf, option, user, proxy_ip, master_proxy, host, command, expected_cmd",
+    [
+        # https://jira.mesosphere.com/browse/DCOS-42048
+        (
+            "",
+            ["StrictHostKeyChecking=no"],
+            "",
+            "82.194.127.1",
+            True,
+            "10.0.1.35",
+            "hostname && hostname",
+            ("ssh -A -t -o StrictHostKeyChecking=no -l core 82.194.127.1 -- "
+             "ssh -A -t -o StrictHostKeyChecking=no -l core 10.0.1.35 -- "
+             "'hostname && hostname'")
+        ),
+
+        # https://jira.mesosphere.com/browse/COPS-5494
+        (
+            "",
+            ["StrictHostKeyChecking=no"],
+            "cgianelloni",
+            "",
+            False,
+            "10.110.12.95",
+            "host leader.mesos",
+            ("ssh  -A -t -o StrictHostKeyChecking=no -l cgianelloni "
+             "10.110.12.95 -- 'host leader.mesos'")
+        ),
+    ]
+)
+def test_get_ssh_command(conf, option, user, proxy_ip, master_proxy,
+                         host, command, expected_cmd):
+    cmd = main._get_ssh_command(conf, option, user, proxy_ip, master_proxy,
+                                host, command)
+    assert cmd == expected_cmd
