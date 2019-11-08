@@ -4,6 +4,7 @@ export PYTHONIOENCODING=utf-8
 export CLI_TEST_SSH_USER=centos
 export CLI_TEST_MASTER_PROXY=1
 export PYTHON=python3.7
+export DCOS_DIR=$(mktemp)
 make plugin
 cd python/lib/dcoscli
 source env/bin/activate
@@ -13,3 +14,4 @@ dcos cluster remove --all
 dcos cluster setup --no-check ${DCOS_TEST_URL}
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations
+rm -rf $DCOS_DIR
