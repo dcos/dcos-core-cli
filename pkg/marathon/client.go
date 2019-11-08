@@ -1,7 +1,6 @@
 package marathon
 
 import (
-	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"strings"
