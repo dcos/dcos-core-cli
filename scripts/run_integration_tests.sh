@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -x
+export PYTHONIOENCODING=utf-8
 export CLI_TEST_SSH_USER=centos
 export CLI_TEST_MASTER_PROXY=1
 export PYTHON=python3.7
-export PYTHONIOENCODING=utf8
 export LANG=en_US.utf-8
 export LC_ALL=en_US.utf-8
 make plugin
