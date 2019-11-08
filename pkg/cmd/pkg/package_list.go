@@ -78,7 +78,10 @@ func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
 		}
 
 		for _, pkg := range cosmosPackages {
-			packages[pkg.Name] = pkg
+			_, ok := packages[pkg.Name]
+			if !ok {
+				packages[pkg.Name] = pkg
+			}
 		}
 	}
 

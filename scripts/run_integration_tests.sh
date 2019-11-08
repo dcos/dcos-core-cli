@@ -3,8 +3,10 @@ set -x
 export PYTHONIOENCODING=utf-8
 export CLI_TEST_SSH_USER=centos
 export CLI_TEST_MASTER_PROXY=1
-export PYTHON=python3.7
 export DCOS_DIR=$(mktemp)
+export PYTHON=python3.7
+export LANG=en_US.utf-8
+export LC_ALL=en_US.utf-8
 make plugin
 cd python/lib/dcoscli
 source env/bin/activate
