@@ -63,7 +63,7 @@ pipeline {
         }
 
         stage("Run integration tests") {
-            agent { label 'py36' }
+            agent { label 'py37' }
             steps {
                 unstash "dcos-${os}"
                 withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
