@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/x509"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/dcos/dcos-cli/api"
@@ -38,10 +39,13 @@ func errorMessage(err error) string {
 		case 403:
 			return "you are not authorized to perform this operation"
 		}
-	case *x509.CertificateInvalidError:
-		return invalidCertError
-	case *x509.UnknownAuthorityError:
-		return invalidCertError
+	case *url.Error:
+		switch e.Err.(type) {
+		case *x509.CertificateInvalidError:
+			return invalidCertError
+		case *x509.UnknownAuthorityError:
+			return invalidCertError
+		}
 	}
 	return err.Error()
 }
