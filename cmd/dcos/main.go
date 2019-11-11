@@ -12,11 +12,11 @@ import (
 	"github.com/dcos/dcos-core-cli/pkg/cmd"
 )
 
-const invalidCertError = `An SSL error occurred. To configure your SSL settings, " +
-"please run: 'dcos config set core.ssl_verify <value>\n'
-<value>: Whether to verify SSL certs for HTTPS or path to certs. " +
-"Valid values are a path to a CA_BUNDLE, True (will then use CA " +
-"certificates from certifi), or False (will then send insecure requests).\n`
+const invalidCertError = "An SSL error occurred. To configure your SSL settings, " +
+	"please run: 'dcos config set core.ssl_verify <value>\n'" +
+	"<value>: Whether to verify SSL certs for HTTPS or path to certs. " +
+	"Valid values are a path to a CA_BUNDLE, True (will then use CA " +
+	"certificates from certifi), or False (will then send insecure requests).\n"
 
 func main() {
 	ctx := cli.NewContext(cli.NewOsEnvironment())

@@ -70,9 +70,9 @@ def test_verify_ssl_with_bad_cert_config(env):
 
 def _ssl_error_msg():
     return (
-        "Error: An SSL error occurred. To configure your SSL settings, please"
+        "Error: An SSL error occurred. To configure your SSL settings, please "
         "run: 'dcos config set core.ssl_verify <value>'\n"
         "<value>: Whether to verify SSL certs for HTTPS or path to certs. "
         "Valid values are a path to a CA_BUNDLE, "
-        "True (will then use CA Certificates from certifi), "
+        "True (will then use CA certificates from certifi), "
         "or False (will then send insecure requests).\n")
