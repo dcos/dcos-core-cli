@@ -15,7 +15,7 @@ const invalidCertError = `An SSL error occurred. To configure your SSL settings,
 "please run: 'dcos config set core.ssl_verify <value>\n'
 <value>: Whether to verify SSL certs for HTTPS or path to certs. " +
 "Valid values are a path to a CA_BUNDLE, True (will then use CA " +
-"Certificates from certifi), or False (will then send insecure requests).\n`
+"certificates from certifi), or False (will then send insecure requests).\n`
 
 func main() {
 	ctx := cli.NewContext(cli.NewOsEnvironment())
@@ -39,6 +39,8 @@ func errorMessage(err error) string {
 			return "you are not authorized to perform this operation"
 		}
 	case x509.CertificateInvalidError:
+		return invalidCertError
+	case x509.UnknownAuthorityError:
 		return invalidCertError
 	}
 	return err.Error()
