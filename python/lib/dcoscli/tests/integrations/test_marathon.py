@@ -69,8 +69,7 @@ def test_add_app_through_http():
 
 
 def test_add_app_bad_resource():
-    stderr = (b'Can\'t read from resource: bad_resource.\n'
-              b'Please check that it exists.\n')
+    stderr = (b'Error: can\'t read from resource: bad_resource. Please check that it exists\n')
     assert_command(['dcos', 'marathon', 'app', 'add', 'bad_resource'],
                    returncode=1,
                    stderr=stderr)
@@ -90,14 +89,14 @@ def test_add_bad_json_app():
 
         assert returncode == 1
         assert stdout == b''
-        assert stderr.decode('utf-8').startswith('Error loading JSON: ')
+        assert stderr.decode('utf-8').startswith('Error: error loading JSON: ')
 
 
 def test_add_existing_app():
     with _zero_instance_app():
         app_path = 'tests/data/marathon/apps/zero_instance_sleep_v2.json'
         with open(app_path) as fd:
-            stderr = b"Application '/zero-instance-app' already exists\n"
+            stderr = b"Error: Application '/zero-instance-app' already exists\n"
             assert_command(['dcos', 'marathon', 'app', 'add'],
                            returncode=1,
                            stderr=stderr,
@@ -277,7 +276,7 @@ def test_app_add_invalid_request():
     returncode, stdout, stderr = exec_command(
         ['dcos', 'marathon', 'app', 'add', path])
 
-    stderr_end = b"""{"message":"Invalid JSON","details":[{"path":"/container/docker/network","errors":["error.unknown.enum.literal"]}]}"""  # noqa: E501
+    stderr_end = b"Invalid JSON (path: '/container/docker/network' errors: error.unknown.enum.literal)"  # noqa: E501
 
     assert returncode == 1
     assert stderr_end in stderr
@@ -759,24 +758,6 @@ def test_leader_delete(marathon_up):
     # run with an unhealthy marathon. Explicitly wait for marathon to
     # go down before waiting for it to become healthy again.
     wait_marathon_down()
-
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="No pseudo terminal on windows")
-def test_app_add_no_tty():
-    proc, master = popen_tty('dcos marathon app add')
-
-    stdout, stderr = proc.communicate()
-    os.close(master)
-
-    print(stdout)
-    print(stderr)
-
-    assert proc.wait() == 1
-    assert stdout == b''
-    assert stderr == (b"We currently don't support reading from the TTY. "
-                      b"Please specify an application JSON.\n"
-                      b"E.g.: dcos marathon app add < app_resource.json\n")
 
 
 def _update_app(app_id, file_path):

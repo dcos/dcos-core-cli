@@ -37,7 +37,7 @@ github.com/docker/docker/pkg/term/windows
 github.com/donovanhide/eventsource
 # github.com/dustin/go-humanize v1.0.0
 github.com/dustin/go-humanize
-# github.com/gambol99/go-marathon v0.7.2-0.20191108003727-ab094f7a10c5
+# github.com/gambol99/go-marathon v0.7.2-0.20191118125545-9c4da387a2a4
 github.com/gambol99/go-marathon
 # github.com/gobwas/glob v0.2.3
 github.com/gobwas/glob
