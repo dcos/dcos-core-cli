@@ -6,19 +6,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	"github.com/gambol99/go-marathon"
+	goMarathon "github.com/gambol99/go-marathon"
 )
+
+var httpRegexp = regexp.MustCompile("^(http|https)$")
 
 // Client to interact with the Marathon API.
 type Client struct {
-	API     marathon.Marathon
+	API     goMarathon.Marathon
 	baseURL string
 }
+
+type ErrAppAlreadyExists struct {
+	appID string
+}
+
+func (e ErrAppAlreadyExists) Error() string {
+	return fmt.Sprintf("Application '/%s' already exists", strings.TrimPrefix(e.appID, "/"))
+}
+
+var ErrCannotReadAppDefinition = errors.New("cannot read app definition")
 
 // NewClient creates a new HTTP wrapper client to talk to the Marathon service.
 func NewClient(ctx api.Context) (*Client, error) {
@@ -31,16 +46,81 @@ func NewClient(ctx api.Context) (*Client, error) {
 		baseURL = cluster.URL() + "/service/marathon"
 	}
 
-	config := marathon.NewDefaultConfig()
+	config := goMarathon.NewDefaultConfig()
 	config.URL = baseURL
 	config.HTTPClient = pluginutil.NewHTTPClient()
 
-	client, err := marathon.NewClient(config)
+	client, err := goMarathon.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{API: client, baseURL: baseURL}, nil
+}
+
+// AddApp creates a deployment from the app definition referenced in appFile which can be a local
+// file name or an HTTP URL. If appFile is empty, the definition is read from ctx.Input().
+func (c *Client) AddApp(ctx api.Context, appLocation string) (*goMarathon.Application, error) {
+	appBytes, err := getAppDefinition(ctx, appLocation)
+	if err != nil {
+		return nil, ErrCannotReadAppDefinition
+	}
+
+	var app map[string]interface{}
+	err = json.Unmarshal(appBytes, &app)
+	if err != nil {
+		return nil, err
+	}
+
+	existingApp, err := c.API.ApplicationBy(app["id"].(string), &goMarathon.GetAppOpts{})
+	if err != nil {
+		if apiErr, ok := err.(*goMarathon.APIError); !ok {
+			return nil, err
+		} else if apiErr.ErrCode != goMarathon.ErrCodeNotFound {
+			return nil, err
+		}
+	}
+	if existingApp != nil {
+		return nil, ErrAppAlreadyExists{appID: existingApp.ID}
+	}
+
+	var resApp goMarathon.Application
+	err = c.API.ApiPost("v2/apps/", app, &resApp)
+	return &resApp, err
+}
+
+// getAppDefinition loads the app definition JSON from either a file pointed to by location or an HTTP
+// URL pointed to by location or, if location is empty, from stdin.
+func getAppDefinition(ctx api.Context, location string) ([]byte, error) {
+	var appBytes []byte
+	var err error
+
+	if location == "" {
+		appBytes, err = ioutil.ReadAll(ctx.Input())
+		if err != nil {
+			return nil, err
+		}
+		return appBytes, nil
+	}
+
+	url, err := url.Parse(location)
+	if err == nil && httpRegexp.MatchString(url.Scheme) {
+		resp, err := http.Get(location) // nolint: gosec // using the user-provided URL here is exactly what we want
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("could not fetch app definition from %s", location)
+		}
+		return ioutil.ReadAll(resp.Body)
+	}
+
+	_, err = os.Stat(location)
+	if err == nil {
+		return ioutil.ReadFile(location)
+	}
+
+	return nil, err
 }
 
 // GroupsWithoutRootSlash returns the Marathon groups' names as a map without the first "/".
@@ -106,7 +186,7 @@ func httpResponseToError(resp *http.Response) error {
 	}
 }
 
-func (c *Client) Applications() ([]marathon.Application, error) {
+func (c *Client) Applications() ([]goMarathon.Application, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/apps")
 	if err != nil {
@@ -116,7 +196,7 @@ func (c *Client) Applications() ([]marathon.Application, error) {
 
 	switch resp.StatusCode {
 	case 200:
-		var applications marathon.Applications
+		var applications goMarathon.Applications
 
 		err = json.NewDecoder(resp.Body).Decode(&applications)
 		return applications.Apps, err
@@ -125,7 +205,7 @@ func (c *Client) Applications() ([]marathon.Application, error) {
 	}
 }
 
-func (c *Client) Deployments() ([]marathon.Deployment, error) {
+func (c *Client) Deployments() ([]goMarathon.Deployment, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/deployments")
 	if err != nil {
@@ -135,7 +215,7 @@ func (c *Client) Deployments() ([]marathon.Deployment, error) {
 
 	switch resp.StatusCode {
 	case 200:
-		var result []marathon.Deployment
+		var result []goMarathon.Deployment
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return result, err
 	default:
@@ -143,20 +223,20 @@ func (c *Client) Deployments() ([]marathon.Deployment, error) {
 	}
 }
 
-func (c *Client) Queue() (marathon.Queue, error) {
+func (c *Client) Queue() (goMarathon.Queue, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/queue")
 	if err != nil {
-		return marathon.Queue{}, err
+		return goMarathon.Queue{}, err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case 200:
-		var result marathon.Queue
+		var result goMarathon.Queue
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return result, err
 	default:
-		return marathon.Queue{}, errors.New("unable to get Marathon queue")
+		return goMarathon.Queue{}, errors.New("unable to get Marathon queue")
 	}
 }
