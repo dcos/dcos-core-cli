@@ -16,6 +16,7 @@ func newCmdMarathonPing(ctx api.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ping",
 		Short: "Ensure Marathon is up and responding.",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := marathon.NewClient(ctx)
 			if err != nil {
