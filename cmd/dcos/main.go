@@ -41,9 +41,7 @@ func errorMessage(err error) string {
 		}
 	case *url.Error:
 		switch e.Err.(type) {
-		case x509.CertificateInvalidError:
-			return invalidCertError
-		case x509.UnknownAuthorityError:
+		case x509.CertificateInvalidError, x509.UnknownAuthorityError:
 			return invalidCertError
 		}
 	}
