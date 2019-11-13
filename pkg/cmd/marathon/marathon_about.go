@@ -13,6 +13,7 @@ func newCmdMarathonAbout(ctx api.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "about",
 		Short: "Print info.json for DC/OS Marathon.",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := marathon.NewClient(ctx)
 			if err != nil {
