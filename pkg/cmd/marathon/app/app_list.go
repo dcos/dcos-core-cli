@@ -17,9 +17,6 @@ import (
 
 const defaultTableValue = "---"
 
-// `truncate` will break if this is less than 3
-const maxTableValueLength = 30
-
 var deploymentDisplay = map[string]string{
 	"ResolveArtifacts":   "artifacts",
 	"ScaleApplication":   "scale",
@@ -113,31 +110,34 @@ func newCmdMarathonAppList(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
-func truncate(s string) string {
-	if len(s) < maxTableValueLength {
+func truncate(s string, maxLength int) string {
+	if len(s) < maxLength {
 		return s
 	}
 
-	return s[:maxTableValueLength-3] + "..."
+	return s[:maxLength-3] + "..."
 }
 
 func formatCmd(app m.Application) string {
+	maxLength := 30
 	if app.Cmd != nil && *app.Cmd != "" {
-		return truncate(*app.Cmd)
+		return truncate(*app.Cmd, maxLength)
 	}
 	if app.Args != nil && len(*app.Args) > 0 {
-		return truncate(fmt.Sprintf("[%s]", strings.Join(*app.Args, ", ")))
+		return truncate(fmt.Sprintf("[%s]", strings.Join(*app.Args, ", ")), maxLength)
 	}
 	return defaultTableValue
 }
 
 func formatContainerType(app m.Application) string {
-	// TODO: everything to upper/lower case?
+	// container type is in uppercase according to
+	// https://github.com/mesosphere/marathon/blob/master/docs/docs/rest-api/public/api/v2/types/appContainer.raml#L12-L16
+
 	if app.Container != nil && app.Container.Type != "" {
 		return app.Container.Type
 	}
 
-	return "mesos"
+	return "MESOS"
 }
 
 func formatTaskRunning(app m.Application) string {
