@@ -177,6 +177,40 @@ func (c *Client) Info() (map[string]interface{}, error) {
 	}
 }
 
+// KillTasks kill all the tasks of a Marathon app.
+func (c *Client) KillTasks(appID string, host string) (map[string]interface{}, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	url := fmt.Sprintf("/v2/apps/%s/tasks", strings.Trim(appID, "/"))
+	if host != "" {
+		url += "?host=" + host
+	}
+
+	resp, err := dcosClient.Delete(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not read response body: %s", err)
+		}
+
+		var tasksKilled map[string]interface{}
+		err = json.Unmarshal(data, &tasksKilled)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal response body: %s", err)
+		}
+		return tasksKilled, nil
+	case 404:
+		return nil, fmt.Errorf("app '/%s' does not exist", appID)
+	default:
+		return nil, httpResponseToError(resp)
+	}
+}
+
 func httpResponseToError(resp *http.Response) error {
 	if resp.StatusCode < 400 {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
