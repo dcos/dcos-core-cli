@@ -15,7 +15,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultTableValue = "---"
+const (
+	defaultTableValue = "---"
+	ellipsis          = "..."
+)
 
 var deploymentDisplay = map[string]string{
 	"ResolveArtifacts":   "artifacts",
@@ -42,65 +45,7 @@ func newCmdMarathonAppList(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			applications, err := client.Applications()
-			if err != nil {
-				return err
-			}
-
-			if quiet {
-				for _, app := range applications {
-					fmt.Fprintln(ctx.Out(), app.ID)
-				}
-				return nil
-			}
-
-			if jsonOutput {
-				enc := json.NewEncoder(ctx.Out())
-				enc.SetIndent("", "    ")
-
-				return enc.Encode(&applications)
-			}
-
-			deployments, err := client.Deployments()
-			if err != nil {
-				return err
-			}
-
-			deploymentMap := make(map[string]m.Deployment)
-			for _, d := range deployments {
-				deploymentMap[d.ID] = d
-			}
-
-			queue, err := client.Queue()
-			if err != nil {
-				return err
-			}
-
-			tableHeader := []string{"ID", "MEM", "CPUS", "TASKS", "HEALTH", "DEPLOYMENT", "WAITING", "CONTAINER", "CMD", "ROLE"}
-			table := cli.NewTable(ctx.Out(), tableHeader)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-
-			items := make([][]string, 0, len(applications))
-			for _, app := range applications {
-				item := []string{
-					app.ID,
-					humanize.Ftoa(*app.Mem),
-					humanize.Ftoa(app.CPUs),
-					formatTaskRunning(app),
-					formatHealth(app),
-					formatDeployments(app, deploymentMap),
-					formatWaiting(app, queue),
-					formatContainerType(app),
-					formatCmd(app),
-					formatRole(app),
-				}
-				items = append(items, item)
-			}
-			sort.Sort(appRows(items))
-			table.AppendBulk(items)
-			table.Render()
-
-			return nil
+			return appList(ctx, client, quiet, jsonOutput)
 		},
 	}
 
@@ -110,12 +55,74 @@ func newCmdMarathonAppList(ctx api.Context) *cobra.Command {
 	return cmd
 }
 
+func appList(ctx api.Context, client *marathon.Client, quiet bool, jsonOutput bool) error {
+	applications, err := client.Applications()
+	if err != nil {
+		return err
+	}
+
+	if quiet {
+		for _, app := range applications {
+			fmt.Fprintln(ctx.Out(), app.ID)
+		}
+		return nil
+	}
+
+	if jsonOutput {
+		enc := json.NewEncoder(ctx.Out())
+		enc.SetIndent("", "    ")
+
+		return enc.Encode(&applications)
+	}
+
+	deployments, err := client.Deployments()
+	if err != nil {
+		return err
+	}
+
+	deploymentMap := make(map[string]m.Deployment)
+	for _, d := range deployments {
+		deploymentMap[d.ID] = d
+	}
+
+	queue, err := client.Queue()
+	if err != nil {
+		return err
+	}
+
+	tableHeader := []string{"ID", "MEM", "CPUS", "TASKS", "HEALTH", "DEPLOYMENT", "WAITING", "CONTAINER", "CMD", "ROLE"}
+	table := cli.NewTable(ctx.Out(), tableHeader)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+
+	items := make([][]string, 0, len(applications))
+	for _, app := range applications {
+		item := []string{
+			app.ID,
+			humanize.Ftoa(*app.Mem),
+			humanize.Ftoa(app.CPUs),
+			formatTaskRunning(app),
+			formatHealth(app),
+			formatDeployments(app, deploymentMap),
+			formatWaiting(app, queue),
+			formatContainerType(app),
+			formatCmd(app),
+			formatRole(app),
+		}
+		items = append(items, item)
+	}
+	sort.Sort(appRows(items))
+	table.AppendBulk(items)
+	table.Render()
+
+	return nil
+}
+
 func truncate(s string, maxLength int) string {
 	if len(s) < maxLength {
 		return s
 	}
 
-	return s[:maxLength-3] + "..."
+	return s[:maxLength-len(ellipsis)] + ellipsis
 }
 
 func formatCmd(app m.Application) string {
