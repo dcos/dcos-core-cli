@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -x
+
+set -ex
+
 export PYTHONIOENCODING=utf-8
 export CLI_TEST_SSH_USER=centos
 export CLI_TEST_MASTER_PROXY=1
