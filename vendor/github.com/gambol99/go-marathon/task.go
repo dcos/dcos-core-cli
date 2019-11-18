@@ -1,5 +1,5 @@
 /*
-Copyright 2014 Rohith All rights reserved.
+Copyright 2014 The go-marathon Authors All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ type KillApplicationTasksOpts struct {
 type KillTaskOpts struct {
 	Scale bool `url:"scale,omitempty"`
 	Force bool `url:"force,omitempty"`
+	Wipe  bool `url:"wipe,omitempty"`
 }
 
 // HasHealthCheckResults checks if the task has any health checks
@@ -79,13 +80,13 @@ func (r *Task) HasHealthCheckResults() bool {
 // AllTasks lists tasks of all applications.
 //		opts: 		AllTasksOpts request payload
 func (r *marathonClient) AllTasks(opts *AllTasksOpts) (*Tasks, error) {
-	u, err := addOptions(marathonAPITasks, opts)
+	path, err := addOptions(marathonAPITasks, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	tasks := new(Tasks)
-	if err := r.apiGet(u, nil, tasks); err != nil {
+	if err := r.apiGet(path, nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -107,14 +108,14 @@ func (r *marathonClient) Tasks(id string) (*Tasks, error) {
 //		id:		the id of the application
 //		opts: 		KillApplicationTasksOpts request payload
 func (r *marathonClient) KillApplicationTasks(id string, opts *KillApplicationTasksOpts) (*Tasks, error) {
-	u := fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id))
-	u, err := addOptions(u, opts)
+	path := fmt.Sprintf("%s/%s/tasks", marathonAPIApps, trimRootPath(id))
+	path, err := addOptions(path, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	tasks := new(Tasks)
-	if err := r.apiDelete(u, nil, tasks); err != nil {
+	if err := r.apiDelete(path, nil, tasks); err != nil {
 		return nil, err
 	}
 
@@ -129,8 +130,8 @@ func (r *marathonClient) KillTask(taskID string, opts *KillTaskOpts) (*Task, err
 	appName = strings.Replace(appName, "_", "/", -1)
 	taskID = strings.Replace(taskID, "/", "_", -1)
 
-	u := fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID)
-	u, err := addOptions(u, opts)
+	path := fmt.Sprintf("%s/%s/tasks/%s", marathonAPIApps, appName, taskID)
+	path, err := addOptions(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +140,7 @@ func (r *marathonClient) KillTask(taskID string, opts *KillTaskOpts) (*Task, err
 		Task Task `json:"task"`
 	})
 
-	if err := r.apiDelete(u, nil, wrappedTask); err != nil {
+	if err := r.apiDelete(path, nil, wrappedTask); err != nil {
 		return nil, err
 	}
 
@@ -150,8 +151,8 @@ func (r *marathonClient) KillTask(taskID string, opts *KillTaskOpts) (*Task, err
 //	tasks:		the array of task ids
 //	opts:		KillTaskOpts request payload
 func (r *marathonClient) KillTasks(tasks []string, opts *KillTaskOpts) error {
-	u := fmt.Sprintf("%s/delete", marathonAPITasks)
-	u, err := addOptions(u, opts)
+	path := fmt.Sprintf("%s/delete", marathonAPITasks)
+	path, err := addOptions(path, opts)
 	if err != nil {
 		return nil
 	}
@@ -161,7 +162,7 @@ func (r *marathonClient) KillTasks(tasks []string, opts *KillTaskOpts) error {
 	}
 	post.IDs = tasks
 
-	return r.apiPost(u, &post, nil)
+	return r.apiPost(path, &post, nil)
 }
 
 // TaskEndpoints gets the endpoints i.e. HOST_IP:DYNAMIC_PORT for a specific application service
@@ -186,7 +187,10 @@ func (r *marathonClient) TaskEndpoints(name string, port int, healthCheck bool) 
 	// step: we need to get the port index of the service we are interested in
 	portIndex, err := application.Container.Docker.ServicePortIndex(port)
 	if err != nil {
-		return nil, err
+		portIndex, err = application.Container.ServicePortIndex(port)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// step: do we have any tasks?
@@ -217,7 +221,7 @@ func (r *Task) allHealthChecksAlive() bool {
 	}
 	// step: check the health results then
 	for _, check := range r.HealthCheckResults {
-		if check.Alive == false {
+		if !check.Alive {
 			return false
 		}
 	}

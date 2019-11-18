@@ -11,7 +11,7 @@ import (
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	marathon "github.com/gambol99/go-marathon"
+	"github.com/gambol99/go-marathon"
 )
 
 // Client to interact with the Marathon API.
@@ -103,5 +103,60 @@ func httpResponseToError(resp *http.Response) error {
 	}
 	return &httpclient.HTTPError{
 		Response: resp,
+	}
+}
+
+func (c *Client) Applications() ([]marathon.Application, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/apps")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var applications marathon.Applications
+
+		err = json.NewDecoder(resp.Body).Decode(&applications)
+		return applications.Apps, err
+	default:
+		return nil, errors.New("unable to get Marathon apps")
+	}
+}
+
+func (c *Client) Deployments() ([]marathon.Deployment, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/deployments")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result []marathon.Deployment
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return nil, errors.New("unable to get Marathon deployments")
+	}
+}
+
+func (c *Client) Queue() (marathon.Queue, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/queue")
+	if err != nil {
+		return marathon.Queue{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result marathon.Queue
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return marathon.Queue{}, errors.New("unable to get Marathon queue")
 	}
 }

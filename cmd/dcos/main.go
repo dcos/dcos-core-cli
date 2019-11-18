@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/x509"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/dcos/dcos-cli/api"
@@ -9,6 +11,12 @@ import (
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/cmd"
 )
+
+const invalidCertError = "An SSL error occurred. To configure your SSL settings, " +
+	"please run: 'dcos config set core.ssl_verify <value>'\n" +
+	"<value>: Whether to verify SSL certs for HTTPS or path to certs. " +
+	"Valid values are a path to a CA_BUNDLE, True (will then use CA " +
+	"certificates from certifi), or False (will then send insecure requests)."
 
 func main() {
 	ctx := cli.NewContext(cli.NewOsEnvironment())
@@ -23,12 +31,18 @@ func run(ctx api.Context) error {
 }
 
 func errorMessage(err error) string {
-	if httpErr, ok := err.(*httpclient.HTTPError); ok {
-		switch httpErr.Response.StatusCode {
+	switch e := err.(type) {
+	case *httpclient.HTTPError:
+		switch e.Response.StatusCode {
 		case 401:
 			return "authentication failed, please run `dcos auth login`"
 		case 403:
 			return "you are not authorized to perform this operation"
+		}
+	case *url.Error:
+		switch e.Err.(type) {
+		case x509.CertificateInvalidError, x509.UnknownAuthorityError:
+			return invalidCertError
 		}
 	}
 	return err.Error()

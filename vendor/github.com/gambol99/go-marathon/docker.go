@@ -1,5 +1,5 @@
 /*
-Copyright 2014 Rohith All rights reserved.
+Copyright 2014 The go-marathon Authors All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@ import (
 
 // Container is the definition for a container type in marathon
 type Container struct {
-	Type    string    `json:"type,omitempty"`
-	Docker  *Docker   `json:"docker,omitempty"`
-	Volumes *[]Volume `json:"volumes,omitempty"`
+	Type         string         `json:"type,omitempty"`
+	Docker       *Docker        `json:"docker,omitempty"`
+	Volumes      *[]Volume      `json:"volumes,omitempty"`
+	PortMappings *[]PortMapping `json:"portMappings,omitempty"`
 }
 
 // PortMapping is the portmapping structure between container and mesos
@@ -36,6 +37,7 @@ type PortMapping struct {
 	Name          string             `json:"name,omitempty"`
 	ServicePort   int                `json:"servicePort,omitempty"`
 	Protocol      string             `json:"protocol,omitempty"`
+	NetworkNames  *[]string          `json:"networkNames,omitempty"`
 }
 
 // Parameters is the parameters to pass to the docker client when creating the container
@@ -46,10 +48,76 @@ type Parameters struct {
 
 // Volume is the docker volume details associated to the container
 type Volume struct {
-	ContainerPath string          `json:"containerPath,omitempty"`
-	HostPath      string          `json:"hostPath,omitempty"`
-	External      *ExternalVolume `json:"external,omitempty"`
-	Mode          string          `json:"mode,omitempty"`
+	ContainerPath string            `json:"containerPath,omitempty"`
+	HostPath      string            `json:"hostPath,omitempty"`
+	External      *ExternalVolume   `json:"external,omitempty"`
+	Mode          string            `json:"mode,omitempty"`
+	Persistent    *PersistentVolume `json:"persistent,omitempty"`
+	Secret        string            `json:"secret,omitempty"`
+}
+
+// PersistentVolumeType is the a persistent docker volume to be mounted
+type PersistentVolumeType string
+
+const (
+	// PersistentVolumeTypeRoot is the root path of the persistent volume
+	PersistentVolumeTypeRoot PersistentVolumeType = "root"
+	// PersistentVolumeTypePath is the mount path of the persistent volume
+	PersistentVolumeTypePath PersistentVolumeType = "path"
+	// PersistentVolumeTypeMount is the mount type of the persistent volume
+	PersistentVolumeTypeMount PersistentVolumeType = "mount"
+)
+
+// PersistentVolume declares a Volume to be Persistent, and sets
+// the size (in MiB) and optional type, max size (MiB) and constraints for the Volume.
+type PersistentVolume struct {
+	Type        PersistentVolumeType `json:"type,omitempty"`
+	Size        int                  `json:"size"`
+	MaxSize     int                  `json:"maxSize,omitempty"`
+	Constraints *[][]string          `json:"constraints,omitempty"`
+}
+
+// SetType sets the type of mesos disk resource to use
+//		type:	       PersistentVolumeType enum
+func (p *PersistentVolume) SetType(tp PersistentVolumeType) *PersistentVolume {
+	p.Type = tp
+	return p
+}
+
+// SetSize sets size of the persistent volume
+//		size:	        size in MiB
+func (p *PersistentVolume) SetSize(size int) *PersistentVolume {
+	p.Size = size
+	return p
+}
+
+// SetMaxSize sets maximum size of an exclusive mount-disk resource to consider;
+// does not apply to root or path disk resource types
+//		maxSize:	size in MiB
+func (p *PersistentVolume) SetMaxSize(maxSize int) *PersistentVolume {
+	p.MaxSize = maxSize
+	return p
+}
+
+// AddConstraint adds a new constraint
+//		constraints:	the constraint definition, one constraint per array element
+func (p *PersistentVolume) AddConstraint(constraints ...string) *PersistentVolume {
+	if p.Constraints == nil {
+		p.EmptyConstraints()
+	}
+
+	c := *p.Constraints
+	c = append(c, constraints)
+	p.Constraints = &c
+	return p
+}
+
+// EmptyConstraints explicitly empties constraints -- use this if you need to empty
+// constraints of an application that already has constraints set (setting constraints to nil will
+// keep the current value)
+func (p *PersistentVolume) EmptyConstraints() *PersistentVolume {
+	p.Constraints = &[][]string{}
+	return p
 }
 
 // ExternalVolume is an external volume definition
@@ -57,6 +125,18 @@ type ExternalVolume struct {
 	Name     string             `json:"name,omitempty"`
 	Provider string             `json:"provider,omitempty"`
 	Options  *map[string]string `json:"options,omitempty"`
+}
+
+// PullConfig specifies a secret for authentication with a private Docker registry
+type PullConfig struct {
+	Secret string `json:"secret,omitempty"`
+}
+
+// NewPullConfig creats a *PullConfig based on a given secret
+func NewPullConfig(secret string) *PullConfig {
+	return &PullConfig{
+		Secret: secret,
+	}
 }
 
 // Docker is the docker definition from a marathon application
@@ -67,6 +147,7 @@ type Docker struct {
 	Parameters     *[]Parameters  `json:"parameters,omitempty"`
 	PortMappings   *[]PortMapping `json:"portMappings,omitempty"`
 	Privileged     *bool          `json:"privileged,omitempty"`
+	PullConfig     *PullConfig    `json:"pullConfig,omitempty"`
 }
 
 // Volume attachs a volume to the container
@@ -96,6 +177,26 @@ func (container *Container) Volume(hostPath, containerPath, mode string) *Contai
 func (container *Container) EmptyVolumes() *Container {
 	container.Volumes = &[]Volume{}
 	return container
+}
+
+// SetPersistentVolume defines persistent properties for volume
+func (v *Volume) SetPersistentVolume() *PersistentVolume {
+	ev := &PersistentVolume{}
+	v.Persistent = ev
+	return ev
+}
+
+// SetSecretVolume defines secret and containerPath for volume
+func (v *Volume) SetSecretVolume(containerPath, secret string) *Volume {
+	v.ContainerPath = containerPath
+	v.Secret = secret
+	return v
+}
+
+// EmptyPersistentVolume empties the persistent volume definition
+func (v *Volume) EmptyPersistentVolume() *Volume {
+	v.Persistent = &PersistentVolume{}
+	return v
 }
 
 // SetExternalVolume define external elements for a volume
@@ -183,6 +284,19 @@ func (docker *Docker) Host() *Docker {
 
 // Expose sets the container to expose the following TCP ports
 //		ports:			the TCP ports the container is exposing
+func (container *Container) Expose(ports ...int) *Container {
+	for _, port := range ports {
+		container.ExposePort(PortMapping{
+			ContainerPort: port,
+			HostPort:      0,
+			ServicePort:   0,
+			Protocol:      "tcp"})
+	}
+	return container
+}
+
+// Expose sets the container to expose the following TCP ports
+//		ports:			the TCP ports the container is exposing
 func (docker *Docker) Expose(ports ...int) *Docker {
 	for _, port := range ports {
 		docker.ExposePort(PortMapping{
@@ -192,6 +306,19 @@ func (docker *Docker) Expose(ports ...int) *Docker {
 			Protocol:      "tcp"})
 	}
 	return docker
+}
+
+// ExposeUDP sets the container to expose the following UDP ports
+//		ports:			the UDP ports the container is exposing
+func (container *Container) ExposeUDP(ports ...int) *Container {
+	for _, port := range ports {
+		container.ExposePort(PortMapping{
+			ContainerPort: port,
+			HostPort:      0,
+			ServicePort:   0,
+			Protocol:      "udp"})
+	}
+	return container
 }
 
 // ExposeUDP sets the container to expose the following UDP ports
@@ -208,6 +335,19 @@ func (docker *Docker) ExposeUDP(ports ...int) *Docker {
 }
 
 // ExposePort exposes an port in the container
+func (container *Container) ExposePort(portMapping PortMapping) *Container {
+	if container.PortMappings == nil {
+		container.EmptyPortMappings()
+	}
+
+	portMappings := *container.PortMappings
+	portMappings = append(portMappings, portMapping)
+	container.PortMappings = &portMappings
+
+	return container
+}
+
+// ExposePort exposes an port in the container
 func (docker *Docker) ExposePort(portMapping PortMapping) *Docker {
 	if docker.PortMappings == nil {
 		docker.EmptyPortMappings()
@@ -218,6 +358,14 @@ func (docker *Docker) ExposePort(portMapping PortMapping) *Docker {
 	docker.PortMappings = &portMappings
 
 	return docker
+}
+
+// EmptyPortMappings explicitly empties the port mappings -- use this if you need to empty
+// port mappings of an application that already has port mappings set (setting port mappings to nil will
+// keep the current value)
+func (container *Container) EmptyPortMappings() *Container {
+	container.PortMappings = &[]PortMapping{}
+	return container
 }
 
 // EmptyPortMappings explicitly empties the port mappings -- use this if you need to empty
@@ -277,6 +425,24 @@ func (docker *Docker) EmptyParameters() *Docker {
 
 // ServicePortIndex finds the service port index of the exposed port
 //		port:			the port you are looking for
+func (container *Container) ServicePortIndex(port int) (int, error) {
+	if container.PortMappings == nil || len(*container.PortMappings) == 0 {
+		return 0, errors.New("The container does not contain any port mappings to search")
+	}
+
+	// step: iterate and find the port
+	for index, containerPort := range *container.PortMappings {
+		if containerPort.ContainerPort == port {
+			return index, nil
+		}
+	}
+
+	// step: we didn't find the port in the mappings
+	return 0, fmt.Errorf("The container port %d was not found in the container port mappings", port)
+}
+
+// ServicePortIndex finds the service port index of the exposed port
+//		port:			the port you are looking for
 func (docker *Docker) ServicePortIndex(port int) (int, error) {
 	if docker.PortMappings == nil || len(*docker.PortMappings) == 0 {
 		return 0, errors.New("The docker does not contain any port mappings to search")
@@ -290,5 +456,32 @@ func (docker *Docker) ServicePortIndex(port int) (int, error) {
 	}
 
 	// step: we didn't find the port in the mappings
-	return 0, fmt.Errorf("The container port required was not found in the container port mappings")
+	return 0, fmt.Errorf("The docker port %d was not found in the container port mappings", port)
+}
+
+// SetPullConfig adds *PullConfig to Docker
+func (docker *Docker) SetPullConfig(pullConfig *PullConfig) *Docker {
+	docker.PullConfig = pullConfig
+
+	return docker
+}
+
+// AddNetwork adds a network name to a PortMapping
+//		name:	the name of the network
+func (p *PortMapping) AddNetwork(name string) *PortMapping {
+	if p.NetworkNames == nil {
+		p.EmptyNetworkNames()
+	}
+	networks := *p.NetworkNames
+	networks = append(networks, name)
+	p.NetworkNames = &networks
+	return p
+}
+
+// EmptyNetworkNames explicitly empties the network names -- use this if you need to empty
+// the network names of a port mapping that already has network names set
+func (p *PortMapping) EmptyNetworkNames() *PortMapping {
+	p.NetworkNames = &[]string{}
+
+	return p
 }
