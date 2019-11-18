@@ -7,7 +7,7 @@ require (
 	github.com/dcos/dcos-cli v0.0.0-20190522171319-af0434c0ca80
 	github.com/docker/docker v0.7.3-0.20190611184350-29829874d173
 	github.com/dustin/go-humanize v1.0.0
-	github.com/gambol99/go-marathon v0.7.1
+	github.com/gambol99/go-marathon v0.7.2-0.20191108003727-ab094f7a10c5
 	github.com/gobwas/glob v0.2.3
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.3.1

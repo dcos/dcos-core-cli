@@ -1,5 +1,5 @@
 /*
-Copyright 2014 Rohith All rights reserved.
+Copyright 2014 The go-marathon Authors All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package marathon
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -38,8 +37,11 @@ type cluster struct {
 	sync.RWMutex
 	// a collection of nodes
 	members []*member
-	// the http client
-	client *http.Client
+	// the marathon HTTP client to ensure consistency in requests
+	client *httpClient
+	// healthCheckInterval is the interval by which we probe down nodes for
+	// availability again.
+	healthCheckInterval time.Duration
 }
 
 // member represents an individual endpoint
@@ -51,7 +53,7 @@ type member struct {
 }
 
 // newCluster returns a new marathon cluster
-func newCluster(client *http.Client, marathonURL string) (*cluster, error) {
+func newCluster(client *httpClient, marathonURL string, isDCOS bool) (*cluster, error) {
 	// step: extract and basic validate the endpoints
 	var members []*member
 	var defaultProto string
@@ -83,13 +85,21 @@ func newCluster(client *http.Client, marathonURL string) (*cluster, error) {
 			return nil, newInvalidEndpointError("endpoint: %s must have a host", endpoint)
 		}
 
+		// step: if DCOS is set and no path is given, set the default DCOS path.
+		// done in order to maintain compatibility with automatic addition of the
+		// default DCOS path.
+		if isDCOS && strings.TrimLeft(u.Path, "/") == "" {
+			u.Path = defaultDCOSPath
+		}
+
 		// step: create a new node for this endpoint
 		members = append(members, &member{endpoint: u.String()})
 	}
 
 	return &cluster{
-		client:  client,
-		members: members,
+		client:              client,
+		members:             members,
+		healthCheckInterval: 5 * time.Second,
 	}, nil
 }
 
@@ -124,17 +134,21 @@ func (c *cluster) markDown(endpoint string) {
 // healthCheckNode performs a health check on the node and when active updates the status
 func (c *cluster) healthCheckNode(node *member) {
 	// step: wait for the node to become active ... we are assuming a /ping is enough here
-	for {
-		res, err := c.client.Get(fmt.Sprintf("%s/ping", node.endpoint))
-		if err == nil && res.StatusCode == 200 {
-			break
+	ticker := time.NewTicker(c.healthCheckInterval)
+	defer ticker.Stop()
+	for range ticker.C {
+		req, err := c.client.buildMarathonRequest("GET", node.endpoint, "ping", nil)
+		if err == nil {
+			res, err := c.client.Do(req)
+			if err == nil && res.StatusCode == 200 {
+				// step: mark the node as active again
+				c.Lock()
+				node.status = memberStatusUp
+				c.Unlock()
+				break
+			}
 		}
-		<-time.After(time.Duration(5 * time.Second))
 	}
-	// step: mark the node as active again
-	c.Lock()
-	defer c.Unlock()
-	node.status = memberStatusUp
 }
 
 // activeMembers returns a list of active members
