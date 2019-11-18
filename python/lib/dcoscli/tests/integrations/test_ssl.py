@@ -61,6 +61,7 @@ def test_verify_ssl_with_bad_cert_env_var(env):
     env.pop('DCOS_SSL_VERIFY')
 
 
+@pytest.mark.skip(reason="https://jira.mesosphere.com/browse/DCOS-61005")
 def test_verify_ssl_with_bad_cert_config(env):
     with update_config('core.ssl_verify', 'tests/data/ssl/fake.pem', env):
         returncode, stdout, stderr = exec_command(
