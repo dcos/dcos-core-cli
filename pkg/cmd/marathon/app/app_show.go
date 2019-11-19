@@ -21,36 +21,41 @@ func newCmdMarathonAppShow(ctx api.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "show",
+		Args:  cobra.ExactArgs(1),
 		Short: "Show the `marathon.json` for an  application.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := marathon.NewClient(ctx)
-			if err != nil {
-				return err
-			}
-			appID := args[0]
-
-			targetVersion := ""
-			if appVersion != "" {
-				targetVersion, err = calculateVersion(client, appID, appVersion)
-				if err != nil {
-					return err
-				}
-			}
-
-			app, err := client.ApplicationByVersion(appID, targetVersion)
-			if err != nil {
-				return err
-			}
-
-			enc := json.NewEncoder(ctx.Out())
-			enc.SetIndent("", "    ")
-			return enc.Encode(app)
+			return appShow(ctx, args[0], appVersion)
 		},
 	}
 
 	cmd.Flags().StringVar(&appVersion, "app-version", "", appVersionDescription)
 
 	return cmd
+}
+
+func appShow(ctx api.Context, appID string, appVersion string) error {
+	client, err := marathon.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	targetVersion := ""
+	if appVersion != "" {
+		targetVersion, err = calculateVersion(client, appID, appVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	app, err := client.ApplicationByVersion(appID, targetVersion)
+	if err != nil {
+		return err
+	}
+
+	enc := json.NewEncoder(ctx.Out())
+	enc.SetIndent("", "    ")
+	return enc.Encode(app)
+
 }
 
 func calculateVersion(client *marathon.Client, appID string, version string) (string, error) {
@@ -72,7 +77,7 @@ func calculateVersion(client *marathon.Client, appID string, version string) (st
 		return "", err
 	}
 	if len(versions.Versions) <= versionsBehind {
-		return "", fmt.Errorf("application %s only has %d versions", appID, len(versions.Versions))
+		return "", fmt.Errorf("application %s only has %d version(s)", appID, len(versions.Versions))
 	}
 	return versions.Versions[versionsBehind], nil
 }
