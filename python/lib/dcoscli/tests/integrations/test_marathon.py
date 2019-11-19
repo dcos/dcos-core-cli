@@ -138,8 +138,8 @@ def test_show_missing_relative_app_version():
         assert returncode == 1
         assert stdout == b''
 
-        pattern = ("Application 'zero-instance-app' only has [1-9][0-9]* "
-                   "version\\(s\\)\\.\n")
+        pattern = ("Error: application 'zero-instance-app' only has "
+                   "[1-9][0-9]* version\\(s\\)\\.\n")
         assert re.fullmatch(pattern, stderr.decode('utf-8'), flags=re.DOTALL)
 
 
@@ -156,7 +156,7 @@ def test_show_missing_absolute_app_version():
         assert returncode == 1
         assert stdout == b''
         assert stderr.decode('utf-8').startswith(
-            "Error: App '/zero-instance-app' does not exist")
+            "Error: app '/zero-instance-app' does not exist")
 
 
 def test_show_bad_app_version():
