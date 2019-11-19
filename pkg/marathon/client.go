@@ -160,3 +160,55 @@ func (c *Client) Queue() (marathon.Queue, error) {
 		return marathon.Queue{}, errors.New("unable to get Marathon queue")
 	}
 }
+
+func (c *Client) ApplicationVersions(appID string) (marathon.ApplicationVersions, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", normalizeAppID(appID)))
+	if err != nil {
+		return marathon.ApplicationVersions{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result marathon.ApplicationVersions
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return marathon.ApplicationVersions{}, fmt.Errorf("unable to get versions for Marathon app %s", appID)
+	}
+}
+
+func (c *Client) ApplicationByVersion(appID string, version string) (*marathon.Application, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	url := fmt.Sprintf("/v2/apps%s", normalizeAppID(appID))
+	if version != "" {
+		url = fmt.Sprintf("/v2/apps%s/versions/%s", normalizeAppID(appID), version)
+	}
+
+	resp, err := dcosClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		if version == "" {
+			var result struct {
+				App marathon.Application `json:"app"`
+			}
+			err = json.NewDecoder(resp.Body).Decode(&result)
+			return &result.App, err
+		}
+		var result marathon.Application
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return &result, err
+	default:
+		return nil, fmt.Errorf("unable to get version %s for app %s", version, appID)
+	}
+}
+
+func normalizeAppID(appID string) string {
+	return fmt.Sprintf("/%s", strings.Trim(appID, "/"))
+}

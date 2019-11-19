@@ -218,6 +218,150 @@ func TestDeploymentErrors(t *testing.T) {
 	}
 }
 
+func TestApplicationVersions(t *testing.T) {
+	expected := marathon.ApplicationVersions{
+		Versions: []string{
+			"2019-11-18T22:48:41.138Z",
+			"2019-11-18T22:27:28.504Z",
+			"2019-11-19T07:12:44.466Z",
+		},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v2/apps/kafka/versions", r.URL.String())
+		assert.Equal(t, "GET", r.Method)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(expected)
+	}))
+	defer ts.Close()
+
+	client := Client{
+		baseURL: ts.URL,
+	}
+
+	versions, err := client.ApplicationVersions("/kafka")
+	require.NoError(t, err)
+
+	jsonEqual(t, expected, versions)
+}
+
+func TestApplicationVersionsErrors(t *testing.T) {
+	tests := []struct {
+		name          string
+		statusCode    int
+		expectedError string
+	}{
+		{
+			name:          "unauthorized",
+			statusCode:    http.StatusUnauthorized,
+			expectedError: "unable to get versions for Marathon app /kafka",
+		},
+		{
+			name:          "forbidden",
+			statusCode:    http.StatusForbidden,
+			expectedError: "unable to get versions for Marathon app /kafka",
+		},
+	}
+
+	for _, test := range tests {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(test.statusCode)
+		}))
+
+		client := Client{
+			baseURL: ts.URL,
+		}
+
+		versions, err := client.ApplicationVersions("/kafka")
+
+		assert.EqualError(t, err, test.expectedError)
+		assert.Empty(t, versions.Versions)
+
+		ts.Close()
+	}
+}
+
+func TestApplicationByVersionWithNoVersion(t *testing.T) {
+	expected := marathon.Application{
+		ID: "/kafka",
+	}
+	response := struct {
+		App marathon.Application `json:"app"`
+	}{
+		App: expected,
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v2/apps/kafka", r.URL.String())
+		json.NewEncoder(w).Encode(response)
+	}))
+	defer ts.Close()
+
+	client := Client{
+		baseURL: ts.URL,
+	}
+	application, err := client.ApplicationByVersion("/kafka", "")
+
+	require.NoError(t, err)
+	jsonEqual(t, expected, application)
+}
+
+func TestApplicationByVersionWithVersion(t *testing.T) {
+	expected := marathon.Application{
+		ID: "/kafka",
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v2/apps/kafka/versions/2019-11-19T07:12:44.466Z", r.URL.String())
+		assert.Equal(t, "GET", r.Method)
+
+		json.NewEncoder(w).Encode(expected)
+	}))
+	defer ts.Close()
+
+	client := Client{
+		baseURL: ts.URL,
+	}
+	application, err := client.ApplicationByVersion("/kafka", "2019-11-19T07:12:44.466Z")
+
+	require.NoError(t, err)
+	jsonEqual(t, expected, application)
+}
+
+func TestApplicationByVersionErrors(t *testing.T) {
+	tests := []struct {
+		name          string
+		statusCode    int
+		expectedError string
+	}{
+		{
+			name:          "unauthorized",
+			statusCode:    http.StatusUnauthorized,
+			expectedError: "unable to get version 2019-11-19T07:12:44.466Z for app /kafka",
+		},
+		{
+			name:          "forbidden",
+			statusCode:    http.StatusForbidden,
+			expectedError: "unable to get version 2019-11-19T07:12:44.466Z for app /kafka",
+		},
+	}
+
+	for _, test := range tests {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(test.statusCode)
+		}))
+
+		client := Client{
+			baseURL: ts.URL,
+		}
+
+		application, err := client.ApplicationByVersion("/kafka", "2019-11-19T07:12:44.466Z")
+
+		assert.EqualError(t, err, test.expectedError)
+		assert.Nil(t, application)
+
+		ts.Close()
+	}
+}
 func jsonEqual(t *testing.T, expected interface{}, actual interface{}) {
 	expectedJSON, err := json.Marshal(expected)
 	require.NoError(t, err)
