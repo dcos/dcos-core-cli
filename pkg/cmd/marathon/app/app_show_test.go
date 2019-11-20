@@ -186,5 +186,5 @@ func TestAppShowNonExistantVersion(t *testing.T) {
 	ctx.SetCluster(cluster)
 
 	err := appShow(ctx, "/kafka", "2019-11-15T07:12:44.466Z")
-	assert.EqualError(t, err, "unable to get version 2019-11-15T07:12:44.466Z for app /kafka")
+	assert.EqualError(t, err, "app '/kafka' does not exist")
 }
