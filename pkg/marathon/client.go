@@ -284,6 +284,8 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 		var result goMarathon.Application
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return &result, err
+	case 404:
+		return nil, fmt.Errorf("app '%s' does not exist", appID)
 	default:
 		return nil, fmt.Errorf("unable to get version %s for app %s", version, appID)
 	}
