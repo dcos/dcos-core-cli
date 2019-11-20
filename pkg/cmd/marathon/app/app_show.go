@@ -77,7 +77,7 @@ func calculateVersion(client *marathon.Client, appID string, version string) (st
 		return "", err
 	}
 	if len(versions.Versions) <= versionsBehind {
-		return "", fmt.Errorf("application %s only has %d version(s)", appID, len(versions.Versions))
+		return "", fmt.Errorf("application '%s' only has %d version(s)", appID, len(versions.Versions))
 	}
 	return versions.Versions[versionsBehind], nil
 }
