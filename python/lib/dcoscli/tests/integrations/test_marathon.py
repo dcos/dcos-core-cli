@@ -138,7 +138,7 @@ def test_show_missing_relative_app_version():
         assert stdout == b''
 
         pattern = ("Error: application 'zero-instance-app' only has "
-                   "[1-9][0-9]* version\\(s\\)\\.\n")
+                   "[1-9][0-9]* version\\(s\\)\n")
         assert re.fullmatch(pattern, stderr.decode('utf-8'), flags=re.DOTALL)
 
 
