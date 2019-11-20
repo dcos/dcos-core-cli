@@ -241,25 +241,25 @@ func (c *Client) Queue() (goMarathon.Queue, error) {
 	}
 }
 
-func (c *Client) ApplicationVersions(appID string) (marathon.ApplicationVersions, error) {
+func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersions, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", normalizeAppID(appID)))
 	if err != nil {
-		return marathon.ApplicationVersions{}, err
+		return goMarathon.ApplicationVersions{}, err
 	}
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case 200:
-		var result marathon.ApplicationVersions
+		var result goMarathon.ApplicationVersions
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return result, err
 	default:
-		return marathon.ApplicationVersions{}, fmt.Errorf("unable to get versions for Marathon app %s", appID)
+		return goMarathon.ApplicationVersions{}, fmt.Errorf("unable to get versions for Marathon app %s", appID)
 	}
 }
 
-func (c *Client) ApplicationByVersion(appID string, version string) (*marathon.Application, error) {
+func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon.Application, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	url := fmt.Sprintf("/v2/apps%s", normalizeAppID(appID))
 	if version != "" {
@@ -276,12 +276,12 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*marathon.A
 	case 200:
 		if version == "" {
 			var result struct {
-				App marathon.Application `json:"app"`
+				App goMarathon.Application `json:"app"`
 			}
 			err = json.NewDecoder(resp.Body).Decode(&result)
 			return &result.App, err
 		}
-		var result marathon.Application
+		var result goMarathon.Application
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return &result, err
 	default:

@@ -225,7 +225,7 @@ func TestDeploymentErrors(t *testing.T) {
 }
 
 func TestApplicationVersions(t *testing.T) {
-	expected := marathon.ApplicationVersions{
+	expected := goMarathon.ApplicationVersions{
 		Versions: []string{
 			"2019-11-18T22:48:41.138Z",
 			"2019-11-18T22:27:28.504Z",
@@ -289,11 +289,11 @@ func TestApplicationVersionsErrors(t *testing.T) {
 }
 
 func TestApplicationByVersionWithNoVersion(t *testing.T) {
-	expected := marathon.Application{
+	expected := goMarathon.Application{
 		ID: "/kafka",
 	}
 	response := struct {
-		App marathon.Application `json:"app"`
+		App goMarathon.Application `json:"app"`
 	}{
 		App: expected,
 	}
@@ -313,7 +313,7 @@ func TestApplicationByVersionWithNoVersion(t *testing.T) {
 }
 
 func TestApplicationByVersionWithVersion(t *testing.T) {
-	expected := marathon.Application{
+	expected := goMarathon.Application{
 		ID: "/kafka",
 	}
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
