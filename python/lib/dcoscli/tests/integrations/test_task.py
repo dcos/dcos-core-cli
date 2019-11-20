@@ -1,4 +1,4 @@
-import collections
+from collections.abc import Sequence
 import json
 import os
 import re
@@ -73,7 +73,7 @@ def test_task():
     assert stderr == b''
 
     tasks = json.loads(stdout.decode('utf-8'))
-    assert isinstance(tasks, collections.Sequence)
+    assert isinstance(tasks, Sequence)
     assert len(tasks) == NUM_TASKS
 
     schema = create_schema(task_fixture().dict(), True)
@@ -317,8 +317,9 @@ def test_download_sandbox():
         cwd = os.getcwd()
         os.chdir(tmp)
 
+        task_id = _get_task_id('download-app')
         returncode, stdout, stderr = exec_command(
-            ['dcos', 'task', 'download', 'download-app'])
+            ['dcos', 'task', 'download', task_id])
 
         assert returncode == 0
         assert stderr == b''
@@ -336,8 +337,9 @@ def test_download_sandbox():
 def test_download_sandbox_to_target():
     with tempdir() as tmp:
         targetdir = '--target-dir=' + tmp + '/sandbox'
+        task_id = _get_task_id('download-app')
         returncode, stdout, stderr = exec_command(
-            ['dcos', 'task', 'download', 'download-app', targetdir])
+            ['dcos', 'task', 'download', task_id, targetdir])
 
         assert returncode == 0
         assert stderr == b''
@@ -350,9 +352,9 @@ def test_download_single_file():
 
         cwd = os.getcwd()
         os.chdir(tmp)
-
+        task_id = _get_task_id('download-app')
         returncode, stdout, stderr = exec_command(
-            ['dcos', 'task', 'download', 'download-app', '/test/test1'])
+            ['dcos', 'task', 'download', task_id, '/test/test1'])
 
         assert returncode == 0
         assert stderr == b''
@@ -367,8 +369,9 @@ def test_download_single_file():
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='Test failing on windows')
 def test_download_no_match():
+    task_id = _get_task_id('download-app')
     returncode, _, stderr = exec_command(
-        ['dcos', 'task', 'download', 'download-app', 'blub'])
+        ['dcos', 'task', 'download', task_id, 'blub'])
 
     assert returncode == 1
     assert stderr.startswith(b'Error: no file or directory matched')

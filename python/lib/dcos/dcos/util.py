@@ -1,4 +1,3 @@
-import collections
 import concurrent.futures
 import contextlib
 import functools
@@ -13,6 +12,8 @@ import stat
 import sys
 import tempfile
 import time
+from collections import OrderedDict
+from collections.abc import Mapping, Sequence
 
 import jsonschema
 import six
@@ -385,7 +386,7 @@ def load_json(reader, keep_order=False):
 
     try:
         if keep_order:
-            return json.load(reader, object_pairs_hook=collections.OrderedDict)
+            return json.load(reader, object_pairs_hook=OrderedDict)
         else:
             return json.load(reader)
     except Exception as error:
@@ -505,7 +506,7 @@ def create_schema(obj, add_properties=False):
     elif isinstance(obj, six.string_types):
         return {'type': 'string'}
 
-    elif isinstance(obj, collections.Mapping):
+    elif isinstance(obj, Mapping):
         schema = {'type': 'object',
                   'properties': {},
                   'additionalProperties': add_properties,
@@ -516,7 +517,7 @@ def create_schema(obj, add_properties=False):
 
         return schema
 
-    elif isinstance(obj, collections.Sequence):
+    elif isinstance(obj, Sequence):
         schema = {'type': 'array'}
         if obj:
             schema['items'] = create_schema(obj[0], add_properties)

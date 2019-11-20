@@ -1,8 +1,8 @@
-import collections
 import copy
 import json
 import os
 
+from collections.abc import Mapping, MutableMapping
 import pkg_resources
 import toml
 
@@ -368,7 +368,7 @@ def unset(name):
 
     if value is None:
         raise DCOSException("Property {!r} doesn't exist".format(name))
-    elif isinstance(value, collections.Mapping):
+    elif isinstance(value, Mapping):
         raise DCOSException(_generate_choice_msg(name, value))
     else:
         msg = "Removed [{}]".format(name)
@@ -415,7 +415,7 @@ def _iterator(parent, dictionary):
         if parent is not None:
             new_key = "{}.{}".format(parent, key)
 
-        if not isinstance(value, collections.Mapping):
+        if not isinstance(value, Mapping):
             yield (new_key, value)
         else:
             for x in _iterator(new_key, value):
@@ -563,7 +563,7 @@ def generate_root_schema(toml_config):
     return root_schema
 
 
-class Toml(collections.Mapping):
+class Toml(Mapping):
     """Class for getting value from TOML.
 
     :param dictionary: configuration dictionary
@@ -582,7 +582,7 @@ class Toml(collections.Mapping):
         """
 
         toml_config = _get_path(self._dictionary, path)
-        if isinstance(toml_config, collections.Mapping):
+        if isinstance(toml_config, Mapping):
             return Toml(toml_config)
         else:
             return toml_config
@@ -613,7 +613,7 @@ class Toml(collections.Mapping):
         return len(self._dictionary)
 
 
-class MutableToml(collections.MutableMapping):
+class MutableToml(MutableMapping):
     """Class for managing CLI configuration through TOML.
 
     :param dictionary: configuration dictionary
@@ -632,7 +632,7 @@ class MutableToml(collections.MutableMapping):
         """
 
         toml_config = _get_path(self._dictionary, path)
-        if isinstance(toml_config, collections.MutableMapping):
+        if isinstance(toml_config, MutableMapping):
             return MutableToml(toml_config)
         else:
             return toml_config

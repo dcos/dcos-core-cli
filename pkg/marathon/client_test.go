@@ -2,11 +2,17 @@ package marathon
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/gambol99/go-marathon"
+	marathonmocks "github.com/dcos/dcos-core-cli/pkg/marathon/mocks"
+
+	"github.com/dcos/dcos-cli/pkg/cli"
+	"github.com/dcos/dcos-cli/pkg/mock"
+	goMarathon "github.com/gambol99/go-marathon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,12 +28,12 @@ func TestResponseToError(t *testing.T) {
 }
 
 func TestApplications(t *testing.T) {
-	expected := marathon.Applications{
-		Apps: []marathon.Application{
+	expected := goMarathon.Applications{
+		Apps: []goMarathon.Application{
 			{
 				ID:      "test-id",
 				Env:     new(map[string]string),
-				Secrets: new(map[string]marathon.Secret),
+				Secrets: new(map[string]goMarathon.Secret),
 			},
 		},
 	}
@@ -88,15 +94,15 @@ func TestApplicationsErrors(t *testing.T) {
 }
 
 func TestQueue(t *testing.T) {
-	expected := marathon.Queue{
-		Items: []marathon.Item{
+	expected := goMarathon.Queue{
+		Items: []goMarathon.Item{
 			{
 				Count: 1,
-				Delay: marathon.Delay{
+				Delay: goMarathon.Delay{
 					Overdue:         false,
 					TimeLeftSeconds: 5,
 				},
-				Application: marathon.Application{
+				Application: goMarathon.Application{
 					ID: "test-id",
 				},
 			},
@@ -151,14 +157,14 @@ func TestQueueErrors(t *testing.T) {
 		queue, err := client.Queue()
 
 		assert.EqualError(t, err, test.expectedError)
-		assert.EqualValues(t, marathon.Queue{}, queue)
+		assert.EqualValues(t, goMarathon.Queue{}, queue)
 
 		ts.Close()
 	}
 }
 
 func TestDeployments(t *testing.T) {
-	expected := []marathon.Deployment{
+	expected := []goMarathon.Deployment{
 		{
 			ID: "test-id",
 		},
@@ -368,4 +374,145 @@ func jsonEqual(t *testing.T, expected interface{}, actual interface{}) {
 	actualJSON, err := json.Marshal(actual)
 	require.NoError(t, err)
 	assert.JSONEq(t, string(expectedJSON), string(actualJSON))
+}
+
+func TestAddAppWithEmptyInput(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader("")})
+
+	newApp, err := client.AddApp(ctx, "")
+	assert.Error(t, err, nil)
+	_, ok := err.(*json.SyntaxError)
+	assert.True(t, ok)
+	assert.Nil(t, newApp)
+}
+
+func TestAddAppWithNonExistingFile(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(nil)
+
+	newApp, err := client.AddApp(ctx, "/this/does/not/exist")
+	assert.Equal(t, ErrCannotReadAppDefinition, err, nil)
+	assert.Nil(t, newApp)
+}
+
+func TestAddAppWithUnsupportedScheme(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(nil)
+
+	newApp, err := client.AddApp(ctx, "ftp://example.org/whateva")
+	assert.Error(t, err, nil)
+	assert.Nil(t, newApp)
+}
+
+func TestAddAppWithHTTPURL(t *testing.T) {
+	// spin up HTTP server that serves an app definition
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/", r.URL.String())
+		assert.Equal(t, "GET", r.Method)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"id":"some id", "another_property":"another value"}`))
+	}))
+	defer ts.Close()
+
+	marathonMock := &marathonmocks.MarathonMock{}
+	client := &Client{API: marathonMock}
+	marathonMock.ApplicationByFn = func(string, *goMarathon.GetAppOpts) (*goMarathon.Application, error) {
+		return nil, nil
+	}
+	marathonMock.ApiPostFn = func(path string, data interface{}, result interface{}) error {
+		if app, ok := data.(map[string]interface{}); ok {
+			assert.Equal(t, "some id", app["id"])
+			assert.Equal(t, "another value", app["another_property"])
+			return nil
+		}
+		assert.Fail(t, "wrong type provided to ApiPost", "%#v", data)
+		return nil
+	}
+	ctx := mock.NewContext(nil)
+
+	newApp, err := client.AddApp(ctx, ts.URL)
+
+	assert.NoError(t, err, nil)
+	assert.NotNil(t, newApp)
+	assert.Equal(t, 1, marathonMock.ApplicationByInvocations, "Expected ApplicationBy to be invoked once")
+	assert.Equal(t, 1, marathonMock.ApiPostInvocations, "Expected ApiPost to be invoked once")
+	assert.Equal(t, &goMarathon.Application{}, newApp)
+}
+
+func TestAddAppWithBrokenURL(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(nil)
+
+	newApp, err := client.AddApp(ctx, "ft p://example.org/whateva")
+	assert.Error(t, err, nil)
+	assert.Nil(t, newApp)
+}
+
+func TestAddApp(t *testing.T) {
+	tests := []struct {
+		name             string
+		applicationByErr error
+		applicationByApp *goMarathon.Application
+		expectedApp      *goMarathon.Application
+		expectedErr      error
+	}{
+		{
+			name:             "application does not exists, yet",
+			applicationByErr: &goMarathon.APIError{ErrCode: goMarathon.ErrCodeNotFound},
+			applicationByApp: nil,
+			expectedApp:      &goMarathon.Application{ID: "some id"},
+			expectedErr:      nil,
+		},
+		{
+			name:             "arbitrary APIError",
+			applicationByErr: &goMarathon.APIError{ErrCode: 999},
+			applicationByApp: nil,
+			expectedApp:      nil,
+			expectedErr:      &goMarathon.APIError{ErrCode: 999},
+		},
+		{
+			name:             "arbitrary error",
+			applicationByErr: goMarathon.ErrMarathonDown,
+			applicationByApp: nil,
+			expectedApp:      nil,
+			expectedErr:      goMarathon.ErrMarathonDown,
+		},
+		{
+			name:             "application already exists",
+			applicationByErr: nil,
+			applicationByApp: &goMarathon.Application{},
+			expectedApp:      nil,
+			expectedErr:      ErrAppAlreadyExists{appID: ""},
+		},
+	}
+	marathonMock := marathonmocks.MarathonMock{}
+	client := &Client{API: &marathonMock}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			marathonMock.ApplicationByFn = func(string, *goMarathon.GetAppOpts) (*goMarathon.Application, error) {
+				return tt.applicationByApp, tt.applicationByErr
+			}
+			marathonMock.ApiPostFn = func(path string, data interface{}, result interface{}) error {
+				resApp, ok := result.(*goMarathon.Application)
+				if !ok {
+					return fmt.Errorf("Parameter result not of type Application")
+				}
+				inApp, ok := data.(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("Parameter data not of type map[string]interface{}")
+				}
+				resApp.ID = inApp["id"].(string)
+				return nil
+			}
+
+			ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader(`{"id":"some id"}`)})
+
+			newApp, err := client.AddApp(ctx, "")
+
+			assert.Equal(t, tt.expectedApp, newApp)
+			assert.Equal(t, tt.expectedErr, err)
+		})
+	}
 }
