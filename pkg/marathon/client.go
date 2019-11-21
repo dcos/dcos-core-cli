@@ -286,6 +286,8 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 		return &result, err
 	case 404:
 		return nil, fmt.Errorf("app '%s' does not exist", normalizeAppID(appID))
+	case 422:
+		return nil, fmt.Errorf("invalid timestamp provided '%s', expecting ISO-8601 datetime string", version)
 	default:
 		return nil, fmt.Errorf("unable to get version %s for app %s", version, appID)
 	}

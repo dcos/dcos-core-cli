@@ -169,12 +169,7 @@ def test_show_bad_app_version():
              'zero-instance-app'])
         assert returncode == 1
         assert stdout == b''
-        assert stderr.startswith(b'Error while fetching')
-        pattern = (b"""{"message":"Invalid timestamp provided """
-                   b"""\'20:39:32.972Z\'. Expecting ISO-8601 """
-                   b"""datetime string."}".\n""")
-
-        assert stderr.endswith(pattern)
+        assert stderr.startswith(b'Error: invalid timestamp provided')
 
 
 def test_show_bad_relative_app_version():
