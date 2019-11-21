@@ -1,8 +1,12 @@
 package app
 
 import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+
 	"github.com/dcos/dcos-cli/api"
-	"github.com/dcos/dcos-core-cli/pkg/cmd/marathon/python"
+	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +21,63 @@ func newCmdMarathonAppShow(ctx api.Context) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "show",
+		Args:  cobra.ExactArgs(1),
 		Short: "Show the `marathon.json` for an  application.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return python.InvokePythonCLI(ctx)
+			return appShow(ctx, args[0], appVersion)
 		},
 	}
 
 	cmd.Flags().StringVar(&appVersion, "app-version", "", appVersionDescription)
 
 	return cmd
+}
+
+func appShow(ctx api.Context, appID string, appVersion string) error {
+	client, err := marathon.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	targetVersion := ""
+	if appVersion != "" {
+		targetVersion, err = calculateVersion(client, appID, appVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	app, err := client.ApplicationByVersion(appID, targetVersion)
+	if err != nil {
+		return err
+	}
+
+	enc := json.NewEncoder(ctx.Out())
+	enc.SetIndent("", "    ")
+	return enc.Encode(app)
+
+}
+
+func calculateVersion(client *marathon.Client, appID string, version string) (string, error) {
+	// check if the version string is an integer which indicates that the user
+	// wants that many behind the latest version
+	versionsBehind, err := strconv.Atoi(version)
+	if err != nil {
+		// if it fails to parse, the user must have given a specific version string
+		return version, nil
+	}
+
+	if versionsBehind >= 0 {
+		return "", fmt.Errorf("relative versions must be negative: %d", versionsBehind)
+	}
+	versionsBehind = -1 * versionsBehind
+
+	versions, err := client.ApplicationVersions(appID)
+	if err != nil {
+		return "", err
+	}
+	if len(versions.Versions) <= versionsBehind {
+		return "", fmt.Errorf("application '%s' only has %d version(s)", appID, len(versions.Versions))
+	}
+	return versions.Versions[versionsBehind], nil
 }

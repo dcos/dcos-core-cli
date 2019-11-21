@@ -274,3 +274,59 @@ func (c *Client) Queue() (goMarathon.Queue, error) {
 		return goMarathon.Queue{}, errors.New("unable to get Marathon queue")
 	}
 }
+
+func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersions, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", normalizeAppID(appID)))
+	if err != nil {
+		return goMarathon.ApplicationVersions{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result goMarathon.ApplicationVersions
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return goMarathon.ApplicationVersions{}, fmt.Errorf("unable to get versions for Marathon app %s", appID)
+	}
+}
+
+func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon.Application, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	url := fmt.Sprintf("/v2/apps%s", normalizeAppID(appID))
+	if version != "" {
+		url = fmt.Sprintf("/v2/apps%s/versions/%s", normalizeAppID(appID), version)
+	}
+
+	resp, err := dcosClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		if version == "" {
+			var result struct {
+				App goMarathon.Application `json:"app"`
+			}
+			err = json.NewDecoder(resp.Body).Decode(&result)
+			return &result.App, err
+		}
+		var result goMarathon.Application
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return &result, err
+	case 404:
+		return nil, fmt.Errorf("app '%s' does not exist", normalizeAppID(appID))
+	case 422:
+		return nil, fmt.Errorf("invalid timestamp provided '%s', expecting ISO-8601 datetime string", version)
+	default:
+		return nil, fmt.Errorf("unable to get version %s for app %s", version, appID)
+	}
+}
+
+func normalizeAppID(appID string) string {
+	return fmt.Sprintf("/%s", strings.Trim(appID, "/"))
+}
