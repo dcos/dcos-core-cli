@@ -399,7 +399,7 @@ def test_kill_missing_app():
         ['dcos', 'marathon', 'app', 'kill', 'app'])
     assert returncode == 1
     assert stdout.decode() == ''
-    stderr_expected = "Error: App '/app' does not exist"
+    stderr_expected = "Error: app '/app' does not exist"
     assert stderr.decode().strip() == stderr_expected
 
 
