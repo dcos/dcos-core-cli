@@ -48,7 +48,6 @@ def test_verify_ssl_without_cert_config(env):
         assert stderr.decode('utf-8') == _ssl_error_msg()
 
 
-@pytest.mark.skip(reason="https://jira.mesosphere.com/browse/DCOS-61005")
 def test_verify_ssl_with_bad_cert_env_var(env):
     env['DCOS_SSL_VERIFY'] = 'tests/data/ssl/fake.pem'
 
@@ -61,7 +60,6 @@ def test_verify_ssl_with_bad_cert_env_var(env):
     env.pop('DCOS_SSL_VERIFY')
 
 
-@pytest.mark.skip(reason="https://jira.mesosphere.com/browse/DCOS-61005")
 def test_verify_ssl_with_bad_cert_config(env):
     with update_config('core.ssl_verify', 'tests/data/ssl/fake.pem', env):
         returncode, stdout, stderr = exec_command(
@@ -76,5 +74,5 @@ def _ssl_error_msg():
         "run: 'dcos config set core.ssl_verify <value>'\n"
         "<value>: Whether to verify SSL certs for HTTPS or path to certs. "
         "Valid values are a path to a CA_BUNDLE, "
-        "True (will then use CA certificates from certifi), "
+        "True (will then use system CA certificates), "
         "or False (will then send insecure requests).\n")
