@@ -182,7 +182,7 @@ def test_show_bad_relative_app_version():
             ['dcos', 'marathon', 'app', 'show',
              '--app-version=2', 'zero-instance-app'],
             returncode=1,
-            stderr=b"Relative versions must be negative: 2\n")
+            stderr=b"Error: relative versions must be negative: 2\n")
 
 
 def test_start_missing_app():
