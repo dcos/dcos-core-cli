@@ -225,12 +225,12 @@ def test_stop_app():
 
 def test_stop_already_stopped_app():
     with _zero_instance_app():
-        stdout = (b"app '/zero-instance-app' already "
+        stderr = (b"app '/zero-instance-app' already "
                   b"stopped: 0 instances.\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'stop', 'zero-instance-app'],
             returncode=1,
-            stdout=stdout)
+            stderr=stderr)
 
 
 def test_update_missing_app():
