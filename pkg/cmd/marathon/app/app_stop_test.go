@@ -95,7 +95,7 @@ func TestAppStopWhenAppIsStopped(t *testing.T) {
 	ctx.SetCluster(cluster)
 
 	err := appStop(ctx, "/test", false)
-	assert.EqualError(t, err, "application '/test' already stopped: 0 instances")
+	assert.EqualError(t, err, "app '/test' already stopped: 0 instances")
 }
 
 func TestAppStopWhenAppDoesntExist(t *testing.T) {
