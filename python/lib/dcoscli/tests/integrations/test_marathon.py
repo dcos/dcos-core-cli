@@ -384,13 +384,11 @@ def test_killing_with_host_app():
         assert len(expected_to_be_killed.intersection(new_tasks)) == 0
 
 
-@pytest.mark.skipif(
-    True, reason='https://github.com/mesosphere/marathon/issues/3251')
 def test_kill_stopped_app():
     with _zero_instance_app():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'kill', 'zero-instance-app'])
-        assert returncode == 1
+        assert returncode == 0
         assert stdout.decode().startswith('Killed tasks: []')
 
 
@@ -723,18 +721,16 @@ def ignore_exception(exc):
 @pytest.fixture
 def marathon_up():
     yield
-
-    @retrying.retry(stop_max_delay=timedelta(minutes=5).total_seconds() * 1000,
-                    retry_on_exception=ignore_exception)
-    def check_marathon_up():
-        # testing to see if marathon is up and can talk through the gateway
-        # ignore the exception until we have a successful reponse.
-        returncode, _, _ = exec_command(['dcos', 'marathon', 'app', 'list'])
-
-        assert returncode == 0
-
     check_marathon_up()
 
+@retrying.retry(stop_max_delay=timedelta(minutes=5).total_seconds() * 1000,
+                retry_on_exception=ignore_exception, wait_fixed=1000)
+def check_marathon_up():
+    # testing to see if marathon is up and can talk through the gateway
+    # ignore the exception until we have a successful reponse.
+    returncode, _, _ = exec_command(['dcos', 'marathon', 'app', 'list'])
+
+    assert returncode == 0
 
 @retrying.retry(stop_max_delay=timedelta(minutes=5).total_seconds() * 1000,
                 retry_on_exception=ignore_exception)
@@ -753,6 +749,7 @@ def test_leader_delete(marathon_up):
     # run with an unhealthy marathon. Explicitly wait for marathon to
     # go down before waiting for it to become healthy again.
     wait_marathon_down()
+    check_marathon_up()
 
 
 def _update_app(app_id, file_path):
