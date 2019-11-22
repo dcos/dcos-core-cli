@@ -42,7 +42,7 @@ func appStop(ctx api.Context, appID string, force bool) error {
 	}
 
 	if *description.Instances <= 0 {
-		return fmt.Errorf("application '%s' already stopped: %d instances", appID, *description.Instances)
+		return fmt.Errorf("app '%s' already stopped: %d instances", appID, *description.Instances)
 	}
 
 	deploymentID, err := client.API.ScaleApplicationInstances(appID, 0, force)
