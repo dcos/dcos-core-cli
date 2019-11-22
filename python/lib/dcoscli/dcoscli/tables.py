@@ -40,7 +40,7 @@ def task_table(tasks):
         ("NAME", lambda t: t["name"]),
         ("HOST", lambda t: _hostname(t)),
         ("USER", lambda t: t.user()),
-        ("STATE", lambda t: t["state"].split("_")[-1][0]),
+        ("STATE", lambda t: t["state"]),
         ("ID", lambda t: t["id"]),
         ("MESOS ID", lambda t: t["slave_id"]),
         ("REGION",
