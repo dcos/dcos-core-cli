@@ -327,6 +327,7 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 	}
 }
 
-func normalizeAppID(appID string) string {
+// NormalizeAppID will return a string with the correct Application ID form based on the given string
+func NormalizeAppID(appID string) string {
 	return fmt.Sprintf("/%s", strings.Trim(appID, "/"))
 }

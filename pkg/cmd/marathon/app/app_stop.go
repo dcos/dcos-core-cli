@@ -17,7 +17,7 @@ func newCmdMarathonAppStop(ctx api.Context) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Stop an application.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			appID := args[0]
+			appID := marathon.NormalizeAppID(args[0])
 
 			return appStop(ctx, appID, force)
 		},

@@ -207,7 +207,7 @@ def test_start_already_started_app():
 def test_stop_missing_app():
     assert_command(['dcos', 'marathon', 'app', 'stop', 'missing-id'],
                    returncode=1,
-                   stderr=b"Error: App '/missing-id' does not exist\n")
+                   stderr=b"Error: app '/missing-id' does not exist\n")
 
 
 def test_stop_app():
@@ -225,7 +225,7 @@ def test_stop_app():
 
 def test_stop_already_stopped_app():
     with _zero_instance_app():
-        stdout = (b"Application 'zero-instance-app' already "
+        stdout = (b"application '/zero-instance-app' already "
                   b"stopped: 0 instances.\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'stop', 'zero-instance-app'],
