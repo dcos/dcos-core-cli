@@ -407,14 +407,14 @@ def test_list_version_missing_app():
     assert_command(
         ['dcos', 'marathon', 'app', 'version', 'list', 'missing-id'],
         returncode=1,
-        stderr=b"Error: App '/missing-id' does not exist\n")
+        stderr=b"Error: Marathon API error: App '/missing-id' does not exist\n")
 
 
 def test_list_version_negative_max_count():
     assert_command(['dcos', 'marathon', 'app', 'version', 'list',
                     'missing-id', '--max-count=-1'],
                    returncode=1,
-                   stderr=b'Maximum count must be a positive number: -1\n')
+                   stderr=b'Error: maximum count must be a positive number\n')
 
 
 def test_list_version_app():
