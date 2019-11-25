@@ -226,7 +226,7 @@ def test_stop_app():
 def test_stop_already_stopped_app():
     with _zero_instance_app():
         stderr = (b"Error: app '/zero-instance-app' already "
-                  b"stopped: 0 instances.\n")
+                  b"stopped: 0 instances\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'stop', 'zero-instance-app'],
             returncode=1,
