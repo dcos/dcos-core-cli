@@ -48,6 +48,7 @@ pipeline {
                                       -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
                                       -e DCOS_USERNAME -e DCOS_PASSWORD \
                                       -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
+                                      -e REGION="eu-central-1" \
                                       python:3.7-stretch bash -c " \
                                         cd scripts; \
                                         python3 -m venv env; \
