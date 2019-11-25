@@ -29,7 +29,7 @@ if command == 'create':
         'aws_region': os.environ.get('REGION', 'us-east-1'),
         'aws_key_name': 'default',
         'ssh_private_key_filename': os.environ['CLI_TEST_SSH_KEY_PATH'],
-        'os_name': 'cent-os-7-dcos-prereqs',
+        'os_name': 'rhel-7-dcos-prereqs',
         'instance_type': 'm4.large',
         'num_masters': 1,
         'num_private_agents': 1,
