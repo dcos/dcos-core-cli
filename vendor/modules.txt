@@ -9,8 +9,9 @@ github.com/antihax/optional
 github.com/davecgh/go-spew/spew
 # github.com/dcos/client-go v0.0.0-20190910161559-e3e16c6d1484
 github.com/dcos/client-go/dcos
-# github.com/dcos/dcos-cli v0.0.0-20190920080154-cd01a5d079b4
+# github.com/dcos/dcos-cli v0.0.0-20191121101114-91bc46caf036
 github.com/dcos/dcos-cli/api
+github.com/dcos/dcos-cli/constants
 github.com/dcos/dcos-cli/pkg/cli
 github.com/dcos/dcos-cli/pkg/cli/version
 github.com/dcos/dcos-cli/pkg/cluster/linker
