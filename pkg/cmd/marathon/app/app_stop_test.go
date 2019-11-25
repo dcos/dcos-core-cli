@@ -163,3 +163,42 @@ func TestAppStopForce(t *testing.T) {
 	err := appStop(ctx, "/test", true)
 	assert.NoError(t, err)
 }
+
+func TestAppStopWhenDeploymentBlocked(t *testing.T) {
+	app := struct {
+		App goMarathon.Application `json:"app"`
+	}{
+		App: goMarathon.Application{
+			ID:        "test",
+			Instances: intPointer(2),
+		},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch url := r.URL.String(); url {
+		case "/service/marathon/v2/apps/test":
+			switch r.Method {
+			case http.MethodGet:
+				w.WriteHeader(200)
+				json.NewEncoder(w).Encode(app)
+			case http.MethodPut:
+				w.WriteHeader(409)
+			default:
+				require.Fail(t, "unexpected http verb", url, r.Method)
+			}
+		default:
+			require.Fail(t, "unexpected call to endpoint", url)
+		}
+	}))
+
+	out := new(bytes.Buffer)
+	env := mock.NewEnvironment()
+	env.Out = out
+	ctx := mock.NewContext(env)
+	cluster := config.NewCluster(nil)
+	cluster.SetURL(ts.URL)
+	ctx.SetCluster(cluster)
+
+	err := appStop(ctx, "/test", false)
+	assert.EqualError(t, err, "changes blocked: deployment already in progress for app")
+}

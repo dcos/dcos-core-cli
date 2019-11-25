@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
@@ -47,6 +48,14 @@ func appStop(ctx api.Context, appID string, force bool) error {
 
 	deploymentID, err := client.API.ScaleApplicationInstances(appID, 0, force)
 	if err != nil {
+		if apiErr, ok := err.(*goMarathon.APIError); ok {
+			switch apiErr.ErrCode {
+			case goMarathon.ErrCodeDuplicateID:
+				return errors.New("changes blocked: deployment already in progress for app")
+			default:
+				fmt.Println(apiErr.ErrCode)
+			}
+		}
 		return err
 	}
 
