@@ -50,10 +50,8 @@ func appStop(ctx api.Context, appID string, force bool) error {
 	if err != nil {
 		if apiErr, ok := err.(*goMarathon.APIError); ok {
 			switch apiErr.ErrCode {
-			case goMarathon.ErrCodeDuplicateID:
+			case goMarathon.ErrCodeAppLocked, goMarathon.ErrCodeDuplicateID:
 				return errors.New("changes blocked: deployment already in progress for app")
-			default:
-				fmt.Println(apiErr.ErrCode)
 			}
 		}
 		return err
