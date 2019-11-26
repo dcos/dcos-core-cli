@@ -309,18 +309,18 @@ def test_update_app_from_stdin():
 
 def test_restarting_stopped_app():
     with _zero_instance_app():
-        stdout = (b"Unable to perform rolling restart of application '"
+        stderr = (b"Error: unable to perform rolling restart of application '"
                   b"/zero-instance-app' because it has no running tasks\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'restart', 'zero-instance-app'],
             returncode=1,
-            stdout=stdout)
+            stderr=stderr)
 
 
 def test_restarting_missing_app():
     assert_command(['dcos', 'marathon', 'app', 'restart', 'missing-id'],
                    returncode=1,
-                   stderr=b"Error: App '/missing-id' does not exist\n")
+                   stderr=b"Error: app '/missing-id' does not exist\n")
 
 
 def test_killing_app():
