@@ -272,7 +272,7 @@ def _parse_url(value):
     scheme_pattern = r'^(?P<scheme>(?:(?:https?)://))'
     domain_pattern = (
         r'(?P<hostname>(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.?)+'
-        '(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)?|')  # domain,
+        r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)?|')  # domain,
 
     value_regex = re.match(
         scheme_pattern +  # http:// or https://

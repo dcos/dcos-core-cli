@@ -452,8 +452,8 @@ def _hack_error_message_fix(message):
     # This regular expression matches the character 'u' followed by the
     # single-quote character, all optionally preceded by a left square
     # bracket, parenthesis, curly brace, or whitespace character.
-    return re.compile("([\[\(\{\s])u'").sub(
-        "\g<1>'",
+    return re.compile(r"([\[\(\{\s])u'").sub(
+        r"\g<1>'",
         re.compile("^u'").sub("'", message))
 
 
