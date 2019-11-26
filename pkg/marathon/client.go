@@ -277,7 +277,7 @@ func (c *Client) Queue() (goMarathon.Queue, error) {
 
 func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersions, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
-	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", normalizeAppID(appID)))
+	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", NormalizeAppID(appID)))
 	if err != nil {
 		return goMarathon.ApplicationVersions{}, err
 	}
@@ -295,9 +295,9 @@ func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersio
 
 func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon.Application, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
-	url := fmt.Sprintf("/v2/apps%s", normalizeAppID(appID))
+	url := fmt.Sprintf("/v2/apps%s", NormalizeAppID(appID))
 	if version != "" {
-		url = fmt.Sprintf("/v2/apps%s/versions/%s", normalizeAppID(appID), version)
+		url = fmt.Sprintf("/v2/apps%s/versions/%s", NormalizeAppID(appID), version)
 	}
 
 	resp, err := dcosClient.Get(url)
@@ -319,7 +319,7 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return &result, err
 	case 404:
-		return nil, fmt.Errorf("app '%s' does not exist", normalizeAppID(appID))
+		return nil, fmt.Errorf("app '%s' does not exist", NormalizeAppID(appID))
 	case 422:
 		return nil, fmt.Errorf("invalid timestamp provided '%s', expecting ISO-8601 datetime string", version)
 	default:
@@ -327,6 +327,7 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 	}
 }
 
-func normalizeAppID(appID string) string {
+// NormalizeAppID will return a string with the correct Application ID form based on the given string
+func NormalizeAppID(appID string) string {
 	return fmt.Sprintf("/%s", strings.Trim(appID, "/"))
 }
