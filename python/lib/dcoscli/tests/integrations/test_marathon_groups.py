@@ -119,7 +119,7 @@ def _add_group_by_stdin(file_path):
         cmd = ['dcos', 'marathon', 'group', 'add']
         returncode, stdout, stderr = exec_command(cmd, stdin=fd)
         assert returncode == 0
-        assert re.fullmatch('Created deployment \S+\n',
+        assert re.fullmatch(r'Created deployment \S+\n',
                             stdout.decode('utf-8'))
         assert stderr == b''
 

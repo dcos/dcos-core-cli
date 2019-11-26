@@ -19,7 +19,7 @@ def add_app(app_path, wait=True):
     cmd = ['dcos', 'marathon', 'app', 'add', app_path]
     returncode, stdout, stderr = exec_command(cmd)
     assert returncode == 0
-    assert re.fullmatch('Created deployment \S+\n', stdout.decode('utf-8'))
+    assert re.fullmatch(r'Created deployment \S+\n', stdout.decode('utf-8'))
     assert stderr == b''
 
     if wait:
@@ -173,7 +173,7 @@ def add_pod(pod_path, wait=True):
     cmd = ['dcos', 'marathon', 'pod', 'add', pod_path]
     returncode, stdout, stderr = exec_command(cmd)
     assert returncode == 0
-    assert re.fullmatch('Created deployment \S+\n', stdout.decode('utf-8'))
+    assert re.fullmatch(r'Created deployment \S+\n', stdout.decode('utf-8'))
     assert stderr == b''
 
     if wait:
@@ -276,7 +276,7 @@ def add_group(group_path, wait=True):
     cmd = ['dcos', 'marathon', 'group', 'add', group_path]
     returncode, stdout, stderr = exec_command(cmd)
     assert returncode == 0
-    assert re.fullmatch('Created deployment \S+\n', stdout.decode('utf-8'))
+    assert re.fullmatch(r'Created deployment \S+\n', stdout.decode('utf-8'))
     assert stderr == b''
 
     if wait:

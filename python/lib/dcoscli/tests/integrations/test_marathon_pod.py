@@ -87,7 +87,7 @@ def _pod_add_from_stdin(file_path):
         returncode, stdout, stderr = exec_command(cmd, stdin=fd)
 
     assert returncode == 0
-    assert re.fullmatch('Created deployment \S+\n', stdout.decode('utf-8'))
+    assert re.fullmatch(r'Created deployment \S+\n', stdout.decode('utf-8'))
     assert stderr == b''
 
     watch_all_deployments()
@@ -147,7 +147,7 @@ def _assert_pod_update_from_stdin(extra_args, pod_json_file_path):
         returncode, stdout, stderr = exec_command(cmd, stdin=fd)
 
     assert returncode == 0
-    assert re.fullmatch('Created deployment \S+\n', stdout.decode('utf-8'))
+    assert re.fullmatch(r'Created deployment \S+\n', stdout.decode('utf-8'))
     assert stderr == b''
 
 
