@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,183 +15,114 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAppStop(t *testing.T) {
-	app := struct {
-		App goMarathon.Application `json:"app"`
-	}{
-		App: goMarathon.Application{
-			ID:        "test",
-			Instances: intPointer(3),
-		},
-	}
-	deployment := goMarathon.DeploymentID{
-		DeploymentID: "5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43",
-		Version:      "2015-09-29T15:59:51.164Z",
-	}
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch url := r.URL.String(); url {
-		//nolint:goconst
-		case "/service/marathon/v2/apps/test":
-			switch r.Method {
-			case http.MethodGet:
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(app)
-			case http.MethodPut:
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(deployment)
-			default:
-				require.Fail(t, "unexpected http verb", r.Method)
-			}
-		default:
-			require.Fail(t, "unexpected call to endpoint", url)
-		}
-	}))
+const testID = "test"
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
-
-	err := appStop(ctx, "/test", false)
-	require.NoError(t, err)
-
-	assert.Equal(t, "Created deployment 5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43\n", out.String())
-
+type appResponse struct {
+	App goMarathon.Application `json:"app"`
 }
 
-func TestAppStopWhenAppIsStopped(t *testing.T) {
-	app := struct {
-		App goMarathon.Application `json:"app"`
-	}{
+func TestAppStopTable(t *testing.T) {
+	simpleApp := appResponse{
 		App: goMarathon.Application{
-			ID:        "test",
-			Instances: intPointer(0),
-		},
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch url := r.URL.String(); url {
-		case "/service/marathon/v2/apps/test":
-			switch r.Method {
-			case http.MethodGet:
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(app)
-			default:
-				require.Fail(t, "unexpected http verb", url, r.Method)
-			}
-		default:
-			require.Fail(t, "unexpected call to endpoint", url)
-		}
-	}))
-
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
-
-	err := appStop(ctx, "/test", false)
-	assert.EqualError(t, err, "app '/test' already stopped: 0 instances")
-}
-
-func TestAppStopWhenAppDoesntExist(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch url := r.URL.String(); url {
-		case "/service/marathon/v2/apps/test":
-			w.WriteHeader(http.StatusNotFound)
-		default:
-			require.Fail(t, "unexpected call to endpoint", url)
-		}
-	}))
-
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
-	err := appStop(ctx, "/test", false)
-	assert.EqualError(t, err, "app '/test' does not exist")
-}
-
-func TestAppStopForce(t *testing.T) {
-	app := struct {
-		App goMarathon.Application `json:"app"`
-	}{
-		App: goMarathon.Application{
-			ID:        "test",
+			ID:        testID,
 			Instances: intPointer(2),
 		},
 	}
-	deployment := goMarathon.DeploymentID{
-		DeploymentID: "5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43",
-		Version:      "2015-09-29T15:59:51.164Z",
-	}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch url := r.URL.Path; url {
-		case "/service/marathon/v2/apps/test":
-			switch r.Method {
-			case http.MethodGet:
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(app)
-			case http.MethodPut:
+	tests := []struct {
+		name    string
+		force   bool
+		getFunc http.HandlerFunc
+		putFunc http.HandlerFunc
+		out     string
+		err     error
+	}{
+		{
+			getFunc: encodeFunc(simpleApp),
+			putFunc: encodeFunc(goMarathon.DeploymentID{
+				DeploymentID: "5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43",
+				Version:      "2015-09-29T15:59:51.164Z",
+			}),
+			out: "Created deployment 5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43\n",
+		},
+		{
+			name: "when app is stopped",
+			getFunc: encodeFunc(struct {
+				App goMarathon.Application `json:"app"`
+			}{App: goMarathon.Application{
+				ID:        testID,
+				Instances: intPointer(0),
+			}}),
+			err: errors.New("app '/test' already stopped: 0 instances"),
+		},
+		{
+			name:    "when app doesn't exist",
+			getFunc: http.NotFound,
+			err:     errors.New("app '/test' does not exist"),
+		},
+		{
+			name:    "with force",
+			force:   true,
+			getFunc: encodeFunc(simpleApp),
+			putFunc: func(w http.ResponseWriter, r *http.Request) {
 				assert.Contains(t, r.URL.Query(), "force")
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(deployment)
-			default:
-				require.Fail(t, "unexpected http verb", url, r.Method)
-			}
-		default:
-			require.Fail(t, "unexpected call to endpoint", url)
-		}
-	}))
-
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
-
-	err := appStop(ctx, "/test", true)
-	assert.NoError(t, err)
-}
-
-func TestAppStopWhenDeploymentBlocked(t *testing.T) {
-	app := struct {
-		App goMarathon.Application `json:"app"`
-	}{
-		App: goMarathon.Application{
-			ID:        "test",
-			Instances: intPointer(2),
+				encode(w, goMarathon.DeploymentID{
+					DeploymentID: "5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43",
+					Version:      "2015-09-29T15:59:51.164Z",
+				})
+			},
+			out: "Created deployment 5ed4c0c5-9ff8-4a6f-a0cd-f57f59a34b43\n",
+		},
+		{
+			name:    "when deployment is blocked",
+			getFunc: encodeFunc(simpleApp),
+			putFunc: func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(409) },
+			err:     errors.New("changes blocked: deployment already in progress for app"),
 		},
 	}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch url := r.URL.String(); url {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := router(tt.getFunc, tt.putFunc)
+			ctx, out := newContext(ts)
+
+			err := appStop(ctx, "/test", tt.force)
+
+			require.Equal(t, tt.err, err)
+			assert.Equal(t, tt.out, out.String())
+		})
+	}
+}
+
+func encodeFunc(obj interface{}) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) { encode(w, obj) }
+}
+
+// nolint: interfacer
+func encode(w http.ResponseWriter, obj interface{}) {
+	json.NewEncoder(w).Encode(obj)
+}
+
+func router(getFunc http.HandlerFunc, putFunc http.HandlerFunc) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch url := r.URL.Path; url {
+		// nolint: goconst
 		case "/service/marathon/v2/apps/test":
 			switch r.Method {
 			case http.MethodGet:
-				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(app)
+				getFunc(w, r)
 			case http.MethodPut:
-				w.WriteHeader(409)
+				putFunc(w, r)
 			default:
-				require.Fail(t, "unexpected http verb", url, r.Method)
+				panic("unexpected http verb " + r.Method)
 			}
 		default:
-			require.Fail(t, "unexpected call to endpoint", url)
+			panic("unexpected call to endpoint " + url)
 		}
 	}))
+}
 
+func newContext(ts *httptest.Server) (*mock.Context, *bytes.Buffer) {
 	out := new(bytes.Buffer)
 	env := mock.NewEnvironment()
 	env.Out = out
@@ -198,7 +130,5 @@ func TestAppStopWhenDeploymentBlocked(t *testing.T) {
 	cluster := config.NewCluster(nil)
 	cluster.SetURL(ts.URL)
 	ctx.SetCluster(cluster)
-
-	err := appStop(ctx, "/test", false)
-	assert.EqualError(t, err, "changes blocked: deployment already in progress for app")
+	return ctx, out
 }
