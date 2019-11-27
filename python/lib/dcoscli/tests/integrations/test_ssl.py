@@ -55,7 +55,7 @@ def test_verify_ssl_with_bad_cert_env_var(env):
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'list'], env)
         assert returncode == 1
-        assert stderr.decode('utf-8') == _ssl_error_msg()
+        assert stderr.decode('utf-8') == _new_ssl_error_msg()
 
     env.pop('DCOS_SSL_VERIFY')
 
@@ -65,7 +65,7 @@ def test_verify_ssl_with_bad_cert_config(env):
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'list'], env)
         assert returncode == 1
-        assert stderr.decode('utf-8') == _ssl_error_msg()
+        assert stderr.decode('utf-8') == _new_ssl_error_msg()
 
 
 def _ssl_error_msg():
@@ -75,4 +75,14 @@ def _ssl_error_msg():
         "<value>: Whether to verify SSL certs for HTTPS or path to certs. "
         "Valid values are a path to a CA_BUNDLE, "
         "True (will then use CA Certificates from certifi), "
+        "or False (will then send insecure requests).\n")
+
+
+def _new_ssl_error_msg():
+    return (
+        "Error: An SSL error occurred. To configure your SSL settings, please "
+        "run: 'dcos config set core.ssl_verify <value>'\n"
+        "<value>: Whether to verify SSL certs for HTTPS or path to certs. "
+        "Valid values are a path to a CA_BUNDLE, "
+        "True (will then use system CA certificates), "
         "or False (will then send insecure requests).\n")
