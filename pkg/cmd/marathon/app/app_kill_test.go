@@ -1,15 +1,12 @@
 package app
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	goMarathon "github.com/gambol99/go-marathon"
 	"github.com/stretchr/testify/assert"
@@ -24,13 +21,7 @@ func TestMarathonKill(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -50,13 +41,7 @@ func TestMarathonKillHost(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -76,11 +61,7 @@ func TestMarathonKillMissingApp(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -105,13 +86,7 @@ func TestMarathonKillScale(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -133,11 +108,7 @@ func TestMarathonKillScaleMissingApp(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)

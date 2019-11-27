@@ -6,8 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/stretchr/testify/assert"
@@ -21,11 +19,7 @@ func TestMarathonPingOnce(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -49,11 +43,7 @@ func TestMarathonPing(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -84,11 +74,7 @@ func TestMarathonPingError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
