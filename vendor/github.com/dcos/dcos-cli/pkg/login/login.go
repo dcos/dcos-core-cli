@@ -12,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const defaultLoginEndpoint = "/acs/api/v1/auth/login"
+
 var (
 	// ErrAuthDisabled is the error returned when attempting to get authentication providers
 	// from a cluster without authentication.
@@ -112,7 +114,9 @@ func (c *Client) challengeAuth() (string, error) {
 // sniffAuth sends an HTTP request with a given ACS token to a well-known resource.
 // It is mainly used to challenge auth or verify that an ACS token is valid.
 func (c *Client) sniffAuth(acsToken string) (*http.Response, error) {
-	var opts []httpclient.Option
+	opts := []httpclient.Option{
+		httpclient.FailOnErrStatus(false),
+	}
 	if acsToken != "" {
 		opts = append(opts, httpclient.ACSToken(acsToken))
 	}
@@ -131,7 +135,7 @@ func (c *Client) sniffAuth(acsToken string) (*http.Response, error) {
 // Login makes a POST requests to the login endpoint with the given credentials.
 func (c *Client) Login(loginEndpoint string, credentials *Credentials) (string, error) {
 	if loginEndpoint == "" {
-		loginEndpoint = "/acs/api/v1/auth/login"
+		loginEndpoint = defaultLoginEndpoint
 	}
 
 	reqBody, err := json.Marshal(credentials)
