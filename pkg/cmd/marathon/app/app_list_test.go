@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	m "github.com/gambol99/go-marathon"
 	"github.com/stretchr/testify/assert"
@@ -43,13 +41,7 @@ func TestAppList(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	require.NoError(t, err)
@@ -80,13 +72,7 @@ func TestAppListQuiet(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	require.NoError(t, err)
@@ -116,13 +102,7 @@ func TestAppListJSON(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	require.NoError(t, err)

@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/gambol99/go-marathon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,13 +29,7 @@ func TestAppShowNoVersion(t *testing.T) {
 		}
 	}))
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	err := appShow(ctx, "/kafka", "")
 	require.NoError(t, err)
@@ -75,13 +67,7 @@ func TestAppShowRelativeVersion(t *testing.T) {
 		}
 	}))
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	err := appShow(ctx, "/kafka", "-2")
 	require.NoError(t, err)
@@ -102,13 +88,7 @@ func TestAppShowRelativePostiveVersion(t *testing.T) {
 		assert.Fail(t, "no calls to DCOS expected")
 	}))
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	err := appShow(ctx, "/kafka", "2")
 	assert.EqualError(t, err, "relative versions must be negative: 2")
@@ -137,13 +117,7 @@ func TestAppShowAbsoluteVersion(t *testing.T) {
 		}
 	}))
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, out := newContext(ts)
 
 	err := appShow(ctx, "/kafka", "2019-11-18T07:12:44.466Z")
 	require.NoError(t, err)
@@ -177,13 +151,7 @@ func TestAppShowNonExistantVersion(t *testing.T) {
 		}
 	}))
 
-	out := new(bytes.Buffer)
-	env := mock.NewEnvironment()
-	env.Out = out
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	err := appShow(ctx, "/kafka", "2019-11-15T07:12:44.466Z")
 	assert.EqualError(t, err, "app '/kafka' does not exist")
