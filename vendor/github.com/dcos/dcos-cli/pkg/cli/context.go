@@ -91,7 +91,7 @@ func (ctx *Context) PluginManager(cluster *config.Cluster) *plugin.Manager {
 }
 
 // DCOSDir returns the root directory for the DC/OS CLI.
-// It defaults to `~/.dcos` and can be overriden by the `DCOS_DIR` env var.
+// It defaults to `~/.dcos` and can be overridden by the `DCOS_DIR` env var.
 func (ctx *Context) DCOSDir() (string, error) {
 	if dcosDir, ok := ctx.env.EnvLookup(EnvDCOSDir); ok {
 		// Make sure DCOS_DIR is an absolute path, otherwise this causes issues with plugin invocation.
@@ -154,24 +154,27 @@ func (ctx *Context) Clusters() ([]*config.Cluster, error) {
 }
 
 // HTTPClient creates an httpclient.Client for a given cluster.
-func (ctx *Context) HTTPClient(c *config.Cluster, opts ...httpclient.Option) *httpclient.Client {
+func (ctx *Context) HTTPClient(c *config.Cluster, opts ...httpclient.Option) (*httpclient.Client, error) {
 	var baseOpts []httpclient.Option
 
 	if c.ACSToken() != "" {
 		baseOpts = append(baseOpts, httpclient.ACSToken(c.ACSToken()))
 	}
-	if c.Timeout() > 0 {
-		baseOpts = append(baseOpts, httpclient.Timeout(c.Timeout()))
+	baseOpts = append(baseOpts, httpclient.Timeout(c.Timeout()))
+
+	clusterTLS, err := c.TLS()
+	if err != nil {
+		return nil, config.NewSSLError(err)
 	}
 	tlsOpt := httpclient.TLS(&tls.Config{
-		InsecureSkipVerify: c.TLS().Insecure,
-		RootCAs:            c.TLS().RootCAs,
+		InsecureSkipVerify: clusterTLS.Insecure, // nolint: gosec
+		RootCAs:            clusterTLS.RootCAs,
 	})
 
 	baseOpts = append(baseOpts, tlsOpt, httpclient.Logger(ctx.Logger()))
 	opts = append(baseOpts, opts...)
 
-	return httpclient.New(c.URL(), opts...)
+	return httpclient.New(c.URL(), opts...), nil
 }
 
 // Prompt is able to prompt for input, password or choices.
