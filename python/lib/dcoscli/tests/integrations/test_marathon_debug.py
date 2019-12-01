@@ -77,7 +77,7 @@ def test_debug_summary():
 
             decoded = stdout.decode()
             assert 'CONSTRAINTS' in decoded
-            assert "[['hostname', 'UNIQUE']]" in decoded
+            assert "[[hostname UNIQUE]]" in decoded
             assert '0.00%' in decoded
         check_debug_summary()
 
@@ -108,8 +108,7 @@ def test_debug_summary_pod():
 
             decoded = stdout.decode()
             assert 'CONSTRAINTS' in decoded
-            assert "'operator': 'UNIQUE'" in decoded
-            assert "'fieldName': 'hostname'" in decoded
+            assert "hostname UNIQUE" in decoded
             assert '0.00%' in decoded
 
         check_debug_summary()
