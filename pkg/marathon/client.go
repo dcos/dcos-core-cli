@@ -177,6 +177,33 @@ func (c *Client) Info() (map[string]interface{}, error) {
 	}
 }
 
+// RawQueue returns the content of a Marathon endpoint url.
+func (c *Client) RawQueue() (*RawQueue, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/queue?embed=lastUnusedOffers")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not read response body: %s", err)
+		}
+
+		var result RawQueue
+		err = json.Unmarshal(data, &result)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal response body: %s", err)
+		}
+		return &result, nil
+	default:
+		return nil, httpResponseToError(resp)
+	}
+}
+
 // KillTasks kill all the tasks of a Marathon app.
 func (c *Client) KillTasks(appID string, host string) (map[string]interface{}, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
@@ -260,6 +287,24 @@ func (c *Client) Deployments() ([]goMarathon.Deployment, error) {
 func (c *Client) Queue() (goMarathon.Queue, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
 	resp, err := dcosClient.Get("/v2/queue")
+	if err != nil {
+		return goMarathon.Queue{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result goMarathon.Queue
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return goMarathon.Queue{}, errors.New("unable to get Marathon queue")
+	}
+}
+
+func (c *Client) QueueWithLastUnusedOffers() (goMarathon.Queue, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/queue?embed=lastUnusedOffers")
 	if err != nil {
 		return goMarathon.Queue{}, err
 	}
