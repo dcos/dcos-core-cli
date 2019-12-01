@@ -124,7 +124,7 @@ def test_debug_summary_pod_json():
         assert stderr == b''
 
         decoded = stdout.decode().replace(' ', '').replace('\n', '')
-        assert '"reason":"UnfulfilledConstraint"' in decoded
+        assert '"reason":["UnfulfilledConstraint"]' in decoded
         assert '{"declined":0,"processed":0,"reason":"InsufficientCpus"}' \
                in decoded
 

@@ -17,6 +17,14 @@ import (
 	goMarathon "github.com/gambol99/go-marathon"
 )
 
+const UnfulfilledRole = "UnfulfilledRole"
+const UnfulfilledConstraint = "UnfulfilledConstraint"
+const InsufficientCpus = "InsufficientCpus"
+const InsufficientMemory = "InsufficientMemory"
+const InsufficientDisk = "InsufficientDisk"
+const InsufficientPorts = "InsufficientPorts"
+const DeclinedScarceResources = "DeclinedScarceResources"
+
 var httpRegexp = regexp.MustCompile("^(http|https)$")
 
 // Client to interact with the Marathon API.
