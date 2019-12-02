@@ -33,4 +33,6 @@ require (
 	gotest.tools v2.2.0+incompatible
 )
 
+replace github.com/gambol99/go-marathon => github.com/mesosphere/go-marathon v0.7.2-0.20191202124444-58c41efabec5
+
 go 1.12

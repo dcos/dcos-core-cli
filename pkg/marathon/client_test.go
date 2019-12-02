@@ -102,7 +102,7 @@ func TestQueue(t *testing.T) {
 					Overdue:         false,
 					TimeLeftSeconds: 5,
 				},
-				Application: goMarathon.Application{
+				Application: &goMarathon.Application{
 					ID: "test-id",
 				},
 			},
