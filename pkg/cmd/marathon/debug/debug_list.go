@@ -46,7 +46,7 @@ func debugList(ctx api.Context, jsonOutput bool) error {
 		enc := json.NewEncoder(ctx.Out())
 		enc.SetIndent("", "    ")
 
-		return enc.Encode(&queue)
+		return enc.Encode(&queue.Items)
 
 	}
 
