@@ -39,6 +39,8 @@ github.com/gambol99/go-marathon v0.7.1 h1:/dnwXQ0W0UDScpvmcdjzRz3ssnJ/5ieX/q4Xi/
 github.com/gambol99/go-marathon v0.7.1/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/gambol99/go-marathon v0.7.2-0.20191118125545-9c4da387a2a4 h1:LKdqU1VbGM3KkuCA+MzjcdUK/07bljgMDoJzxCnJ4Ts=
 github.com/gambol99/go-marathon v0.7.2-0.20191118125545-9c4da387a2a4/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
+github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37 h1:zEKbiTqjvvrey+2Vum1H98Mah1CPpcIqTnmfbdLsCNs=
+github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-openapi/analysis v0.0.0-20180825180245-b006789cd277/go.mod h1:k70tL6pCuVxPJOHXQ+wIac1FUrvNkHolPie/cLEU6hI=
@@ -84,7 +86,6 @@ github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
 github.com/gogo/protobuf v1.3.0 h1:G8O7TerXerS4F6sx9OV7/nRfJdnXgHZu/S/7F2SN+UE=
 github.com/gogo/protobuf v1.3.0/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
-github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/go-cmp v0.3.1 h1:Xye71clBPdm5HgqGwUkwhbynsUJZhDbS20FvLhQ2izg=
@@ -125,10 +126,6 @@ github.com/mattn/go-runewidth v0.0.4 h1:2BvfKmzob6Bmd4YsL0zygOqfdFnK7GR4QL06Do4/
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mesos/mesos-go v0.0.11-0.20190717023829-56ac038085ac h1:Psyp4ihyc+sazWXeR4Wo2Sbcemgym+z0sOIDdhOFAXo=
 github.com/mesos/mesos-go v0.0.11-0.20190717023829-56ac038085ac/go.mod h1:kPYCMQ9gsOXVAle1OsoY4I1+9kPu8GHkf88aV59fDr4=
-github.com/mesosphere/go-marathon v0.7.2-0.20191127154926-234c384db47f h1:ugDTBddHLL0wEqR9Z07F9iAMErAEkWLg86dfmu5ItNQ=
-github.com/mesosphere/go-marathon v0.7.2-0.20191127154926-234c384db47f/go.mod h1:+MRD6NDRoCbWubCddXA17oNyL2+FCDLP+ISozYpNKFU=
-github.com/mesosphere/go-marathon v0.7.2-0.20191202124444-58c41efabec5 h1:+wApjz19bMtJO2Rk+JEqli48UFN7rF7revsA3cA3GxU=
-github.com/mesosphere/go-marathon v0.7.2-0.20191202124444-58c41efabec5/go.mod h1:+MRD6NDRoCbWubCddXA17oNyL2+FCDLP+ISozYpNKFU=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
@@ -237,7 +234,5 @@ gopkg.in/square/go-jose.v2 v2.3.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
-gopkg.in/yaml.v2 v2.2.5 h1:ymVxjfMaHvXD8RqPRmzHHsB3VvucivSkIAvJFDI5O3c=
-gopkg.in/yaml.v2 v2.2.5/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gotest.tools v2.2.0+incompatible h1:VsBPFP1AI068pPrMxtb/S8Zkgf9xEmTLJjfM+P5UIEo=
 gotest.tools v2.2.0+incompatible/go.mod h1:DsYFclhRJ6vuDpmuTbkuFWG+y2sxOXAzmJt81HFBacw=
