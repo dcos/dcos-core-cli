@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dcos/dcos-cli/pkg/config"
-	"github.com/dcos/dcos-cli/pkg/mock"
 	"github.com/dcos/dcos-core-cli/pkg/marathon"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,11 +17,7 @@ func TestMarathonRemove(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -40,11 +34,7 @@ func TestMarathonRemoveForce(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -61,11 +51,7 @@ func TestMarathonRemoveMissingApp(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -83,11 +69,7 @@ func TestMarathonRemoveOtherError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx, _ := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)

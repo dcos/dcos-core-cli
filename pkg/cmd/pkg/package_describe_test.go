@@ -17,15 +17,6 @@ import (
 )
 
 func TestPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
-	var out bytes.Buffer
-	env := mock.NewEnvironment()
-	env.Fs = afero.NewCopyOnWriteFs(
-		afero.NewReadOnlyFs(afero.NewOsFs()),
-		afero.NewMemMapFs(),
-	)
-	env.Out = &out
-	ctx := mock.NewContext(env)
-
 	client := &mocks.Client{}
 	desc := cosmos.Description{
 		Package: dcos.CosmosPackage{
@@ -65,8 +56,7 @@ func TestPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%#v", tt.in), func(t *testing.T) {
-			var out bytes.Buffer
-			env.Out = &out
+			ctx, out := newContext()
 
 			err = pkgDescribe(ctx, "helloworld", tt.in, client)
 			assert.NoError(t, err)
@@ -76,15 +66,6 @@ func TestPkgDescribeShouldProxyCommandsToCosmos(t *testing.T) {
 }
 
 func TestPkgDescribeShouldDetectIfPackageSupportsCli(t *testing.T) {
-	var out bytes.Buffer
-	env := mock.NewEnvironment()
-	env.Fs = afero.NewCopyOnWriteFs(
-		afero.NewReadOnlyFs(afero.NewOsFs()),
-		afero.NewMemMapFs(),
-	)
-	env.Out = &out
-	ctx := mock.NewContext(env)
-
 	var testCases = []struct {
 		in  cosmos.Description
 		out string
@@ -118,8 +99,7 @@ func TestPkgDescribeShouldDetectIfPackageSupportsCli(t *testing.T) {
 			client := &mocks.Client{}
 			client.On("PackageDescribe", "helloworld", "").Return(&tt.in, nil)
 
-			var out bytes.Buffer
-			env.Out = &out
+			ctx, out := newContext()
 
 			err := pkgDescribe(ctx, "helloworld", describeOptions{cliOnly: true}, client)
 			assert.NoError(t, err)
@@ -129,14 +109,7 @@ func TestPkgDescribeShouldDetectIfPackageSupportsCli(t *testing.T) {
 }
 
 func TestPkgDescribeShouldReturnCosmosErrorOnRender(t *testing.T) {
-	var out bytes.Buffer
-	env := mock.NewEnvironment()
-	env.Fs = afero.NewCopyOnWriteFs(
-		afero.NewReadOnlyFs(afero.NewOsFs()),
-		afero.NewMemMapFs(),
-	)
-	env.Out = &out
-	ctx := mock.NewContext(env)
+	ctx, out := newContext()
 
 	client := &mocks.Client{}
 	desc := cosmos.Description{}
@@ -149,15 +122,6 @@ func TestPkgDescribeShouldReturnCosmosErrorOnRender(t *testing.T) {
 }
 
 func TestPkgDescribeShouldReturnCosmosErrorWhenCosmosFails(t *testing.T) {
-	var out bytes.Buffer
-	env := mock.NewEnvironment()
-	env.Fs = afero.NewCopyOnWriteFs(
-		afero.NewReadOnlyFs(afero.NewOsFs()),
-		afero.NewMemMapFs(),
-	)
-	env.Out = &out
-	ctx := mock.NewContext(env)
-
 	client := &mocks.Client{}
 	client.On("PackageDescribe", "helloworld", "").Return(nil, fmt.Errorf("could not describe"))
 	client.On("PackageListVersions", "helloworld").Return(nil, fmt.Errorf("could not get version"))
@@ -175,8 +139,7 @@ func TestPkgDescribeShouldReturnCosmosErrorWhenCosmosFails(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%#v", tt.in), func(t *testing.T) {
-			var out bytes.Buffer
-			env.Out = &out
+			ctx, out := newContext()
 
 			err := pkgDescribe(ctx, "helloworld", tt.in, client)
 			assert.EqualError(t, err, tt.out)
@@ -186,14 +149,7 @@ func TestPkgDescribeShouldReturnCosmosErrorWhenCosmosFails(t *testing.T) {
 }
 
 func TestPkgDescribeShouldReturnErrorWhenUnableToDecodeMarathonConfiguration(t *testing.T) {
-	var out bytes.Buffer
-	env := mock.NewEnvironment()
-	env.Fs = afero.NewCopyOnWriteFs(
-		afero.NewReadOnlyFs(afero.NewOsFs()),
-		afero.NewMemMapFs(),
-	)
-	env.Out = &out
-	ctx := mock.NewContext(env)
+	ctx, out := newContext()
 
 	client := &mocks.Client{}
 	desc := cosmos.Description{
@@ -208,4 +164,16 @@ func TestPkgDescribeShouldReturnErrorWhenUnableToDecodeMarathonConfiguration(t *
 	err := pkgDescribe(ctx, "helloworld", describeOptions{appOnly: true, config: true}, client)
 	assert.EqualError(t, err, "illegal base64 data at input byte 3")
 	assert.Empty(t, string(out.Bytes()))
+}
+
+func newContext() (*mock.Context, *bytes.Buffer) {
+	var out bytes.Buffer
+	env := mock.NewEnvironment()
+	env.Fs = afero.NewCopyOnWriteFs(
+		afero.NewReadOnlyFs(afero.NewOsFs()),
+		afero.NewMemMapFs(),
+	)
+	env.Out = &out
+	ctx := mock.NewContext(env)
+	return ctx, &out
 }

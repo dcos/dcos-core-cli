@@ -37,8 +37,6 @@ github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25Kn
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gambol99/go-marathon v0.7.1 h1:/dnwXQ0W0UDScpvmcdjzRz3ssnJ/5ieX/q4Xi/QHOn4=
 github.com/gambol99/go-marathon v0.7.1/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
-github.com/gambol99/go-marathon v0.7.2-0.20191118125545-9c4da387a2a4 h1:LKdqU1VbGM3KkuCA+MzjcdUK/07bljgMDoJzxCnJ4Ts=
-github.com/gambol99/go-marathon v0.7.2-0.20191118125545-9c4da387a2a4/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37 h1:zEKbiTqjvvrey+2Vum1H98Mah1CPpcIqTnmfbdLsCNs=
 github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37/go.mod h1:GLyXJD41gBO/NPKVPGQbhyyC06eugGy15QEZyUkE2/s=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=

@@ -17,6 +17,14 @@ import (
 	goMarathon "github.com/gambol99/go-marathon"
 )
 
+const UnfulfilledRole = "UnfulfilledRole"
+const UnfulfilledConstraint = "UnfulfilledConstraint"
+const InsufficientCpus = "InsufficientCpus"
+const InsufficientMemory = "InsufficientMemory"
+const InsufficientDisk = "InsufficientDisk"
+const InsufficientPorts = "InsufficientPorts"
+const DeclinedScarceResources = "DeclinedScarceResources"
+
 var httpRegexp = regexp.MustCompile("^(http|https)$")
 
 // Client to interact with the Marathon API.
@@ -177,6 +185,33 @@ func (c *Client) Info() (map[string]interface{}, error) {
 	}
 }
 
+// RawQueue returns the content of a Marathon endpoint url.
+func (c *Client) RawQueue() (*RawQueue, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/queue?embed=lastUnusedOffers")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not read response body: %s", err)
+		}
+
+		var result RawQueue
+		err = json.Unmarshal(data, &result)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal response body: %s", err)
+		}
+		return &result, nil
+	default:
+		return nil, httpResponseToError(resp)
+	}
+}
+
 // KillTasks kill all the tasks of a Marathon app.
 func (c *Client) KillTasks(appID string, host string) (map[string]interface{}, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
@@ -275,9 +310,27 @@ func (c *Client) Queue() (goMarathon.Queue, error) {
 	}
 }
 
+func (c *Client) QueueWithLastUnusedOffers() (goMarathon.Queue, error) {
+	dcosClient := pluginutil.HTTPClient(c.baseURL)
+	resp, err := dcosClient.Get("/v2/queue?embed=lastUnusedOffers")
+	if err != nil {
+		return goMarathon.Queue{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var result goMarathon.Queue
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		return result, err
+	default:
+		return goMarathon.Queue{}, errors.New("unable to get Marathon queue")
+	}
+}
+
 func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersions, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
-	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", normalizeAppID(appID)))
+	resp, err := dcosClient.Get(fmt.Sprintf("/v2/apps%s/versions", NormalizeAppID(appID)))
 	if err != nil {
 		return goMarathon.ApplicationVersions{}, err
 	}
@@ -295,9 +348,9 @@ func (c *Client) ApplicationVersions(appID string) (goMarathon.ApplicationVersio
 
 func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon.Application, error) {
 	dcosClient := pluginutil.HTTPClient(c.baseURL)
-	url := fmt.Sprintf("/v2/apps%s", normalizeAppID(appID))
+	url := fmt.Sprintf("/v2/apps%s", NormalizeAppID(appID))
 	if version != "" {
-		url = fmt.Sprintf("/v2/apps%s/versions/%s", normalizeAppID(appID), version)
+		url = fmt.Sprintf("/v2/apps%s/versions/%s", NormalizeAppID(appID), version)
 	}
 
 	resp, err := dcosClient.Get(url)
@@ -319,7 +372,7 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		return &result, err
 	case 404:
-		return nil, fmt.Errorf("app '%s' does not exist", normalizeAppID(appID))
+		return nil, fmt.Errorf("app '%s' does not exist", NormalizeAppID(appID))
 	case 422:
 		return nil, fmt.Errorf("invalid timestamp provided '%s', expecting ISO-8601 datetime string", version)
 	default:
@@ -327,6 +380,7 @@ func (c *Client) ApplicationByVersion(appID string, version string) (*goMarathon
 	}
 }
 
-func normalizeAppID(appID string) string {
+// NormalizeAppID will return a string with the correct Application ID form based on the given string
+func NormalizeAppID(appID string) string {
 	return fmt.Sprintf("/%s", strings.Trim(appID, "/"))
 }

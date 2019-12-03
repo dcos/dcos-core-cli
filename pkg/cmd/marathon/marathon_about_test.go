@@ -19,11 +19,7 @@ func TestMarathonAbout(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
@@ -41,15 +37,20 @@ func TestMarathonAboutClientError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	env := mock.NewEnvironment()
-	ctx := mock.NewContext(env)
-	cluster := config.NewCluster(nil)
-	cluster.SetURL(ts.URL)
-	ctx.SetCluster(cluster)
+	ctx := newContext(ts)
 
 	client, err := marathon.NewClient(ctx)
 	assert.NoError(t, err)
 
 	err = marathonAbout(ctx, *client)
 	assert.EqualError(t, err, `HTTP 500 error`)
+}
+
+func newContext(ts *httptest.Server) *mock.Context {
+	env := mock.NewEnvironment()
+	ctx := mock.NewContext(env)
+	cluster := config.NewCluster(nil)
+	cluster.SetURL(ts.URL)
+	ctx.SetCluster(cluster)
+	return ctx
 }

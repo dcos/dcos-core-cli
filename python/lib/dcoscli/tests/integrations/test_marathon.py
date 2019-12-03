@@ -189,25 +189,25 @@ def test_start_missing_app():
     assert_command(
         ['dcos', 'marathon', 'app', 'start', 'missing-id'],
         returncode=1,
-        stderr=b"Error: App '/missing-id' does not exist\n")
+        stderr=b"Error: app '/missing-id' does not exist\n")
 
 
 def test_start_already_started_app():
     with _zero_instance_app():
         start_app('zero-instance-app')
 
-        stdout = (b"Application 'zero-instance-app' already "
-                  b"started: 1 instances.\n")
+        stderr = (b"Error: application 'zero-instance-app' already "
+                  b"started: 1 instances\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'start', 'zero-instance-app'],
             returncode=1,
-            stdout=stdout)
+            stderr=stderr)
 
 
 def test_stop_missing_app():
     assert_command(['dcos', 'marathon', 'app', 'stop', 'missing-id'],
                    returncode=1,
-                   stderr=b"Error: App '/missing-id' does not exist\n")
+                   stderr=b"Error: app '/missing-id' does not exist\n")
 
 
 def test_stop_app():
@@ -225,12 +225,12 @@ def test_stop_app():
 
 def test_stop_already_stopped_app():
     with _zero_instance_app():
-        stdout = (b"Application 'zero-instance-app' already "
-                  b"stopped: 0 instances.\n")
+        stderr = (b"Error: app '/zero-instance-app' already "
+                  b"stopped: 0 instances\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'stop', 'zero-instance-app'],
             returncode=1,
-            stdout=stdout)
+            stderr=stderr)
 
 
 def test_update_missing_app():
@@ -309,18 +309,18 @@ def test_update_app_from_stdin():
 
 def test_restarting_stopped_app():
     with _zero_instance_app():
-        stdout = (b"Unable to perform rolling restart of application '"
+        stderr = (b"Error: unable to perform rolling restart of application '"
                   b"/zero-instance-app' because it has no running tasks\n")
         assert_command(
             ['dcos', 'marathon', 'app', 'restart', 'zero-instance-app'],
             returncode=1,
-            stdout=stdout)
+            stderr=stderr)
 
 
 def test_restarting_missing_app():
     assert_command(['dcos', 'marathon', 'app', 'restart', 'missing-id'],
                    returncode=1,
-                   stderr=b"Error: App '/missing-id' does not exist\n")
+                   stderr=b"Error: app '/missing-id' does not exist\n")
 
 
 def test_killing_app():
@@ -690,7 +690,8 @@ def test_app_locked_error():
     with app('tests/data/marathon/apps/sleep_many_instances.json',
              '/sleep-many-instances',
              wait=False):
-        stderr = b'Changes blocked: deployment already in progress for app.\n'
+        stderr = (b'Error: changes blocked: deployment '
+                b'already in progress for app\n')
         assert_command(
             ['dcos', 'marathon', 'app', 'stop', 'sleep-many-instances'],
             returncode=1,
