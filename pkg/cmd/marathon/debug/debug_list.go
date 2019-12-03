@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const emptyEntry = "---"
-
 func newCmdMarathonDebugList(ctx api.Context) *cobra.Command {
 	var jsonOutput bool
 
@@ -64,8 +62,8 @@ func debugList(ctx api.Context, jsonOutput bool) error {
 			strconv.FormatBool(i.Delay.Overdue),
 			strconv.Itoa(int(i.ProcessedOffersSummary.ProcessedOffersCount)),
 			strconv.Itoa(int(i.ProcessedOffersSummary.UnusedOffersCount)),
-			formatString(i.ProcessedOffersSummary.LastUnusedOfferAt),
-			formatString(i.ProcessedOffersSummary.LastUsedOfferAt),
+			nilPrintString(i.ProcessedOffersSummary.LastUnusedOfferAt),
+			nilPrintString(i.ProcessedOffersSummary.LastUsedOfferAt),
 		})
 	}
 
@@ -84,13 +82,6 @@ func getAppOrPodID(item goMarathon.Item) string {
 		return item.Pod.ID
 	}
 	return ""
-}
-
-func formatString(s *string) string {
-	if s != nil {
-		return *s
-	}
-	return emptyEntry
 }
 
 // this enables sorting by ID
