@@ -6,7 +6,7 @@ import retrying
 from dcoscli.test.common import exec_command
 from dcoscli.test.marathon import app, pod, watch_for_overdue
 
-list_regex = r'/stuck-(?:sleep|pod)\W+[^Z]+Z\W+\d\W+(?:True|False)' \
+list_regex = r'/stuck-(?:sleep|pod)\W+[^Z]+Z\W+\d\W+(?:true|false)' \
              r'\W+\d{1,2}\W+\d{1,2}\W+[^Z]+Z\W+[^Z]+Z'
 
 
