@@ -30,7 +30,7 @@ type Package struct {
 	PostUninstallNotes string   `json:"postUninstallNotes,omitempty"`
 	PreInstallNotes    string   `json:"preInstallNotes,omitempty"`
 	Scm                string   `json:"scm,omitempty"`
-	ReleaseVersion     *int32   `json:"releaseVersion,omitempty"`
+	ReleaseVersion     *int64   `json:"releaseVersion,omitempty"`
 	Selected           bool     `json:"selected"`
 	Tags               []string `json:"tags,omitempty"`
 	Version            string   `json:"version,omitempty"`

@@ -4,7 +4,10 @@
 
 package sse
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 // EventLog holds all of previous events
 type EventLog []*Event
@@ -12,6 +15,7 @@ type EventLog []*Event
 // Add event to eventlog
 func (e *EventLog) Add(ev *Event) {
 	ev.ID = []byte(e.currentindex())
+	ev.timestamp = time.Now()
 	(*e) = append((*e), ev)
 }
 
@@ -23,7 +27,8 @@ func (e *EventLog) Clear() {
 // Replay events to a subscriber
 func (e *EventLog) Replay(s *Subscriber) {
 	for i := 0; i < len((*e)); i++ {
-		if string((*e)[i].ID) >= s.eventid {
+		id, _ := strconv.Atoi(string((*e)[i].ID))
+		if id >= s.eventid {
 			s.connection <- (*e)[i]
 		}
 	}

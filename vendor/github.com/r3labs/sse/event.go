@@ -7,15 +7,18 @@ package sse
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
+	"time"
 )
 
 // Event holds all of the event source fields
 type Event struct {
-	ID    []byte
-	Data  []byte
-	Event []byte
-	Retry []byte
+	ID        []byte
+	Data      []byte
+	Event     []byte
+	Retry     []byte
+	timestamp time.Time
 }
 
 // EventStreamReader scans an io.Reader looking for EventStream messages.
@@ -34,14 +37,8 @@ func NewEventStreamReader(eventStream io.Reader) *EventStreamReader {
 		}
 
 		// We have a full event payload to parse.
-		if i := bytes.Index(data, []byte("\r\n\r\n")); i >= 0 {
-			return i + 1, data[0:i], nil
-		}
-		if i := bytes.Index(data, []byte("\r\r")); i >= 0 {
-			return i + 1, data[0:i], nil
-		}
-		if i := bytes.Index(data, []byte("\n\n")); i >= 0 {
-			return i + 1, data[0:i], nil
+		if i, nlen := containsDoubleNewline(data); i >= 0 {
+			return i + nlen, data[0:i], nil
 		}
 		// If we're at EOF, we have all of the data.
 		if atEOF {
@@ -58,6 +55,43 @@ func NewEventStreamReader(eventStream io.Reader) *EventStreamReader {
 	}
 }
 
+// Returns a tuple containing the index of a double newline, and the number of bytes
+// represented by that sequence. If no double newline is present, the first value
+// will be negative.
+func containsDoubleNewline(data []byte) (int, int) {
+	// Search for each potentially valid sequence of newline characters
+	crcr := bytes.Index(data, []byte("\r\r"))
+	lflf := bytes.Index(data, []byte("\n\n"))
+	crlflf := bytes.Index(data, []byte("\r\n\n"))
+	lfcrlf := bytes.Index(data, []byte("\n\r\n"))
+	crlfcrlf := bytes.Index(data, []byte("\r\n\r\n"))
+	// Find the earliest position of a double newline combination
+	minPos := minPosInt(crcr, minPosInt(lflf, minPosInt(crlflf, minPosInt(lfcrlf, crlfcrlf))))
+	// Detemine the length of the sequence
+	nlen := 2
+	if minPos == crlfcrlf {
+		nlen = 4
+	} else if minPos == crlflf || minPos == lfcrlf {
+		nlen = 3
+	}
+	return minPos, nlen
+}
+
+// Returns the minimum non-negative value out of the two values. If both
+// are negative, a negative value is returned.
+func minPosInt(a, b int) int {
+	if a < 0 {
+		return b
+	}
+	if b < 0 {
+		return a
+	}
+	if a > b {
+		return b
+	}
+	return a
+}
+
 // ReadEvent scans the EventStream for events.
 func (e *EventStreamReader) ReadEvent() ([]byte, error) {
 	if e.scanner.Scan() {
@@ -65,6 +99,9 @@ func (e *EventStreamReader) ReadEvent() ([]byte, error) {
 		return event, nil
 	}
 	if err := e.scanner.Err(); err != nil {
+		if err == context.Canceled {
+			return nil, io.EOF
+		}
 		return nil, err
 	}
 	return nil, io.EOF
