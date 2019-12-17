@@ -6,6 +6,7 @@ package sse
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -29,15 +30,16 @@ type ConnCallback func(c *Client)
 
 // Client handles an incoming server stream
 type Client struct {
-	URL            string
-	Connection     *http.Client
-	Retry          time.Time
-	subscribed     map[chan *Event]chan bool
-	Headers        map[string]string
-	EncodingBase64 bool
-	EventID        string
-	disconnectcb   ConnCallback
-	mu             sync.Mutex
+	URL               string
+	Connection        *http.Client
+	Retry             time.Time
+	subscribed        map[chan *Event]chan bool
+	Headers           map[string]string
+	EncodingBase64    bool
+	EventID           string
+	disconnectcb      ConnCallback
+	ReconnectStrategy backoff.BackOff
+	mu                sync.Mutex
 }
 
 // NewClient creates a new client
@@ -52,119 +54,152 @@ func NewClient(url string) *Client {
 
 // Subscribe to a data stream
 func (c *Client) Subscribe(stream string, handler func(msg *Event)) error {
+	return c.SubscribeWithContext(context.Background(), stream, handler)
+}
+
+// Subscribe to a data stream with context
+func (c *Client) SubscribeWithContext(ctx context.Context, stream string, handler func(msg *Event)) error {
 	operation := func() error {
-		resp, err := c.request(stream)
+		resp, err := c.request(ctx, stream)
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
 
 		reader := NewEventStreamReader(resp.Body)
+		eventChan, errorChan := c.startReadLoop(reader)
 
 		for {
-			// Read each new line and process the type of event
-			event, err := reader.ReadEvent()
-			if err != nil {
-				if err == io.EOF {
-					return nil
-				}
-
-				// run user specified disconnect function
-				if c.disconnectcb != nil {
-					c.disconnectcb(c)
-				}
-
+			select {
+			case err := <-errorChan:
 				return err
-			}
-
-			// If we get an error, ignore it.
-			if msg, err := c.processEvent(event); err == nil {
-				if len(msg.ID) > 0 {
-					c.EventID = string(msg.ID)
-				} else {
-					msg.ID = []byte(c.EventID)
-				}
-
+			case msg := <-eventChan:
 				handler(msg)
 			}
 		}
 	}
-	return backoff.Retry(operation, backoff.NewExponentialBackOff())
+
+	// Apply user specified reconnection strategy or default to standard NewExponentialBackOff() reconnection method
+	var err error
+	if c.ReconnectStrategy != nil {
+		err = backoff.Retry(operation, c.ReconnectStrategy)
+	} else {
+		err = backoff.Retry(operation, backoff.NewExponentialBackOff())
+	}
+	return err
 }
 
 // SubscribeChan sends all events to the provided channel
 func (c *Client) SubscribeChan(stream string, ch chan *Event) error {
+	return c.SubscribeChanWithContext(context.Background(), stream, ch)
+}
+
+// SubscribeChan sends all events to the provided channel with context
+func (c *Client) SubscribeChanWithContext(ctx context.Context, stream string, ch chan *Event) error {
 	var connected bool
 	errch := make(chan error)
 	c.mu.Lock()
 	c.subscribed[ch] = make(chan bool)
 	c.mu.Unlock()
 
-	go func() {
-		operation := func() error {
-			resp, err := c.request(stream)
-			if err != nil {
-				c.cleanup(resp, ch)
+	operation := func() error {
+		resp, err := c.request(ctx, stream)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			return errors.New("could not connect to stream")
+		}
+
+		if !connected {
+			// Notify connect
+			errch <- nil
+			connected = true
+		}
+
+		reader := NewEventStreamReader(resp.Body)
+		eventChan, errorChan := c.startReadLoop(reader)
+
+		for {
+			var msg *Event
+			// Wait for message to arrive or exit
+			select {
+			case <-c.subscribed[ch]:
+				return nil
+			case err := <-errorChan:
 				return err
+			case msg = <-eventChan:
 			}
 
-			if resp.StatusCode != 200 {
-				c.cleanup(resp, ch)
-				return errors.New("could not connect to stream")
-			}
-
-			if !connected {
-				errch <- nil
-				connected = true
-			}
-
-			reader := NewEventStreamReader(resp.Body)
-
-			for {
-				// Read each new line and process the type of event
-				event, err := reader.ReadEvent()
-				if err != nil {
-					if err == io.EOF {
-						c.cleanup(resp, ch)
-						return nil
-					}
-
-					// run user specified disconnect function
-					if c.disconnectcb != nil {
-						c.disconnectcb(c)
-					}
-
-					return err
-				}
-
-				// If we get an error, ignore it.
-				if msg, err := c.processEvent(event); err == nil {
-					if len(msg.ID) > 0 {
-						c.EventID = string(msg.ID)
-					} else {
-						msg.ID = []byte(c.EventID)
-					}
-
-					select {
-					case <-c.subscribed[ch]:
-						c.cleanup(resp, ch)
-						return nil
-					case ch <- msg:
-						// message sent
-					}
+			// Wait for message to be sent or exit
+			if msg != nil {
+				select {
+				case <-c.subscribed[ch]:
+					return nil
+				case ch <- msg:
+					// message sent
 				}
 			}
 		}
+	}
 
-		err := backoff.Retry(operation, backoff.NewExponentialBackOff())
+	go func() {
+		defer c.cleanup(ch)
+		// Apply user specified reconnection strategy or default to standard NewExponentialBackOff() reconnection method
+		var err error
+		if c.ReconnectStrategy != nil {
+			err = backoff.Retry(operation, c.ReconnectStrategy)
+		} else {
+			err = backoff.Retry(operation, backoff.NewExponentialBackOff())
+		}
+
+		// channel closed once connected
 		if err != nil && !connected {
 			errch <- err
 		}
 	}()
 	err := <-errch
 	close(errch)
-
 	return err
+}
+
+func (c *Client) startReadLoop(reader *EventStreamReader) (chan *Event, chan error) {
+	outCh := make(chan *Event)
+	erChan := make(chan error)
+	go c.readLoop(reader, outCh, erChan)
+	return outCh, erChan
+}
+
+func (c *Client) readLoop(reader *EventStreamReader, outCh chan *Event, erChan chan error) {
+	for {
+		// Read each new line and process the type of event
+		event, err := reader.ReadEvent()
+		if err != nil {
+			if err == io.EOF {
+				erChan <- nil
+				return
+			}
+			// run user specified disconnect function
+			if c.disconnectcb != nil {
+				c.disconnectcb(c)
+			}
+			erChan <- err
+			return
+		}
+
+		// If we get an error, ignore it.
+		if msg, err := c.processEvent(event); err == nil {
+			if len(msg.ID) > 0 {
+				c.EventID = string(msg.ID)
+			} else {
+				msg.ID = []byte(c.EventID)
+			}
+			// Send downstream
+			outCh <- msg
+		}
+	}
 }
 
 // SubscribeRaw to an sse endpoint
@@ -172,9 +207,19 @@ func (c *Client) SubscribeRaw(handler func(msg *Event)) error {
 	return c.Subscribe("", handler)
 }
 
+// SubscribeRaw to an sse endpoint with context
+func (c *Client) SubscribeRawWithContext(ctx context.Context, handler func(msg *Event)) error {
+	return c.SubscribeWithContext(ctx, "", handler)
+}
+
 // SubscribeChanRaw sends all events to the provided channel
 func (c *Client) SubscribeChanRaw(ch chan *Event) error {
 	return c.SubscribeChan("", ch)
+}
+
+// SubscribeChanRaw sends all events to the provided channel with context
+func (c *Client) SubscribeChanRawWithContext(ctx context.Context, ch chan *Event) error {
+	return c.SubscribeChanWithContext(ctx, "", ch)
 }
 
 // Unsubscribe unsubscribes a channel
@@ -192,11 +237,12 @@ func (c *Client) OnDisconnect(fn ConnCallback) {
 	c.disconnectcb = fn
 }
 
-func (c *Client) request(stream string) (*http.Response, error) {
+func (c *Client) request(ctx context.Context, stream string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", c.URL, nil)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	// Setup request, specify stream to connect to
 	if stream != "" {
@@ -256,20 +302,16 @@ func (c *Client) processEvent(msg []byte) (event *Event, err error) {
 	if c.EncodingBase64 {
 		buf := make([]byte, base64.StdEncoding.DecodedLen(len(e.Data)))
 
-		_, err := base64.StdEncoding.Decode(buf, e.Data)
+		n, err := base64.StdEncoding.Decode(buf, e.Data)
 		if err != nil {
 			err = fmt.Errorf("failed to decode event message: %s", err)
 		}
-		e.Data = buf
+		e.Data = buf[:n]
 	}
 	return &e, err
 }
 
-func (c *Client) cleanup(resp *http.Response, ch chan *Event) {
-	if resp != nil {
-		resp.Body.Close()
-	}
-
+func (c *Client) cleanup(ch chan *Event) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
