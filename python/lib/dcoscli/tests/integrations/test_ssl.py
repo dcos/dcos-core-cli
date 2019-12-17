@@ -74,5 +74,5 @@ def _ssl_error_msg():
         "run: 'dcos config set core.ssl_verify <value>'\n"
         "<value>: Whether to verify SSL certs for HTTPS or path to certs. "
         "Valid values are a path to a CA_BUNDLE, "
-        "True (will then use system CA certificates), "
+        "True (will then use CA Certificates from certifi), "
         "or False (will then send insecure requests).\n")
