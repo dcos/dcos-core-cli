@@ -6,11 +6,17 @@ import (
 	"sort"
 )
 
+// This is a non-exhaustive list of login provider IDs for DC/OS.
+const (
+	DCOSOIDCAuth0 = "dcos-oidc-auth0"
+	DCOSUsers     = "dcos-users"
+)
+
 // These are the different login provider types that the DC/OS CLI supports.
 const (
-	DCOSUIDPassword     = "dcos-uid-password"
+	DCOSUIDPassword     = "dcos-uid-password" // nolint: gosec
 	DCOSUIDServiceKey   = "dcos-uid-servicekey"
-	DCOSUIDPasswordLDAP = "dcos-uid-password-ldap"
+	DCOSUIDPasswordLDAP = "dcos-uid-password-ldap" // nolint: gosec
 	SAMLSpInitiated     = "saml-sp-initiated"
 	OIDCAuthCodeFlow    = "oidc-authorization-code-flow"
 	OIDCImplicitFlow    = "oidc-implicit-flow"
@@ -92,19 +98,19 @@ func (p Providers) Slice() []*Provider {
 
 func defaultDCOSUIDPasswordProvider() (provider *Provider) {
 	return &Provider{
-		ID:           "dcos-users",
+		ID:           DCOSUsers,
 		Type:         DCOSUIDPassword,
 		Description:  "Default DC/OS login provider",
 		ClientMethod: methodUserCredential,
 		Config: ProviderConfig{
-			StartFlowURL: "/acs/api/v1/auth/login",
+			StartFlowURL: defaultLoginEndpoint,
 		},
 	}
 }
 
 func defaultOIDCImplicitFlowProvider() (provider *Provider) {
 	return &Provider{
-		ID:           "dcos-oidc-auth0",
+		ID:           DCOSOIDCAuth0,
 		Type:         OIDCImplicitFlow,
 		Description:  "Google, GitHub, or Microsoft",
 		ClientMethod: methodBrowserOIDCToken,
