@@ -12,6 +12,11 @@ schema_version = 1
 name = "dcos-core-cli"
 
 [[commands]]
+name = "calico"
+path = "bin/dcos{0}"
+description = "Manage Calico in DC/OS"
+
+[[commands]]
 name = "job"
 path = "bin/dcos{0}"
 description = "Deploy and manage jobs in DC/OS"
