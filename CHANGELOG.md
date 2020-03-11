@@ -2,10 +2,13 @@
 
 ## 1.13-patch.x
 
+## 1.13-patch.7
+
 * Fixes
 
-  * Add better error descriptions for `node diagnostics` command.
-  * Support more fields in job JSON definition.
+  * Updated task table to be clearer. (#414)
+  * Add better error descriptions for `node diagnostics` command. (#386)
+  * Support more fields in job JSON definition. (#359)
 
 ## 1.13-patch.6
 
