@@ -42,22 +42,51 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        master_ip = sh(script: '''docker run --rm -v $PWD:/usr/src -w /usr/src \
-                                      -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-                                      -e DCOS_TEST_INSTALLER_URL \
-                                      -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-                                      -e DCOS_USERNAME -e DCOS_PASSWORD \
-                                      -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
-                                      python:3.7-stretch bash -c " \
-                                        cd scripts; \
-                                        python3 -m venv env; \
-                                        source env/bin/activate; \
-                                        pip -q install --upgrade pip==18.1 setuptools; \
-                                        pip -q install -r requirements.txt; \
-                                        ./launch_aws_cluster.py create"''',
-                                returnStdout: true).trim()
+                        master_ip = sh(script: '''docker build -t cluster-starter:test -f test.Dockerfile ./;\
+                                  docker run --rm -v $PWD:/usr/src -w /usr/src \
+                                    -v $(pwd)/scripts:/mnt/scripts \
+                                    -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
+                                    -e DCOS_TEST_INSTALLER_URL \
+                                    -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+                                    -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
+                                    -e "TF_VAR_variant=open" \
+                                    cluster-starter:test bash -c " \
+                                        export TF_VAR_cluster_name='ui-\$(date +%s)'; \
+                                        echo $TF_VAR_cluster_name > /tmp/cluster_name-open; \
+                                        mkdir -p /tmp/ssh; \
+                                        cd scripts/terraform && ./up.sh | tail -n1"
+                                    ''', returnStdout: true).trim()
                     }
-                    stash includes: 'scripts/config.json', name: 'aws-config'
+                    // script{
+                    //     master_ip = sh(script: '''
+                    //         ENV TERRAFORM_VERSION=0.11.14
+
+                    //         RUN cd /tmp \
+                    //         && apt-get install -y unzip
+                    //         && wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+                    //         && unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/bin
+                    //         export TF_VAR_cluster_name="core-cli-\$(date +%s)"
+                    //         echo $TF_VAR_cluster_name > /tmp/cluster_name-open
+                    //         cd scripts/terraform && ./up.sh | tail -n1
+                    //     ''', returnStdout: true).trim()
+                    // }
+                    // script {
+                    //     // master_ip = sh(script: '''docker run --rm -v $PWD:/usr/src -w /usr/src \
+                    //     //               -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
+                    //     //               -e DCOS_TEST_INSTALLER_URL \
+                    //     //               -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+                    //     //               -e DCOS_USERNAME -e DCOS_PASSWORD \
+                    //     //               -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
+                    //     //               python:3.7-stretch bash -c " \
+                    //     //                 cd scripts; \
+                    //     //                 python3 -m venv env; \
+                    //     //                 source env/bin/activate; \
+                    //     //                 pip -q install --upgrade pip==18.1 setuptools; \
+                    //     //                 pip -q install -r requirements.txt; \
+                    //     //                 ./launch_aws_cluster.py create"''',
+                    //     //         returnStdout: true).trim()
+                    // }
+                    // stash includes: 'scripts/config.json', name: 'aws-config'
                 }
             }
         }
@@ -92,7 +121,14 @@ pipeline {
                 }
             }
         }
-
+        always {
+            withCredentials(credentials) {
+            sh '''
+                export TF_VAR_cluster_name=$(cat /tmp/cluster_name-open)
+                cd scripts/terraform && ./down.sh
+            '''
+            }
+        }
 //TODO(janisz): Uncomment once we have proper permisions in our CI to perform cleanup
 //        cleanup {
 //            echo 'Delete AWS Cluster'
