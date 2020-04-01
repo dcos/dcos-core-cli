@@ -26,7 +26,7 @@ if command == 'create':
         'installer_url': os.environ['DCOS_TEST_INSTALLER_URL'],
         'platform': 'aws',
         'provider': 'onprem',
-        'aws_region': 'us-west-2',
+        'aws_region': 'us-west-1',
         'aws_key_name': 'default',
         'ssh_private_key_filename': os.environ['CLI_TEST_SSH_KEY_PATH'],
         'os_name': 'cent-os-7-dcos-prereqs',
