@@ -42,22 +42,26 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        master_ip = sh(script: '''docker run --rm -v $PWD:/usr/src -w /usr/src \
-                                      -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-                                      -e DCOS_TEST_INSTALLER_URL \
-                                      -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-                                      -e DCOS_USERNAME -e DCOS_PASSWORD \
-                                      -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
-                                      python:3.7-stretch bash -c " \
-                                        cd scripts; \
-                                        python3 -m venv env; \
-                                        source env/bin/activate; \
-                                        pip -q install --upgrade pip==18.1 setuptools; \
-                                        pip -q install -r requirements.txt; \
-                                        ./launch_aws_cluster.py create"''',
+                        master_ip = sh(script: '''
+                                      cd scripts ; \
+                                      export AWS_REGION="us-east-1" ; \
+                                      export TF_VAR_dcos_user=$DCOS_USERNAME  ; \
+                                      export TF_VAR_dcos_pass=$DCOS_PASSWORD ; \
+                                      export TF_VAR_dcos_license_key_contents=$DCOS_TEST_LICENSE ; \
+                                      export TF_VAR_custom_dcos_download_path=$DCOS_TEST_INSTALLER_URL ; \
+                                      export CLI_TEST_SSH_KEY_PATH ; \
+                                      export TF_INPUT=false ; \
+                                      wget -nv https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; \
+                                      unzip -o terraform_0.11.14_linux_amd64.zip ; \
+                                      mkdir $HOME/.ssh
+                                      eval $(ssh-agent) ; \
+                                      ssh-add $CLI_TEST_SSH_KEY_PATH ; \
+                                      ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub ; \
+                                      ./terraform init ; \
+                                      ./terraform  apply -auto-approve''',
                                 returnStdout: true).trim()
                     }
-                    stash includes: 'scripts/config.json', name: 'aws-config'
+                    stash includes: 'scripts/terraform.tfstate', name: 'terraform.tfstate'
                 }
             }
         }
@@ -93,22 +97,28 @@ pipeline {
             }
         }
 
-//TODO(janisz): Uncomment once we have proper permisions in our CI to perform cleanup
-//        cleanup {
-//            echo 'Delete AWS Cluster'
-//            unstash 'aws-config'
-//            withCredentials(credentials) {
-//                sh('''docker run --rm -v $PWD:/usr/src -w /usr/src \
-//                      -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-//                      python:3.7-stretch bash -c " \
-//                        cd scripts; \
-//                        python3 -m venv env; \
-//                        source env/bin/activate; \
-//                        pip -q install --upgrade pip==18.1 setuptools; \
-//                        pip -q install -r requirements.txt; \
-//                        ./launch_aws_cluster.py delete"''')
-//            }
-//        }
+        cleanup {
+            echo 'Delete AWS Cluster'
+            unstash 'terraform.tfstate'
+            withCredentials(credentials) {
+                sh('''
+                  cd scripts ; \
+                  export AWS_REGION="us-east-1" ; \
+                  export TF_VAR_dcos_user=$DCOS_USERNAME  ; \
+                  export TF_VAR_dcos_pass=$DCOS_PASSWORD ; \
+                  export TF_VAR_dcos_license_key_contents=$DCOS_TEST_LICENSE ; \
+                  export TF_VAR_custom_dcos_download_path=$DCOS_TEST_INSTALLER_URL ; \
+                  export CLI_TEST_SSH_KEY_PATH ; \
+                  export TF_INPUT=false ; \
+                  wget -nv https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; \
+                  unzip -o terraform_0.11.14_linux_amd64.zip ; \
+                  eval $(ssh-agent) ; \
+                  ssh-agent /bin/bash -c "ssh-add $CLI_TEST_SSH_KEY_PATH" ; \
+                  ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > ~/.ssh/id_rsa.pub ; \
+                  ./terraform init ; \
+                  ./terraform destroy -auto-approve''')
+            }
+        }
     }
 
 }
