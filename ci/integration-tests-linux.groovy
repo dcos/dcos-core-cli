@@ -59,11 +59,10 @@ pipeline {
                                   ssh-add $CLI_TEST_SSH_KEY_PATH ; \
                                   ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub ; \
                                   ./terraform init ; \
-                                  ./terraform  apply -auto-approve ; \
-                                  ./terraform output masters_public_ip''')
-                        master_ip = sh(script: './terraform output masters_public_ip', returnStdout: true).trim()
+                                  ./terraform  apply -auto-approve -no-color''')
+                        master_ip = sh(script: 'cd scripts && ./terraform output masters_public_ip', returnStdout: true).trim()
                     }
-                    stash includes: 'scripts/terraform.tfstate', name: 'terraform.tfstate'
+                    stash includes: 'scripts', name: 'terraform'
                 }
             }
         }
@@ -101,16 +100,14 @@ pipeline {
 
         cleanup {
             echo 'Delete AWS Cluster'
-            unstash 'terraform.tfstate'
+            unstash 'terraform'
             withCredentials(credentials) {
                 sh('''
+                  cd scripts ; \
                   export AWS_REGION="us-east-1" ; \
                   export TF_INPUT=false ; \
                   export TF_IN_AUTOMATION=1 ; \
-                  wget -nv https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; \
-                  unzip -o terraform_0.11.14_linux_amd64.zip ; \
-                  ./terraform init ; \
-                  ./terraform destroy -auto-approve''')
+                  ./terraform destroy -auto-approve -no-color''')
             }
         }
     }
