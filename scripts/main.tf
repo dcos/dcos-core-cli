@@ -1,7 +1,8 @@
 provider "aws" {}
 
 variable "custom_dcos_download_path" {
-  type = "string"
+  type    = "string"
+  default = "https://downloads.mesosphere.com/dcos-enterprise/testing/master/dcos_generate_config.sh"
 }
 
 variable "variant" {
@@ -21,7 +22,7 @@ variable "owner" {
 
 variable "expiration" {
   type    = "string"
-  default = "3h"
+  default = "1h"
 }
 
 variable "ssh_public_key_file" {
@@ -56,12 +57,14 @@ variable "build_type" {
 
 variable "dcos_user" {
   type        = "string"
+  default     = "admin"
   description = "DC/OS Superuser."
 }
 
-variable "dcos_pass" {
+variable "dcos_pass_hash" {
   type        = "string"
-  description = "DC/OS Superuser Password."
+  default     = ""
+  description = "DC/OS Superuser Password Hash."
 }
 
 # Used to determine your public IP for forwarding rules
@@ -113,8 +116,8 @@ module "dcos" {
 
   custom_dcos_download_path = "${var.custom_dcos_download_path}"
 
-  dcos_superuser_username = "${var.dcos_user}"
-  dcos_superuser_password_hash = "${bcrypt(var.dcos_pass)}"
+  dcos_superuser_username      = "${var.dcos_user}"
+  dcos_superuser_password_hash = "${var.dcos_pass_hash}"
 }
 
 output "masters_public_ip" {
