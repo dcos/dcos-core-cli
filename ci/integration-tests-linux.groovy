@@ -53,7 +53,7 @@ pipeline {
                                       export TF_INPUT=false ; \
                                       wget -nv https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; \
                                       unzip -o terraform_0.11.14_linux_amd64.zip ; \
-                                      mkdir $HOME/.ssh
+                                      mkdir -p $HOME/.ssh
                                       eval $(ssh-agent) ; \
                                       ssh-add $CLI_TEST_SSH_KEY_PATH ; \
                                       ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub ; \
