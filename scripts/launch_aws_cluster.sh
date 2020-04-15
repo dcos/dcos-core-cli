@@ -11,9 +11,9 @@ export TF_IN_AUTOMATION=1
 wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
 unzip -qq -o terraform_0.11.14_linux_amd64.zip
 mkdir -p $HOME/.ssh
-eval $(ssh-agent) >/dev/stderr
-ssh-add $CLI_TEST_SSH_KEY_PATH >/dev/stderr
-ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub >/dev/stderr
-./terraform init -no-color >/dev/stderr
-./terraform  apply -auto-approve -no-color >/dev/stderr
+eval $(ssh-agent)
+ssh-add $CLI_TEST_SSH_KEY_PATH
+ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub
+./terraform init -no-color
+./terraform  apply -auto-approve -no-color
 ./terraform output masters_public_ip
