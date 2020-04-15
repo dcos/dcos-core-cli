@@ -17,4 +17,4 @@ ssh-add $CLI_TEST_SSH_KEY_PATH >&2
 ssh-keygen -y -f $CLI_TEST_SSH_KEY_PATH > $HOME/.ssh/id_rsa.pub
 ./terraform init -no-color >&2
 ./terraform  apply -auto-approve -no-color >&2
-./terraform output masters_public_ip
+./terraform output dcos_url
