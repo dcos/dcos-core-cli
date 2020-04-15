@@ -46,7 +46,7 @@ pipeline {
                                   cd scripts && \
                                   export AWS_REGION="us-east-1" && \
                                   export TF_VAR_dcos_user=$DCOS_USERNAME  && \
-                                  export TF_VAR_dcos_pass_hash=$(perl -e 'print crypt($ENV{DCOS_PASSWORD},"$6$1234567890$")') && \
+                                  export TF_VAR_dcos_pass_hash=$(perl -e 'print crypt($ENV{DCOS_PASSWORD},"\\$6\\$1234567890\\$")') && \
                                   export TF_VAR_dcos_license_key_contents=$DCOS_TEST_LICENSE && \
                                   export TF_VAR_custom_dcos_download_path=$DCOS_TEST_INSTALLER_URL && \
                                   export CLI_TEST_SSH_KEY_PATH && \
