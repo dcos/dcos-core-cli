@@ -1,4 +1,5 @@
 #!/bin/sh
+set -o errexit
 
 export AWS_REGION="us-east-1"
 export TF_VAR_dcos_user=$DCOS_USERNAME
