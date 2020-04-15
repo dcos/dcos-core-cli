@@ -1,5 +1,5 @@
 #!/bin/sh
-set -o errexit
+set -euxo pipefail
 
 export AWS_REGION="us-east-1"
 export TF_VAR_dcos_user=$DCOS_USERNAME
