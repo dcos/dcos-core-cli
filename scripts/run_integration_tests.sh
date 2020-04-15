@@ -19,8 +19,7 @@ source env/bin/activate
 # connect to cluster and install built plugin
 wget -qO env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/${OS}/x86-64/master/dcos
 chmod +x env/bin/dcos
-sleep 60
-dcos cluster setup --no-check ${DCOS_TEST_URL}
+for i in 1 2 3 4 5; do dcos cluster setup --no-check ${DCOS_TEST_URL} && break || sleep 15; done
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
 # run the tests
