@@ -44,7 +44,7 @@ pipeline {
                     script {
                         master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
                     }
-                    stash includes: 'scripts', name: 'terraform'
+                    stash includes: 'scripts/**/*', name: 'terraform'
                 }
             }
         }
