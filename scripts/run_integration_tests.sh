@@ -17,10 +17,12 @@ cd python/lib/dcoscli
 source env/bin/activate
 
 # connect to cluster and install built plugin
+rm -f env/bin/dcos
 wget -qO env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/${OS}/x86-64/master/dcos
 chmod +x env/bin/dcos
-env/bin/dcos cluster setup --no-check ${DCOS_TEST_URL}
-env/bin/dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
+dcos --version
+dcos cluster setup --no-check ${DCOS_TEST_URL}
+dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
 # run the tests
 py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations

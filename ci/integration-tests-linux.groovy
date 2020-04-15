@@ -69,7 +69,7 @@ pipeline {
                 withCredentials(credentials) {
                     dir("build/linux/") {
                         sh 'wget -qO ./dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos'
-                        sh 'chmod +x dcos'
+                        sh 'chmod +x dcos && dcos --version'
                         sh './dcos cluster setup --no-check ${DCOS_TEST_URL} 2> /dev/null'
                         sh './dcos diagnostics create'
                         sh './dcos diagnostics wait'
