@@ -9,7 +9,7 @@ export TF_VAR_custom_dcos_download_path=$DCOS_TEST_INSTALLER_URL
 export CLI_TEST_SSH_KEY_PATH
 export TF_INPUT=false
 export TF_IN_AUTOMATION=1
-wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
+wget -q https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip -O terraform_0.11.14_linux_amd64.zip
 unzip -qq -o terraform_0.11.14_linux_amd64.zip
 mkdir -p $HOME/.ssh
 eval $(ssh-agent) >&2
