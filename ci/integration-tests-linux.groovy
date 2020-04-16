@@ -56,7 +56,7 @@ pipeline {
                     withCredentials(credentials) {
                         sh '''docker run --rm \
                               -v $PWD:/usr/src -w /usr/src \
-                              -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH}
+                              -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
                               -e DCOS_USERNAME \
                               -e DCOS_PASSWORD \
                               -e CLI_TEST_SSH_KEY_PATH \
