@@ -9,6 +9,8 @@ from dcoscli.test.package import (package, setup_universe_server,
                                   teardown_universe_server)
 from dcoscli.test.service import get_services, wait_for_service
 
+pytestmark = pytest.mark.skip("all tests still WIP")
+
 
 def setup_module(module):
     setup_universe_server()

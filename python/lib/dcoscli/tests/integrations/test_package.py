@@ -19,6 +19,8 @@ from dcoscli.test.package import (BOOTSTRAP_REGISTRY_REPO,
                                   UNIVERSE_TEST_REPOS)
 from dcoscli.test.service import get_services, service_shutdown
 
+pytestmark = pytest.mark.skip("all tests still WIP")
+
 
 @pytest.fixture
 def env():
