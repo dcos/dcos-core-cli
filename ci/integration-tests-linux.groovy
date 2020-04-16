@@ -20,7 +20,7 @@ def credentials = [
          passwordVariable: 'DCOS_PASSWORD']
 ]
 
-def dcos_url = 'UNKNOWN'
+def master_ip = 'UNKNOWN'
 def os = 'linux'
 
 pipeline {
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        dcos_url = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
+                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
                     }
                     stash includes: 'scripts/**/*', name: 'terraform'
                 }
@@ -52,7 +52,7 @@ pipeline {
         stage("Run integration tests") {
             steps {
                 unstash "dcos-${os}"
-                withEnv(["DCOS_TEST_URL=${dcos_url}", "OS=${os}"]) {
+                withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
                     withCredentials(credentials) {
                         sh '''docker run --rm -v $PWD:/usr/src -w /usr/src \
                               -e DCOS_TEST_INSTALLER_URL \
@@ -74,7 +74,7 @@ pipeline {
     post {
         failure {
             echo 'Generate diagnostics bundle'
-            withEnv(["DCOS_TEST_URL=${dcos_url}"]) {
+            withEnv(["DCOS_TEST_URL=${master_ip}"]) {
                 withCredentials(credentials) {
                     dir("build/linux/") {
                         sh 'wget -qO ./dcos https://downloads.dcos.io/cli/testing/binaries/dcos/linux/x86-64/master/dcos'
