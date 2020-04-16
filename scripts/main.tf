@@ -120,7 +120,7 @@ module "dcos" {
   dcos_superuser_password_hash = "${var.dcos_pass_hash}"
 }
 
-output "dcos_url" {
-  description = "This is the load balancer address to access the DC/OS UI"
-  value       = "https://${module.dcos.masters-loadbalancer}/"
+output "master_public_ip" {
+  description = "This is the public masters IP to SSH"
+  value       = "${element(module.dcos.infrastructure.masters.public_ips, 0)}"
 }
