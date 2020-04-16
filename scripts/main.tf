@@ -57,13 +57,13 @@ variable "build_type" {
 
 variable "dcos_user" {
   type        = "string"
-  default     = "admin"
+  default     = "bootstrapuser"
   description = "DC/OS Superuser."
 }
 
 variable "dcos_pass_hash" {
   type        = "string"
-  default     = ""
+  default     = "$6$rounds=656000$YSvuFmasQDXheddh$TpYlCxNHF6PbsGkjlK99Pwxg7D0mgWJ.y0hE2JKoa61wHx.1wtxTAHVRHfsJU9zzHWDoE08wpdtToHimNR9FJ/"
   description = "DC/OS Superuser Password Hash."
 }
 

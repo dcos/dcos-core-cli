@@ -22,7 +22,7 @@ dcos cluster setup --no-check --insecure ${DCOS_TEST_URL}
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
 # run the tests
-py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations
+py.test -vv --durations=10 -p no:cacheprovider tests/integrations
 
 # clean up locally (cluster is left for cloudcleaner to clean up)
 rm -rf $DCOS_DIR
