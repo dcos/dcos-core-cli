@@ -122,5 +122,5 @@ module "dcos" {
 
 output "dcos_url" {
   description = "This is the load balancer address to access the DC/OS UI"
-  value       = "http://${module.dcos.masters-loadbalancer}/"
+  value       = "https://${module.dcos.masters-loadbalancer}/"
 }
