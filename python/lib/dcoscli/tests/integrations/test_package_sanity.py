@@ -1,7 +1,4 @@
-import pytest
 from dcoscli.test.common import exec_command
-
-pytestmark = pytest.mark.skip("all tests still WIP")
 
 
 def test_install_certified_packages_cli():

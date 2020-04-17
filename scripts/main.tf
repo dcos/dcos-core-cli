@@ -39,7 +39,7 @@ variable "dcos_license_key_contents" {
 
 variable "instance_type" {
   type        = "string"
-  default     = "t3.medium"
+  default     = "m5.large"
   description = "Defines type of used machine."
 }
 
