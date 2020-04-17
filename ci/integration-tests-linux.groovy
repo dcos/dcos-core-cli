@@ -33,7 +33,8 @@ pipeline {
     stages {
         stage("Build Go binary") {
             steps {
-                sh "make ${os}"
+                sh "make ${os} test"
+                junit 'report.xml'
                 stash includes: "build/${os}/**", name: "dcos-${os}"
             }
         }

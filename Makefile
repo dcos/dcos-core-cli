@@ -34,8 +34,8 @@ python:
 		make binary
 
 .PHONY: test
-test: lint
-	$(call inDocker,go test -race -cover ./...)
+test:
+	$(call inDocker,go test -race -cover -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml)
 
 .PHONY: lint
 lint: docker-image

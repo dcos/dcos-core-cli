@@ -26,7 +26,8 @@ pipeline {
         agent { label 'mesos-ubuntu' }
 
         steps {
-          sh 'make darwin linux windows'
+          sh 'make test darwin linux windows'
+          junit 'report.xml'
           stash includes: 'build/**', name: 'dcos-core-go'
         }
         }

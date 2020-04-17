@@ -1,6 +1,7 @@
 install:
   - SET PATH=C:\msys64\mingw64\bin;c:\gopath\bin;%PATH%
   - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  - go get -u github.com/jstemmer/go-junit-report
 
 build: off
 
@@ -17,3 +18,12 @@ test_script:
   - SET GO111MODULE=on
   - mingw32-make windows
   - mingw32-make test
+
+after_test:
+# upload test results via rest-api
+  - ps: |
+        $wc = New-Object 'System.Net.WebClient'
+        Get-ChildItem . -Name -Recurse 'result.xml'  |
+        Foreach-Object {
+            $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $_))
+        }
