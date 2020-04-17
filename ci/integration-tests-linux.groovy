@@ -63,6 +63,7 @@ pipeline {
                               -e OS \
                               -e DCOS_TEST_URL\
                               python:3.7 bash -exc "scripts/run_integration_tests.sh"'''
+                        junit 'python/lib/dcoscli/tests.xml'
                     }
                 }
             }
