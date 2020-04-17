@@ -50,12 +50,19 @@ pipeline {
         }
 
         stage("Run integration tests") {
-            agent { label 'py37' }
             steps {
                 unstash "dcos-${os}"
                 withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
                     withCredentials(credentials) {
-                        sh '''scripts/run_integration_tests.sh'''
+                        sh '''docker run --rm \
+                              -v $PWD:/usr/src -w /usr/src \
+                              -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
+                              -e DCOS_USERNAME \
+                              -e DCOS_PASSWORD \
+                              -e CLI_TEST_SSH_KEY_PATH \
+                              -e OS \
+                              -e DCOS_TEST_URL\
+                              python:3.7 bash -exc "scripts/run_integration_tests.sh"'''
                     }
                 }
             }
