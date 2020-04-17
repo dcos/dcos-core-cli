@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from dcoscli.test.common import (assert_command, delete_zk_nodes,
                                  exec_command, file_json,
                                  file_json_ast)
