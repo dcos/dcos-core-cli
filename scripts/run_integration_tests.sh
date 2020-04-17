@@ -23,7 +23,7 @@ dcos cluster setup --no-check ${DCOS_TEST_URL} 2> /dev/null
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
 # run the tests
-py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations
+py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml
 
 # clean up locally (cluster is left for cloudcleaner to clean up)
 rm -rf $DCOS_DIR

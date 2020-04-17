@@ -55,8 +55,9 @@ pipeline {
                 withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
                     withCredentials(credentials) {
                         sh '''docker run --rm \
-                              -v $PWD:/usr/src -w /usr/src \
                               -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
+                              -v $PWD:/usr/src \
+                              -w /usr/src \
                               -e DCOS_USERNAME \
                               -e DCOS_PASSWORD \
                               -e CLI_TEST_SSH_KEY_PATH \
