@@ -77,7 +77,7 @@ pipeline {
                             mv ../../../dcos.exe dist; \
                             PATH=$PWD/dist:$PATH; \
                             dcos cluster remove --all; \
-                            dcos cluster setup --no-check ${DCOS_TEST_URL}; \
+                            dcos cluster setup --no-check --insecure ${DCOS_TEST_URL}; \
                             dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip; \
                             ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations"'''
                     }
