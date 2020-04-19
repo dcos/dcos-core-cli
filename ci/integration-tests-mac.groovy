@@ -20,7 +20,7 @@ def credentials = [
          passwordVariable: 'DCOS_PASSWORD']
 ]
 
-def master_ip = 'UNKNOWN'
+def master_ip = '54.91.2.126'
 def os = 'darwin'
 
 pipeline {
@@ -39,14 +39,14 @@ pipeline {
         }
 
         stage("Launch AWS Cluster") {
-            steps {
-                withCredentials(credentials) {
-                    script {
-                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
-                    }
-                    stash includes: 'scripts/**/*', name: 'terraform'
-                }
-            }
+//            steps {
+//                withCredentials(credentials) {
+//                    script {
+//                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
+//                    }
+//                    stash includes: 'scripts/**/*', name: 'terraform'
+//                }
+//            }
         }
 
         stage("Run integration tests") {
