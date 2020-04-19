@@ -17,9 +17,10 @@ cd python/lib/dcoscli
 source env/bin/activate
 
 # connect to cluster and install built plugin
-wget -qO env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/${OS}/x86-64/master/dcos
-chmod +x env/bin/dcos
-curl -v https://${DCOS_TEST_URL}
+#wget -qO env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/${OS}/x86-64/master/dcos
+#chmod +x env/bin/dcos
+#curl -v https://${DCOS_TEST_URL}
+mv ../../../dcos env/bin/dcos
 dcos cluster setup --no-check ${DCOS_TEST_URL}
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
