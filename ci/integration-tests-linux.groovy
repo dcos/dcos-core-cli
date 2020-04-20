@@ -42,51 +42,9 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
+                        master_ip = sh(script: 'echo 54.175.200.93', returnStdout: true).trim()
                     }
                     stash includes: 'scripts/**/*', name: 'terraform'
-                }
-            }
-        }
-
-        stage("Run integration tests") {
-            steps {
-                unstash "dcos-${os}"
-                withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
-                    withCredentials(credentials) {
-                        sh '''docker run --rm \
-                              -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-                              -v $PWD:/usr/src \
-                              -w /usr/src \
-                              -e DCOS_USERNAME \
-                              -e DCOS_PASSWORD \
-                              -e CLI_TEST_SSH_KEY_PATH \
-                              -e OS \
-                              -e DCOS_TEST_URL\
-                              python:3.7 bash -exc "scripts/run_integration_tests.sh"'''
-                        junit 'python/lib/dcoscli/tests.xml'
-                    }
-                }
-            }
-        }
-
-        stage("Run integration tests") {
-            steps {
-                unstash "dcos-${os}"
-                withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
-                    withCredentials(credentials) {
-                        sh '''docker run --rm \
-                              -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-                              -v $PWD:/usr/src \
-                              -w /usr/src \
-                              -e DCOS_USERNAME \
-                              -e DCOS_PASSWORD \
-                              -e CLI_TEST_SSH_KEY_PATH \
-                              -e OS \
-                              -e DCOS_TEST_URL\
-                              python:3.7-stretch bash -exc "scripts/run_integration_tests.sh"'''
-                        junit 'python/lib/dcoscli/tests.xml'
-                    }
                 }
             }
         }
