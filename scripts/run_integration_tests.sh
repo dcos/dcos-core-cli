@@ -8,6 +8,8 @@ export CLI_TEST_SSH_USER=centos
 export CLI_TEST_MASTER_PROXY=1
 export DCOS_DIR=$(mktemp -d /tmp/dcos.XXXXXXXXXX)
 export PYTHON=python3.7
+export LANG=en_US.utf-8
+export LC_ALL=en_US.utf-8
 
 test -f $CLI_TEST_SSH_KEY_PATH
 
