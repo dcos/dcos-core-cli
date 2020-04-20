@@ -20,6 +20,8 @@ source env/bin/activate
 wget -qO env/bin/dcos https://downloads.dcos.io/cli/testing/binaries/dcos/${OS}/x86-64/master/dcos
 chmod +x env/bin/dcos
 mv ../../../dcos env/bin/dcos
+telnet ${DCOS_TEST_URL} 443
+curl -iv  ${DCOS_TEST_URL}
 dcos cluster setup --no-check ${DCOS_TEST_URL}
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
