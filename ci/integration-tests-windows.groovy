@@ -79,7 +79,8 @@ pipeline {
                             dcos cluster remove --all; \
                             dcos cluster setup --no-check ${DCOS_TEST_URL}; \
                             dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip; \
-                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations"'''
+                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml"'''
+                        junit 'python/lib/dcoscli/tests.xml'
                     }
                 }
             }
