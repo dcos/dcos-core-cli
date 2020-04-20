@@ -67,11 +67,6 @@ variable "dcos_pass_hash" {
   description = "DC/OS Superuser Password Hash."
 }
 
-# Used to determine your public IP for forwarding rules
-data "http" "whatismyip" {
-  url = "http://whatismyip.akamai.com/"
-}
-
 resource "random_string" "password" {
   length  = 12
   special = false
@@ -98,7 +93,7 @@ module "dcos" {
 
   cluster_name        = "${local.cluster_name}"
   ssh_public_key_file = "${var.ssh_public_key_file}"
-  admin_ips           = ["${data.http.whatismyip.body}/32"]
+  admin_ips           = ["0.0.0.0/0"]
 
   num_masters        = "1"
   num_private_agents = "1"
