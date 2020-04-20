@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euxo pipefail
 
-export AWS_REGION="us-west-2"
+export AWS_REGION="us-east-1"
 export TF_VAR_dcos_user=$DCOS_USERNAME
 export TF_VAR_dcos_pass_hash=$(perl -e 'print crypt($ENV{DCOS_PASSWORD},"\$6\$1234567890\$")')
 export TF_VAR_dcos_license_key_contents=$DCOS_TEST_LICENSE
