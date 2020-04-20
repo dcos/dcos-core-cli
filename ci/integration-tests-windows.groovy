@@ -42,7 +42,7 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
+                        master_ip = sh(script: 'echo 54.184.16.92', returnStdout: true).trim()
                     }
                     stash includes: 'scripts/**/*', name: 'terraform'
                 }
