@@ -258,7 +258,7 @@ def test_node_ssh_slave_with_private_ip():
 def test_node_ssh_option():
     stdout, stderr, _ = _node_ssh_output(
         ['--leader', '--option', 'Protocol=0'])
-    assert b'ignoring bad proto spec' in stderr if sys.platform == 'darwin' else stdout
+    assert b'ignoring bad proto spec' in stderr
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
