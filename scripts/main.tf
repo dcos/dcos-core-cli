@@ -22,7 +22,7 @@ variable "owner" {
 
 variable "expiration" {
   type    = "string"
-  default = "1h"
+  default = "2h"
 }
 
 variable "ssh_public_key_file" {
