@@ -113,7 +113,7 @@ pipeline {
                   export AWS_REGION="us-east-1" && \
                   export TF_INPUT=false && \
                   export TF_IN_AUTOMATION=1 && \
-                  ./terraform destroy -auto-approve -no-color''')
+                  ./terraform destroy -auto-approve -no-color 1> /dev/null''')
             }
         }
     }
