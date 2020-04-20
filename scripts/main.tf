@@ -98,7 +98,7 @@ module "dcos" {
 
   cluster_name        = "${local.cluster_name}"
   ssh_public_key_file = "${var.ssh_public_key_file}"
-  admin_ips           = ["${data.http.whatismyip.body}/32"]
+  admin_ips           = ["0.0.0.0/0"]
 
   num_masters        = "1"
   num_private_agents = "1"
