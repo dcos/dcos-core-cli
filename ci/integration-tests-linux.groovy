@@ -31,12 +31,12 @@ pipeline {
     }
 
     stages {
-        stage("Build Go binary") {
-            steps {
-                sh "make ${os}"
-                stash includes: "build/${os}/**", name: "dcos-${os}"
-            }
-        }
+//        stage("Build Go binary") {
+//            steps {
+//                sh "make ${os}"
+//                stash includes: "build/${os}/**", name: "dcos-${os}"
+//            }
+//        }
 
         stage("Launch AWS Cluster") {
             steps {
@@ -52,7 +52,7 @@ pipeline {
         stage("Run integration tests") {
             agent { label 'py37' }
             steps {
-                unstash "dcos-${os}"
+//                unstash "dcos-${os}"
                 withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
                     withCredentials(credentials) {
                         sh 'scripts/run_integration_tests.sh'
