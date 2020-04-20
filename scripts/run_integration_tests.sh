@@ -10,6 +10,7 @@ export DCOS_DIR=$(mktemp -d /tmp/dcos.XXXXXXXXXX)
 export PYTHON=python3.7
 
 whoami
+su --preserve-environment root
 ping -c 3 ${DCOS_TEST_URL}
 openssl s_client -connect ${DCOS_TEST_URL}:443
 curl -iv  ${DCOS_TEST_URL}
