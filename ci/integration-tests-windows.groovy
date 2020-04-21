@@ -42,22 +42,9 @@ pipeline {
             steps {
                 withCredentials(credentials) {
                     script {
-                        master_ip = sh(script: '''docker run --rm -v $PWD:/usr/src -w /usr/src \
-                                      -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-                                      -e DCOS_TEST_INSTALLER_URL \
-                                      -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-                                      -e DCOS_USERNAME -e DCOS_PASSWORD \
-                                      -e DCOS_TEST_LICENSE -e CLI_TEST_SSH_KEY_PATH \
-                                      python:3.7-stretch bash -c " \
-                                        cd scripts; \
-                                        python3 -m venv env; \
-                                        source env/bin/activate; \
-                                        pip -q install --upgrade pip==18.1 setuptools; \
-                                        pip -q install -r requirements.txt; \
-                                        ./launch_aws_cluster.py create"''',
-                                returnStdout: true).trim()
+                        master_ip = sh(script: 'cd scripts && ./launch_aws_cluster.sh', returnStdout: true).trim()
                     }
-                    stash includes: 'scripts/config.json', name: 'aws-config'
+                    stash includes: 'scripts/**/*', name: 'terraform'
                 }
             }
         }
@@ -92,8 +79,13 @@ pipeline {
                             dcos cluster remove --all; \
                             dcos cluster setup --no-check ${DCOS_TEST_URL}; \
                             dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip; \
-                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations"'''
+                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml"'''
                     }
+                }
+            }
+            post {
+                always {
+                    junit 'python/lib/dcoscli/tests.xml'
                 }
             }
         }
@@ -117,22 +109,18 @@ pipeline {
             }
         }
 
-//TODO(janisz): Uncomment once we have proper permisions in our CI to perform cleanup
-//        cleanup {
-//            echo 'Delete AWS Cluster'
-//            unstash 'aws-config'
-//            withCredentials(credentials) {
-//                sh('''docker run --rm -v $PWD:/usr/src -w /usr/src \
-//                      -v ${CLI_TEST_SSH_KEY_PATH}:${CLI_TEST_SSH_KEY_PATH} \
-//                      python:3.7-stretch bash -c " \
-//                        cd scripts; \
-//                        python3 -m venv env; \
-//                        source env/bin/activate; \
-//                        pip -q install --upgrade pip==18.1 setuptools; \
-//                        pip -q install -r requirements.txt; \
-//                        ./launch_aws_cluster.py delete"''')
-//            }
-//        }
+        cleanup {
+            echo 'Delete AWS Cluster'
+            unstash 'terraform'
+            withCredentials(credentials) {
+                sh('''
+                  cd scripts && \
+                  export AWS_REGION="us-east-1" && \
+                  export TF_INPUT=false && \
+                  export TF_IN_AUTOMATION=1 && \
+                  ./terraform destroy -auto-approve -no-color 1> /dev/null''')
+            }
+        }
     }
 
 }
