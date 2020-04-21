@@ -13,7 +13,9 @@ a = Analysis(['dcoscli/main.py'],
                     ('../dcos/data/config-schema/*', 'dcos/data/config-schema'),
                     ('../dcos/data/marathon/*', 'dcos/data/marathon')],
              binaries=None,
-             hiddenimports=['_cffi_backend'],
+             # workaround this bad interaction between setuptools and pyinstaller:
+             # https://github.com/pypa/setuptools/issues/1963
+             hiddenimports=['_cffi_backend', 'pkg_resources.py2_warn'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
