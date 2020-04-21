@@ -2,6 +2,11 @@
 
 ## 1.13-patch.x
 
+## 1.13-patch.8
+
+* Fixes
+    * Update PyInstaller (CVE-2019-16784)
+
 ## 1.13-patch.7
 
 * Fixes
