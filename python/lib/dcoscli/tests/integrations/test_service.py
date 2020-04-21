@@ -35,6 +35,7 @@ def test_service_table():
     assert_lines(['dcos', 'service', 'list'], 3)
 
 
+@pytest.mark.skip(reason="D2IQ-67130")
 def test_service_inactive_and_completed():
     package_install('kafka', True, ['--app'])
     wait_for_service('kafka')
@@ -88,16 +89,16 @@ def test_log():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'service', 'log', package_name])
 
+        assert stderr == b''
         assert returncode == 0
         assert len(stdout.decode('utf-8').split('\n')) > 1
-        assert stderr == b''
 
         returncode, stdout, stderr = exec_command(
             ['dcos', 'service', 'log', package_name, 'stderr'])
 
+        assert stderr == b''
         assert returncode == 0
         assert len(stdout.decode('utf-8').split('\n')) > 1
-        assert stderr == b''
 
 
 def test_log_marathon_file():
@@ -121,9 +122,9 @@ def test_log_marathon():
     returncode, stdout, stderr = exec_command(
             ['dcos', 'service', 'log', 'marathon'])
 
+    assert stderr == b''
     assert returncode == 0
     assert len(stdout.decode('utf-8').split('\n')) > 1
-    assert stderr == b''
 
 
 @pytest.mark.skipif(os.environ.get('DCOS_ENABLE_LOG_TEST') != 1,
