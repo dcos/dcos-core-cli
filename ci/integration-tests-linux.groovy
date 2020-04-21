@@ -56,9 +56,11 @@ pipeline {
                 withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
                     withCredentials(credentials) {
                         sh '''scripts/run_integration_tests.sh'''
-                        junit 'python/lib/dcoscli/tests.xml'
                     }
                 }
+            }
+            post {
+                junit 'python/lib/dcoscli/tests.xml'
             }
         }
     }

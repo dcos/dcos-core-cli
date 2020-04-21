@@ -59,6 +59,9 @@ pipeline {
                     }
                 }
             }
+            post {
+                junit 'python/lib/dcoscli/tests.xml'
+            }
         }
     }
 
