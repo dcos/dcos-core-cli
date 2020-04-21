@@ -24,7 +24,7 @@ node('mesos') {
              variable: 'SLACK_TOKEN']
         ]) {
             slackSend (
-                channel: "#dcos-cli-ci",
+                channel: "#nightlies",
                 color: "danger",
                 message: "*dcos-core-cli*\nNightly integration tests failed... :disappointed:\n${env.RUN_DISPLAY_URL}",
                 teamDomain: "mesosphere",
