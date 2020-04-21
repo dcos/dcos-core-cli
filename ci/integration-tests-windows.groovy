@@ -84,7 +84,9 @@ pipeline {
                 }
             }
             post {
-                junit 'python/lib/dcoscli/tests.xml'
+                always {
+                    junit 'python/lib/dcoscli/tests.xml'
+                }
             }
         }
     }
