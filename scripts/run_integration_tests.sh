@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -euxo pipefail
 
 # prepare environment
 export PYTHONIOENCODING=utf-8
@@ -10,6 +10,8 @@ export DCOS_DIR=$(mktemp -d /tmp/dcos.XXXXXXXXXX)
 export PYTHON=python3.7
 export LANG=en_US.utf-8
 export LC_ALL=en_US.utf-8
+
+test -f $CLI_TEST_SSH_KEY_PATH
 
 # build the plugin
 make plugin
@@ -23,7 +25,7 @@ dcos cluster setup --no-check ${DCOS_TEST_URL}
 dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip
 
 # run the tests
-py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations
+py.test -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml
 
 # clean up locally (cluster is left for cloudcleaner to clean up)
 rm -rf $DCOS_DIR
