@@ -8,11 +8,11 @@ import (
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
-	"github.com/docker/docker/pkg/term"
 	"github.com/gobwas/glob"
 	mesosgo "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli"
 	"github.com/mesos/mesos-go/api/v1/lib/httpcli/httpagent"
+	"github.com/moby/term"
 	"github.com/spf13/cobra"
 )
 

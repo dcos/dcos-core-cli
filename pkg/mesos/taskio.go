@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mesos/mesos-go/api/v1/lib/encoding"
+	"github.com/moby/term"
 
 	mesos "github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/agent"
@@ -254,7 +255,7 @@ func (t *TaskIO) attachContainerInput() error {
 		}
 
 		// Create a proxy reader for stdin which is able to detect the escape sequence.
-		t.opts.Stdin = NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
+		t.opts.Stdin = term.NewEscapeProxy(t.opts.Stdin, t.opts.EscapeSequence)
 
 		t.opts.Logger.Info("Put the terminal in raw mode.")
 
@@ -315,7 +316,7 @@ func (t *TaskIO) attachContainerInput() error {
 					}
 				}
 				if err != nil {
-					if _, ok := err.(EscapeError); ok {
+					if _, ok := err.(term.EscapeError); ok {
 						t.exitSequenceDetected = true
 					}
 					return
