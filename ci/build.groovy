@@ -31,20 +31,14 @@ pipeline {
         }
         }
         stage('Build Linux binary') {
-          agent {
-            node {
-              label 'mesos'
-              customWorkspace '/workspace'
-            }
-          }
+          agent { label 'py37' }
 
           steps {
 
             sh '''
-                docker run --rm -v $PWD:/usr/src -w /usr/src \
-                    python:3.7-stretch bash -exc " \
-                      cd python/lib/dcoscli; \
-                      make binary"
+              bash -exc " \
+                cd python/lib/dcoscli; \
+                make binary"
             '''
 
             sh '''
@@ -111,30 +105,23 @@ pipeline {
       }
       parallel {
         stage('Run Linux tests') {
-          agent {
-            node {
-              label 'mesos'
-              customWorkspace '/workspace'
-            }
-          }
+          agent { label 'py37' }
 
           steps {
             sh '''
-              docker run --rm -v $PWD:/usr/src -w /usr/src \
-                python:3.7-stretch bash -exc " \
-                  cd python/lib/dcos; \
-                  make env; \
-                  ./env/bin/tox -e py35-syntax; \
-                  ./env/bin/tox -e py35-unit"
+              bash -exc " \
+                cd python/lib/dcos; \
+                make env; \
+                ./env/bin/tox -e py35-syntax; \
+                ./env/bin/tox -e py35-unit"
             '''
 
             sh '''
-              docker run --rm -v $PWD:/usr/src -w /usr/src \
-                python:3.7-stretch bash -exc " \
-                  export PYTHON=python3.7; \
-                  cd python/lib/dcoscli; \
-                  make env; \
-                  ./env/bin/tox -e py35-syntax"
+              bash -exc " \
+                export PYTHON=python3.7; \
+                cd python/lib/dcoscli; \
+                make env; \
+                ./env/bin/tox -e py35-syntax"
             '''
           }
         }
@@ -197,7 +184,7 @@ pipeline {
         expression { env.CHANGE_ID == null }
       }
 
-      agent { label 'py36' }
+      agent { label 'py37' }
 
       steps {
         withCredentials([
