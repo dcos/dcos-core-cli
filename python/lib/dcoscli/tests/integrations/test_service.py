@@ -86,6 +86,7 @@ def test_log():
     package_name = 'hello-world'
 
     with package(package_name, deploy=True):
+        time.sleep(60)
         returncode, stdout, stderr = exec_command(
             ['dcos', 'service', 'log', package_name])
 
