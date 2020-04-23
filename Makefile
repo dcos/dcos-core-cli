@@ -17,6 +17,9 @@ darwin linux windows: docker-image
 	$(call inDocker, GOOS=$(@) go build \
 		-tags '$(GO_BUILD_TAGS)' \
 		-o build/$(@)/dcos$($(@)_EXE) ./cmd/dcos)
+	@mkdir -p build/$(@)/plugin/bin
+	# TODO(janisz): Move it to separated resource to not download on every build
+	$(call inDocker, curl -L https://downloads.mesosphere.io/dcos-calicoctl/bin/v3.12.0-d2iq.1/fd5d699-b80546e/calicoctl-$(@)-amd64$($(@)_EXE) --output build/$(@)/plugin/bin/calicoctl$($(@)_EXE) && chmod +x build/$(@)/plugin/bin/calicoctl$($(@)_EXE))
 
 .PHONY: install
 install:

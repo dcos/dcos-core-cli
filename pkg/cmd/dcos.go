@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/dcos/dcos-cli/api"
+	"github.com/dcos/dcos-core-cli/pkg/cmd/calico"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/diagnostics"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/job"
 	"github.com/dcos/dcos-core-cli/pkg/cmd/marathon"
@@ -21,6 +22,7 @@ func NewDCOSCommand(ctx api.Context) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		calico.NewCommand(ctx),
 		job.NewCommand(ctx),
 		node.NewCommand(ctx),
 		pkg.NewCommand(ctx),
