@@ -52,6 +52,7 @@ def test_service_table():
     assert_lines(['dcos', 'service'], 3)
 
 
+@pytest.mark.skip(reason="D2IQ-67130")
 def test_service_inactive_and_completed():
     package_install('kafka', True, ['--app'])
     wait_for_service('kafka')
