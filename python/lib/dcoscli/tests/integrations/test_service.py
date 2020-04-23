@@ -82,6 +82,7 @@ def test_service_inactive_and_completed():
     exec_command(['dcos', 'package', 'uninstall', 'kafka', '--yes'])
 
 
+@pytest.mark.skip(reason="D2IQ-67286")
 def test_log():
     package_name = 'hello-world'
 
