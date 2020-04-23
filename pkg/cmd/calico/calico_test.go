@@ -12,7 +12,7 @@ import (
 
 	"github.com/dcos/dcos-cli/pkg/config"
 	"github.com/dcos/dcos-cli/pkg/mock"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_getMesosState(t *testing.T) {
@@ -46,7 +46,7 @@ func Test_getIps(t *testing.T) {
 
 	data := <-getIps(ctx)
 	wanted := map[string][]string{"127.0.0.1": {"127.0.0.2"}}
-	assert.DeepEqual(t, data, wanted)
+	assert.Equal(t, wanted, data)
 }
 
 func newContext(ts *httptest.Server) *mock.Context {
