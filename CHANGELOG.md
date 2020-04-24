@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.1-patch.x
+
+* Breaking changes
+    * Change default SSH user from `core` to `centos`
+    * Allow changing SSH user without using a proxy
+
 ## 2.1-patch.0
 
 * Features
