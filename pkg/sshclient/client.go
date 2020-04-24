@@ -99,6 +99,10 @@ func (c *Client) configureDestination() {
 
 // Run adds the optional remote command and starts the SSH session.
 func (c *Client) Run(command []string) error {
+	return c.prepareCommand(command).Run()
+}
+
+func (c *Client) prepareCommand(command []string) *exec.Cmd {
 	// Escape remote commands to execute them on the target remote.
 	if len(command) > 0 {
 		command = append([]string{"'"}, command...)
@@ -112,6 +116,5 @@ func (c *Client) Run(command []string) error {
 	cmd.Stdin = c.opts.Input
 	cmd.Stdout = c.opts.Out
 	cmd.Stderr = c.opts.ErrOut
-
-	return cmd.Run()
+	return cmd
 }
