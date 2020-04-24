@@ -44,13 +44,13 @@ func NewClient(opts ClientOpts, logger *logrus.Logger) (*Client, error) {
 			return nil, err
 		}
 	}
-	if opts.Input != nil {
+	if opts.Input == nil {
 		opts.Input = os.Stdin
 	}
-	if opts.Out != nil {
+	if opts.Out == nil {
 		opts.Out = os.Stdout
 	}
-	if opts.ErrOut != nil {
+	if opts.ErrOut == nil {
 		opts.ErrOut = os.Stderr
 	}
 
