@@ -45,7 +45,7 @@ func newCmdNodeSSH(ctx api.Context) *cobra.Command {
 		},
 	}
 
-	defUser := "core"
+	defUser := "centos"
 	cluster, err := ctx.Cluster()
 	if err == nil {
 		if dcosConfUser, ok := cluster.Config().Get("core.ssh_user").(string); ok {
