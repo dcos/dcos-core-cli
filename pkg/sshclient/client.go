@@ -91,6 +91,8 @@ func (c *Client) configureDestination() {
 		if c.opts.Config == "" {
 			c.args = append(c.args, "-l", c.opts.User)
 		}
+	} else if c.opts.Config == "" && c.opts.User != "" {
+		c.args = append(c.args, "-l", c.opts.User)
 	}
 
 	c.args = append(c.args, baseArgs...)
