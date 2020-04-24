@@ -62,16 +62,20 @@ func TestNewClientSetDefault(t *testing.T) {
 		args:   []string{"-A", "-t", ""},
 		opts: ClientOpts{
 			BinaryPath: "/usr/bin/ssh",
+			Input:      os.Stdin,
+			Out:        os.Stdout,
+			ErrOut:     os.Stderr,
 		},
 	}, client)
 	assert.Contains(t,  buf.String(), "Trying to establish connection to")
 }
 
-func TestNewClientOverrideInputOutAndErrorOutWhenSetToStd(t *testing.T) {
+func TestNewClientDoNotOverrideInputOutAndErrorOutWhenSet(t *testing.T) {
 	logger := logrus.New()
 	var buf *bytes.Buffer
+	reader := strings.NewReader("")
 	client, err := NewClient(ClientOpts{
-		Input:  strings.NewReader(""),
+		Input:  reader,
 		Out:    buf,
 		ErrOut: buf,
 	}, logger)
@@ -81,9 +85,9 @@ func TestNewClientOverrideInputOutAndErrorOutWhenSetToStd(t *testing.T) {
 		args:   []string{"-A", "-t", ""},
 		opts: ClientOpts{
 			BinaryPath: "/usr/bin/ssh",
-			Input:      os.Stdin,
-			Out:        os.Stdout,
-			ErrOut:     os.Stderr,
+			Input:      reader,
+			Out:        buf,
+			ErrOut:     buf,
 		},
 	}, client)
 }
@@ -107,8 +111,8 @@ func TestPrepareCommandEmptyCommand(t *testing.T) {
 	assert.Equal(t, []string{"/usr/bin/ssh", "-o", "-6", "-o", "-C", "-o", "-q", "-F", "ssh.config", "-A", "-t", "192.0.2.1", "ssh", "-o", "-6", "-o", "-C", "-o", "-q", "-A", "-t", "192.0.2.2"}, cmd.Args)
 	cmd = c.prepareCommand([]string{"/bin/bash", "'-c'", "echo \"OK\""})
 	assert.Equal(t, []string{"/usr/bin/ssh", "-o", "-6", "-o", "-C", "-o", "-q", "-F", "ssh.config", "-A", "-t", "192.0.2.1", "ssh", "-o", "-6", "-o", "-C", "-o", "-q", "-A", "-t", "192.0.2.2", "'", "/bin/bash", "'-c'", "echo \"OK\"", "'"}, cmd.Args)
-	assert.Equal(t, opts.Input, cmd.Stdin)
-	assert.Equal(t, opts.Out, cmd.Stdout)
-	assert.Equal(t, opts.ErrOut, cmd.Stderr)
+	assert.Equal(t, os.Stdin, cmd.Stdin)
+	assert.Equal(t, os.Stdout, cmd.Stdout)
+	assert.Equal(t, os.Stderr, cmd.Stderr)
 	assert.Contains(t, buf.String(), "Running: [/usr/bin/ssh -o -6 -o -C -o -q -F ssh.config -A -t 192.0.2.1 ssh -o -6 -o -C -o -q -A -t 192.0.2.2]")
 }
