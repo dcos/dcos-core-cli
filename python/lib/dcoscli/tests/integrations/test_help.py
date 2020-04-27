@@ -1,6 +1,11 @@
 from dcoscli.test.common import assert_command
 
 
+def test_help_calico():
+    with open('tests/data/calico/help.txt') as content:
+        assert_command(['dcos', 'help', 'calico'],
+                       stdout=content.read().encode('utf-8'))
+
 def test_help_job():
     with open('dcoscli/data/help/job.txt') as content:
         assert_command(['dcos', 'help', 'job'],

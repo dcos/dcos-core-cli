@@ -2,6 +2,10 @@
 
 ## 2.1-patch.0
 
+* Features
+
+  * Added `dcos calico` command
+
 * Notes
 
 During this new minor release we also refactored the `dcos describe` subcommand from Python to Go.

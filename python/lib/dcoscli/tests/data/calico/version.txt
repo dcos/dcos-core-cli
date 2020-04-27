@@ -1,0 +1,4 @@
+Client Version:    v3.12.0-d2iq.1
+Git commit:        fd5d699
+Cluster Version:   v3.8.2
+Cluster Type:      unknown
