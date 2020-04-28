@@ -2,6 +2,13 @@
 
 ## 2.0-patch.x
 
+## 2.0-patch.5
+
+* Fixes
+
+    * Allow changing SSH user without using a proxy
+    * Update PyInstaller (CVE-2019-16784)
+
 ## 2.0-patch.4
 
 * Features
