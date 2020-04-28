@@ -2,6 +2,12 @@
 
 ## 1.13-patch.x
 
+## 1.13-patch.9
+
+* Fixes
+    * Allow changing SSH user without using a proxy
+
+
 ## 1.13-patch.8
 
 * Fixes
