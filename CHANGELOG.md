@@ -2,12 +2,24 @@
 
 ## 2.0-patch.x
 
-## 2.0-patch.5
+## 2.0-patch.7
 
 * Fixes
 
     * Allow changing SSH user without using a proxy
     * Update PyInstaller (CVE-2019-16784)
+
+## 2.0-patch.6
+
+* Fixes
+
+    * Fix "cannot unmarshal number" for packages that use a unix timestamp as their `releaseVersion`
+
+## 2.0-patch.5
+
+* Fixes
+
+  * Make local installed apps ovverride Cosmos Apps (#405)
 
 ## 2.0-patch.4
 
