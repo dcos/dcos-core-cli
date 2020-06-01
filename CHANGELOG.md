@@ -5,6 +5,7 @@
 * Breaking changes
     * Change default SSH user from `core` to `centos`
     * Allow changing SSH user without using a proxy
+    * Update `dcos node diagnostics` deprecation message
 
 ## 2.1-patch.0
 

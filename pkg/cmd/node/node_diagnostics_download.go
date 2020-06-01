@@ -6,22 +6,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dcos/dcos-cli/api"
 	"github.com/spf13/cobra"
 )
 
-func newCmdNodeDiagnosticsDownload(ctx api.Context) *cobra.Command {
+func newCmdNodeDiagnosticsDownload() *cobra.Command {
 	var location string
 	cmd := &cobra.Command{
 		Use:   "download <bundle>",
 		Short: "Download a diagnostics bundle",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ctx.Deprecated("This command is deprecated since DC/OS 2.0, please use 'dcos diagnostics download' instead.")
-			if err != nil {
-				return err
-			}
-
 			if location == "" {
 				var err error
 				location, err = os.Getwd()

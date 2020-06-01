@@ -17,11 +17,6 @@ func newCmdNodeDiagnosticsList(ctx api.Context) *cobra.Command {
 		Short: "List available diagnostics bundles",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := ctx.Deprecated("This command is deprecated since DC/OS 2.0, please use 'dcos diagnostics list' instead.")
-			if err != nil {
-				return err
-			}
-
 			list, err := diagnosticsClient().List()
 			if err != nil {
 				return err
@@ -36,7 +31,7 @@ func newCmdNodeDiagnosticsList(ctx api.Context) *cobra.Command {
 			fmt.Println("Available diagnostic bundles:")
 			for _, bundles := range list {
 				for _, bundle := range bundles {
-					fmt.Printf("%s %.1fMiB\n", filepath.Base(bundle.File), float64(bundle.Size)/math.Pow(10, 6))
+					fmt.Fprintf(ctx.Out(), "%s %.1fMiB\n", filepath.Base(bundle.File), float64(bundle.Size)/math.Pow(10, 6))
 				}
 
 			}
