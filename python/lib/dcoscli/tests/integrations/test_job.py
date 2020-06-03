@@ -185,6 +185,14 @@ def test_show_runs():
         assert 'pikachu' in stdout.decode('utf-8')
 
 
+def test_run_json():
+    with _no_schedule_instance_job():
+        returncode, stdout, stderr = exec_command(
+            ['dcos', 'job', 'run', '--json', 'pikachu'])
+        assert returncode == 0
+        assert '"jobId": "pikachu",' in stdout.decode('utf-8')
+
+
 def _run_job(job_id):
     returncode, stdout, stderr = exec_command(
         ['dcos', 'job', 'run', job_id])
