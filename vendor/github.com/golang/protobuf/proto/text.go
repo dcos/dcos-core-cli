@@ -1,8 +1,3 @@
-// Protocol Buffers for Go with Gadgets
-//
-// Copyright (c) 2013, The GoGo Authors. All rights reserved.
-// http://github.com/gogo/protobuf
-//
 // Go support for Protocol Buffers - Google's data interchange format
 //
 // Copyright 2010 The Go Authors.  All rights reserved.
@@ -50,8 +45,6 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"sync"
-	"time"
 )
 
 var (
@@ -318,11 +311,7 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 					}
 					continue
 				}
-				if len(props.Enum) > 0 {
-					if err := tm.writeEnum(w, v, props); err != nil {
-						return err
-					}
-				} else if err := tm.writeAny(w, v, props); err != nil {
+				if err := tm.writeAny(w, v, props); err != nil {
 					return err
 				}
 				if err := w.WriteByte('\n'); err != nil {
@@ -403,7 +392,7 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 			// empty bytes field
 			continue
 		}
-		if props.proto3 && fv.Kind() != reflect.Ptr && fv.Kind() != reflect.Slice {
+		if fv.Kind() != reflect.Ptr && fv.Kind() != reflect.Slice {
 			// proto3 non-repeated scalar field; skip if zero value
 			if isProto3Zero(fv) {
 				continue
@@ -446,11 +435,8 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 			}
 		}
 
-		if len(props.Enum) > 0 {
-			if err := tm.writeEnum(w, fv, props); err != nil {
-				return err
-			}
-		} else if err := tm.writeAny(w, fv, props); err != nil {
+		// Enums have a String method, so writeAny will work fine.
+		if err := tm.writeAny(w, fv, props); err != nil {
 			return err
 		}
 
@@ -460,13 +446,7 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 	}
 
 	// Extensions (the XXX_extensions field).
-	pv := sv
-	if pv.CanAddr() {
-		pv = sv.Addr()
-	} else {
-		pv = reflect.New(sv.Type())
-		pv.Elem().Set(sv)
-	}
+	pv := sv.Addr()
 	if _, err := extendable(pv.Interface()); err == nil {
 		if err := tm.writeExtensions(w, pv); err != nil {
 			return err
@@ -479,56 +459,6 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 // writeAny writes an arbitrary field.
 func (tm *TextMarshaler) writeAny(w *textWriter, v reflect.Value, props *Properties) error {
 	v = reflect.Indirect(v)
-
-	if props != nil {
-		if len(props.CustomType) > 0 {
-			custom, ok := v.Interface().(Marshaler)
-			if ok {
-				data, err := custom.Marshal()
-				if err != nil {
-					return err
-				}
-				if err := writeString(w, string(data)); err != nil {
-					return err
-				}
-				return nil
-			}
-		} else if len(props.CastType) > 0 {
-			if _, ok := v.Interface().(interface {
-				String() string
-			}); ok {
-				switch v.Kind() {
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-					reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					_, err := fmt.Fprintf(w, "%d", v.Interface())
-					return err
-				}
-			}
-		} else if props.StdTime {
-			t, ok := v.Interface().(time.Time)
-			if !ok {
-				return fmt.Errorf("stdtime is not time.Time, but %T", v.Interface())
-			}
-			tproto, err := timestampProto(t)
-			if err != nil {
-				return err
-			}
-			propsCopy := *props // Make a copy so that this is goroutine-safe
-			propsCopy.StdTime = false
-			err = tm.writeAny(w, reflect.ValueOf(tproto), &propsCopy)
-			return err
-		} else if props.StdDuration {
-			d, ok := v.Interface().(time.Duration)
-			if !ok {
-				return fmt.Errorf("stdtime is not time.Duration, but %T", v.Interface())
-			}
-			dproto := durationProto(d)
-			propsCopy := *props // Make a copy so that this is goroutine-safe
-			propsCopy.StdDuration = false
-			err := tm.writeAny(w, reflect.ValueOf(dproto), &propsCopy)
-			return err
-		}
-	}
 
 	// Floats have special cases.
 	if v.Kind() == reflect.Float32 || v.Kind() == reflect.Float64 {
@@ -672,27 +602,27 @@ func writeUnknownStruct(w *textWriter, data []byte) (err error) {
 	for b.index < len(b.buf) {
 		x, err := b.DecodeVarint()
 		if err != nil {
-			_, ferr := fmt.Fprintf(w, "/* %v */\n", err)
-			return ferr
+			_, err := fmt.Fprintf(w, "/* %v */\n", err)
+			return err
 		}
 		wire, tag := x&7, x>>3
 		if wire == WireEndGroup {
 			w.unindent()
-			if _, werr := w.Write(endBraceNewline); werr != nil {
-				return werr
+			if _, err := w.Write(endBraceNewline); err != nil {
+				return err
 			}
 			continue
 		}
-		if _, ferr := fmt.Fprint(w, tag); ferr != nil {
-			return ferr
+		if _, err := fmt.Fprint(w, tag); err != nil {
+			return err
 		}
 		if wire != WireStartGroup {
-			if err = w.WriteByte(':'); err != nil {
+			if err := w.WriteByte(':'); err != nil {
 				return err
 			}
 		}
 		if !w.compact || wire == WireStartGroup {
-			if err = w.WriteByte(' '); err != nil {
+			if err := w.WriteByte(' '); err != nil {
 				return err
 			}
 		}
@@ -722,7 +652,7 @@ func writeUnknownStruct(w *textWriter, data []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		if err := w.WriteByte('\n'); err != nil {
+		if err = w.WriteByte('\n'); err != nil {
 			return err
 		}
 	}
@@ -748,30 +678,15 @@ func (s int32Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 // pv is assumed to be a pointer to a protocol message struct that is extendable.
 func (tm *TextMarshaler) writeExtensions(w *textWriter, pv reflect.Value) error {
 	emap := extensionMaps[pv.Type().Elem()]
-	e := pv.Interface().(Message)
-
-	var m map[int32]Extension
-	var mu sync.Locker
-	if em, ok := e.(extensionsBytes); ok {
-		eb := em.GetExtensions()
-		var err error
-		m, err = BytesToExtensionsMap(*eb)
-		if err != nil {
-			return err
-		}
-		mu = notLocker{}
-	} else if _, ok := e.(extendableProto); ok {
-		ep, _ := extendable(e)
-		m, mu = ep.extensionsRead()
-		if m == nil {
-			return nil
-		}
-	}
+	ep, _ := extendable(pv.Interface())
 
 	// Order the extensions by ID.
 	// This isn't strictly necessary, but it will give us
 	// canonical output, which will also make testing easier.
-
+	m, mu := ep.extensionsRead()
+	if m == nil {
+		return nil
+	}
 	mu.Lock()
 	ids := make([]int32, 0, len(m))
 	for id := range m {
@@ -794,7 +709,7 @@ func (tm *TextMarshaler) writeExtensions(w *textWriter, pv reflect.Value) error 
 			continue
 		}
 
-		pb, err := GetExtension(e, desc)
+		pb, err := GetExtension(ep, desc)
 		if err != nil {
 			return fmt.Errorf("failed getting extension: %v", err)
 		}
