@@ -68,7 +68,7 @@ setup(
         'requests>=2.6, <3.0',
         'six>=1.9, <2.0',
         'toml>=0.9, <1.0',
-        'sseclient==0.0.19',
+        'sseclient==0.0.26',
         'retrying==1.3.3',
     ],
 
