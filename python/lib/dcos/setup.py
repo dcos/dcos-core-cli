@@ -60,7 +60,7 @@ setup(
     packages=find_packages(exclude=['pydoc', 'tests', 'cli', 'bin']),
 
     install_requires=[
-        'jsonschema>=2.5, <3.0',
+        'jsonschema>=2.5, <4.0',
         'pager>=3.3, <4.0',
         'prettytable>=0.7, <1.0',
         'PyJWT==1.5.3',
