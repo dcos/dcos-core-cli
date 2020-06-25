@@ -405,7 +405,7 @@ def watch_for_overdue(max_count=300):
         cmd = ['dcos', 'marathon', 'debug', 'list', '--json']
         returncode, stdout, stderr = exec_command(cmd)
         result = json.loads(stdout.decode('utf-8'))
-        if result[0]['delay']['overdue']:
+        if len(result) > 0 and result[0]['delay']['overdue']:
             break
         else:
             count = count + 1
