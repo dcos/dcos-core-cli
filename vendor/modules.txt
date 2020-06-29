@@ -109,7 +109,7 @@ github.com/satori/go.uuid
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/test
-# github.com/spf13/afero v1.2.2
+# github.com/spf13/afero v1.3.0
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.1
