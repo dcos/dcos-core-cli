@@ -2,10 +2,18 @@
 
 ## 2.1-patch.x
 
+## 2.1-patch.1
+
 * Breaking changes
-    * Change default SSH user from `core` to `centos`
-    * Allow changing SSH user without using a proxy
-    * Update `dcos node diagnostics` deprecation message
+
+    * Change default SSH user from `core` to `centos` (#448).
+
+* Fixes
+
+    * Update dependencies (#459, #478).
+    * Update `dcos node diagnostics` deprecation message (#452).
+    * Allow changing SSH user without using a proxy (#448).
+
 
 ## 2.1-patch.0
 
