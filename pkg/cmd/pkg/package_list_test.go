@@ -1,12 +1,14 @@
 package pkg
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/dcos/dcos-cli/pkg/config"
@@ -35,6 +37,11 @@ func TestListPackages(t *testing.T) {
 			Version:     "0.0.0.1",
 		},
 		{
+			Name:        "package-1",
+			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus nec diam non fringilla.",
+			Version:     "0.0.0.2",
+		},
+		{
 			Name:        "package-3",
 			Description: "Lorem ipsum dolor sit amet, \nconsectetur adipiscing elit. \nMaecenas cursus nec diam non fringilla.",
 			Version:     "0.1",
@@ -50,15 +57,25 @@ func TestListPackages(t *testing.T) {
 
 	err := listPackages(ctx, listOptions{}, client)
 	assert.NoError(t, err)
-	assert.Equal(t, `    NAME       VERSION     CERTIFIED    APP     COMMAND                               DESCRIPTION                               
-  cli-app    alpha         true       /cli-app  cli-app  Some CLI APP                                                           
-  package-1  0.0.0.1       false      a         ---      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ...  
-                                      b                                                                                         
-                                      c                                                                                         
-  package-2  0.0.1         false      ---       xyz      XYZ                                                                    
-  package-3           0.1  false      ---       ---      Lorem ipsum dolor sit amet, ...                                        
-  pkg-cli    2.4.4-1.15.4  true       /pkg-cli  pkg-cli  Some CLI Package                                                       
-`, out.String())
+	expected := []string{
+		"NAME       VERSION     CERTIFIED    APP     COMMAND                               DESCRIPTION",
+		"cli-app    alpha         true       /cli-app  cli-app  Some CLI APP",
+		"package-1  0.0.0.1       false      a         ---      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ...",
+		"b",
+		"c",
+		"package-1  0.0.0.2       false      ---       ---      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ...",
+		"package-2  0.0.1         false      ---       xyz      XYZ",
+		"package-3           0.1  false      ---       ---      Lorem ipsum dolor sit amet, ...",
+		"pkg-cli    2.4.4-1.15.4  true       /pkg-cli  pkg-cli  Some CLI Package",
+	}
+
+	line := 0
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		assert.Equal(t, expected[line], strings.TrimSpace(scanner.Text()))
+		line++
+	}
+	assert.Len(t, expected, line)
 }
 
 var abPackage = cosmos.Package{
@@ -105,7 +122,18 @@ var testCases = []struct {
 	{MultipleCommands, listOptions{jsonOutput: true}, []cosmos.Package{
 		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "0.0.0.1"},
 		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"},
-	}, []cosmos.Package{cliApp, pkgCli}},
+	}, []cosmos.Package{
+		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "0.0.0.1"}, cliApp,
+		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"}, pkgCli,
+	}},
+	{MultipleCommands, listOptions{jsonOutput: true}, []cosmos.Package{
+		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "alpha"},
+		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "2.4.4-1.15.4"},
+	}, []cosmos.Package{
+		cliApp, {Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "alpha"},
+		pkgCli, {Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "2.4.4-1.15.4"},
+	}},
+	{MultipleCommands, listOptions{jsonOutput: true}, []cosmos.Package{cliApp, pkgCli}, []cosmos.Package{cliApp, pkgCli}},
 	{MultipleCommands, listOptions{jsonOutput: true, cliOnly: true}, []cosmos.Package{
 		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "0.0.0.1"},
 		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "0.0.1"},

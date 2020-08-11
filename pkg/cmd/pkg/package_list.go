@@ -78,9 +78,10 @@ func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
 		}
 
 		for _, pkg := range cosmosPackages {
-			_, ok := packages[pkg.Name]
+			id := identifier(pkg)
+			_, ok := packages[id]
 			if !ok {
-				packages[pkg.Name] = pkg
+				packages[id] = pkg
 			}
 		}
 	}
@@ -109,12 +110,12 @@ func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
 	return nil
 }
 
-func getPackagesInstalledLocally(ctx api.Context) (map[string]cosmos.Package, error) {
+func getPackagesInstalledLocally(ctx api.Context) (map[id]cosmos.Package, error) {
 	cluster, err := ctx.Cluster()
 	if err != nil {
 		return nil, err
 	}
-	packages := make(map[string]cosmos.Package)
+	packages := make(map[id]cosmos.Package)
 	plugins := ctx.PluginManager(cluster).Plugins()
 	for _, plugin := range plugins {
 		packagePath := path.Join(filepath.Dir(plugin.Dir()), "package.json")
@@ -139,7 +140,7 @@ func getPackagesInstalledLocally(ctx api.Context) (map[string]cosmos.Package, er
 					Name: pkg.Name,
 				}
 
-				packages[pkg.Name] = pkg
+				packages[identifier(pkg)] = pkg
 			}
 		}
 	}
@@ -172,7 +173,7 @@ func renderTable(ctx api.Context, list []cosmos.Package) {
 	table.Render()
 }
 
-func filterPackages(pkgs map[string]cosmos.Package, filter func(app string) bool) []cosmos.Package {
+func filterPackages(pkgs map[id]cosmos.Package, filter func(app string) bool) []cosmos.Package {
 	filteredList := make([]cosmos.Package, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		if filter(pkg.Name) {
@@ -191,8 +192,17 @@ func filterPackages(pkgs map[string]cosmos.Package, filter func(app string) bool
 	return filteredList
 }
 
+type id string
+
+func identifier(p cosmos.Package) id {
+	if p.Command != nil {
+		return id(fmt.Sprintf("%s%s%s%s", p.Name, p.Version, strings.Join(p.Apps, ":"), p.Command.Name))
+	}
+	return id(fmt.Sprintf("%s%s%s", p.Name, p.Version, strings.Join(p.Apps, ":")))
+}
+
 type packages []cosmos.Package
 
 func (p packages) Len() int           { return len(p) }
 func (p packages) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-func (p packages) Less(i, j int) bool { return p[i].Name < p[j].Name }
+func (p packages) Less(i, j int) bool { return identifier(p[i]) < identifier(p[j]) }
