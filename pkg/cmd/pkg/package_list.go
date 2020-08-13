@@ -79,9 +79,12 @@ func listPackages(ctx api.Context, opts listOptions, c cosmos.Client) error {
 
 		for _, pkg := range cosmosPackages {
 			id := identifier(pkg)
-			_, ok := packages[id]
+			p, ok := packages[id]
 			if !ok {
 				packages[id] = pkg
+			} else {
+				p.Apps = appendIfMissing(p.Apps, pkg.Apps...)
+				packages[id] = p
 			}
 		}
 	}
@@ -195,10 +198,7 @@ func filterPackages(pkgs map[id]cosmos.Package, filter func(app string) bool) []
 type id string
 
 func identifier(p cosmos.Package) id {
-	if p.Command != nil {
-		return id(fmt.Sprintf("%s%s%s%s", p.Name, p.Version, strings.Join(p.Apps, ":"), p.Command.Name))
-	}
-	return id(fmt.Sprintf("%s%s%s", p.Name, p.Version, strings.Join(p.Apps, ":")))
+	return id(p.Name + p.Version)
 }
 
 type packages []cosmos.Package
@@ -206,3 +206,16 @@ type packages []cosmos.Package
 func (p packages) Len() int           { return len(p) }
 func (p packages) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p packages) Less(i, j int) bool { return identifier(p[i]) < identifier(p[j]) }
+
+func appendIfMissing(slice []string, s ...string) []string {
+LOOP:
+	for _, i := range s {
+		for _, ele := range slice {
+			if ele == i {
+				continue LOOP
+			}
+		}
+		slice = append(slice, i)
+	}
+	return slice
+}

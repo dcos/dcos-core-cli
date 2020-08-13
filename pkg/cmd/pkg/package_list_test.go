@@ -130,8 +130,9 @@ var testCases = []struct {
 		{Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "alpha"},
 		{Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "2.4.4-1.15.4"},
 	}, []cosmos.Package{
-		cliApp, {Name: "cli-app", Apps: []string{"not", "a", "cliApp"}, Description: "package-2", Version: "alpha"},
-		pkgCli, {Name: "pkg-cli", Command: &dcos.CosmosPackageCommand{Name: "xyz"}, Description: "XYZ", Version: "2.4.4-1.15.4"},
+		{Name: "cli-app", Apps: []string{"/cli-app", "not", "a", "cliApp"}, Command: &dcos.CosmosPackageCommand{Name: "cli-app"},
+			Description: "Some CLI APP", Framework: true, Selected: true, Version: "alpha"},
+		pkgCli,
 	}},
 	{MultipleCommands, listOptions{jsonOutput: true}, []cosmos.Package{cliApp, pkgCli}, []cosmos.Package{cliApp, pkgCli}},
 	{MultipleCommands, listOptions{jsonOutput: true, cliOnly: true}, []cosmos.Package{
