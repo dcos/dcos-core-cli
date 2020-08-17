@@ -5,6 +5,7 @@ package mocks
 import (
 	"net/url"
 	"time"
+
 	"github.com/gambol99/go-marathon"
 )
 
@@ -16,7 +17,7 @@ type MarathonMock struct {
 	AllTasksInvocations                  int
 	AllTasksFn                           func(*marathon.AllTasksOpts) (*marathon.Tasks, error)
 	ApiPostInvocations                   int
-	ApiPostFn                            func(string, interface {}, interface {}) error
+	ApiPostFn                            func(string, interface{}, interface{}) error
 	ApplicationInvocations               int
 	ApplicationFn                        func(string) (*marathon.Application, error)
 	ApplicationByInvocations             int
@@ -150,7 +151,7 @@ func (m *MarathonMock) AllTasks(p0 *marathon.AllTasksOpts) (*marathon.Tasks, err
 	return m.AllTasksFn(p0)
 }
 
-func (m *MarathonMock) ApiPost(p0 string, p1 interface {}, p2 interface {}) error {
+func (m *MarathonMock) ApiPost(p0 string, p1 interface{}, p2 interface{}) error {
 	m.ApiPostInvocations++
 	return m.ApiPostFn(p0, p1, p2)
 }

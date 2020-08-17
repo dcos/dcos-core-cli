@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
-	"github.com/dcos/dcos-core-cli/pkg/mesos"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 )
 
 // Client is a calico client for DC/OS.
@@ -16,8 +13,8 @@ type Client struct {
 	http *httpclient.Client
 }
 
-// NewClient creates a new calico client.
-func NewClient(baseClient *httpclient.Client) *Client {
+// newClient creates a new calico client.
+func newClient(baseClient *httpclient.Client) *Client {
 	return &Client{
 		http: baseClient,
 	}
@@ -48,16 +45,4 @@ func httpResponseToError(resp *http.Response) error {
 	return &httpclient.HTTPError{
 		Response: resp,
 	}
-}
-
-func mesosClient(ctx api.Context) (*mesos.Client, error) {
-	cluster, err := ctx.Cluster()
-	if err != nil {
-		return nil, err
-	}
-	baseURL, _ := cluster.Config().Get("core.mesos_master_url").(string)
-	if baseURL == "" {
-		baseURL = cluster.URL() + "/mesos"
-	}
-	return mesos.NewClient(pluginutil.HTTPClient(baseURL)), nil
 }
