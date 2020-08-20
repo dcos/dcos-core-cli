@@ -2,12 +2,10 @@ package calico
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/dcos/dcos-core-cli/pkg/mesos"
 	"github.com/dcos/dcos-core-cli/pkg/networking"
@@ -99,50 +97,44 @@ func getEnvironment(ctx api.Context, grpcPort string) ([]string, error) {
 			break
 		}
 	}
-	_, err = request(host+grpcPort, cluster.Timeout())
-	if err != nil {
-		return nil, fmt.Errorf("calicoctl is not able to connect to the gRPC port: %s", err)
-	}
 
 	dcosVersion, err := dcosClient.Version()
 	if err != nil {
 		return nil, fmt.Errorf("could not get DC/OS version: %s", err)
 	}
 	if dcosVersion.DCOSVariant != "enterprise" {
+		if err := probeGrpc("http://" + host + grpcPort); err != nil {
+			return nil, fmt.Errorf("could not connect to the gRPC port: %s", err)
+		}
 		return []string{
 			fmt.Sprintf("ETCD_CUSTOM_GRPC_METADATA=authorization:token=%s", cluster.ACSToken()),
 			fmt.Sprintf("ETCD_ENDPOINTS=%s%s", host, grpcPort),
 		}, nil
 	}
 
-	caClient := newClient(httpClient)
-	caCert, err := caClient.getCaCertificate()
-	if err != nil {
-		return nil, fmt.Errorf("could not get certificate: %s", err)
+	tlsCAPath, ok := os.LookupEnv("DCOS_TLS_CA_PATH")
+	if !ok {
+		return nil, fmt.Errorf("DCOS_TLS_CA_PATH is not defined. " +
+			"Calico requires secure connection. " +
+			"Do NOT use --insecure flag with dcos cluster setup, " +
+			"--no-check should be used instead")
 	}
 
-	caFilePath := path.Join(cluster.Dir(), "dcos-ca.crt")
-	out, err := os.Create(caFilePath)
-	defer out.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not create CA file: %s", err)
-	}
-	_, err = out.WriteString(caCert)
-	if err != nil {
-		return nil, fmt.Errorf("could not write CA cert to file: %s", err)
+	if err := probeGrpc("https://" + host + grpcPort); err != nil {
+		return nil, fmt.Errorf("could not connect to the gRPC port: %s", err)
 	}
 
 	return []string{
 		fmt.Sprintf("ETCD_CUSTOM_GRPC_METADATA=authorization:token=%s", cluster.ACSToken()),
 		fmt.Sprintf("ETCD_ENDPOINTS=%s%s", host, grpcPort),
-		fmt.Sprintf("ETCD_CA_CERT_FILE=%s", caFilePath),
+		fmt.Sprintf("ETCD_CA_CERT_FILE=%s", tlsCAPath),
 	}, nil
 }
 
-func request(url string, timeout time.Duration) (*http.Response, error) {
-	probeClient := pluginutil.HTTPClient(
-		"http://"+url,
-		httpclient.Timeout(timeout),
-	)
-	return probeClient.Get("")
+func probeGrpc(url string) error {
+	cx := pluginutil.HTTPClient(url)
+	// We want to check grpc not admin router so need to remove auth header
+	cx.Header().Del("Authorization")
+	_, err := cx.Get("")
+	return err
 }
