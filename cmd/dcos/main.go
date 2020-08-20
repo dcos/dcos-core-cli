@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
 	"github.com/dcos/dcos-cli/pkg/httpclient"
@@ -20,6 +22,7 @@ const invalidCertError = "An SSL error occurred. To configure your SSL settings,
 
 func main() {
 	ctx := cli.NewContext(cli.NewOsEnvironment())
+	ctx.Logger().SetLevel(pluginutil.Logger().Level)
 	if err := run(ctx); err != nil {
 		fmt.Fprintf(ctx.ErrOut(), "Error: %s\n", errorMessage(err))
 		os.Exit(1)

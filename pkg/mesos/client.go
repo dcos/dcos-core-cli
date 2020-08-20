@@ -169,6 +169,9 @@ func (c *Client) Leader() (*Master, error) {
 		if len(hosts) > 1 {
 			return nil, fmt.Errorf("expecting one leader. Got %d", len(hosts))
 		}
+		if len(hosts) == 0 {
+			return nil, fmt.Errorf("no leader found")
+		}
 		return &hosts[0], err
 	default:
 		return nil, httpResponseToError(resp)
