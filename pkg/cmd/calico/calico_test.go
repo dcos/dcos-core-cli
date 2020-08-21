@@ -52,8 +52,36 @@ func Test_runCalicoCtl(t *testing.T) {
 }
 
 func TestGetEnvForEnterprise(t *testing.T) {
-	grpcServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	grpcServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, r.Header.Get("Authorization"))
 	}))
+	cacert, err := ioutil.TempFile("", "*dcos-ca.crt")
+	require.NoError(t, err)
+	defer os.Remove(cacert.Name())
+	// https://github.com/golang/go/blob/go1.15/src/net/http/internal/testcert.go#L13
+	_, err = cacert.Write([]byte(`-----BEGIN CERTIFICATE-----
+MIICEzCCAXygAwIBAgIQMIMChMLGrR+QvmQvpwAU6zANBgkqhkiG9w0BAQsFADAS
+MRAwDgYDVQQKEwdBY21lIENvMCAXDTcwMDEwMTAwMDAwMFoYDzIwODQwMTI5MTYw
+MDAwWjASMRAwDgYDVQQKEwdBY21lIENvMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB
+iQKBgQDuLnQAI3mDgey3VBzWnB2L39JUU4txjeVE6myuDqkM/uGlfjb9SjY1bIw4
+iA5sBBZzHi3z0h1YV8QPuxEbi4nW91IJm2gsvvZhIrCHS3l6afab4pZBl2+XsDul
+rKBxKKtD1rGxlG4LjncdabFn9gvLZad2bSysqz/qTAUStTvqJQIDAQABo2gwZjAO
+BgNVHQ8BAf8EBAMCAqQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDwYDVR0TAQH/BAUw
+AwEB/zAuBgNVHREEJzAlggtleGFtcGxlLmNvbYcEfwAAAYcQAAAAAAAAAAAAAAAA
+AAAAATANBgkqhkiG9w0BAQsFAAOBgQCEcetwO59EWk7WiJsG4x8SY+UIAA+flUI9
+tyC4lNhbcF2Idq9greZwbYCqTTTr2XiRNSMLCOjKyI7ukPoPjo16ocHj+P3vZGfs
+h1fIw3cSS2OolhloGw/XM6RWPWtPAlGykKLciQrBru5NAPvCMsb/I1DAceTiotQM
+fblo6RBxUQ==
+-----END CERTIFICATE-----`))
+	require.NoError(t, err)
+
+	err = os.Setenv("DCOS_ACS_TOKEN", "12345")
+	require.NoError(t, err)
+	defer os.Unsetenv("DCOS_ACS_TOKEN")
+	err = os.Setenv("DCOS_TLS_CA_PATH", cacert.Name())
+	require.NoError(t, err)
+	defer os.Unsetenv("DCOS_TLS_CA_PATH")
+
 	u, err := url.Parse(grpcServer.URL)
 	require.NoError(t, err)
 	_, grpcPort, err := net.SplitHostPort(u.Host)
@@ -86,16 +114,11 @@ func TestGetEnvForEnterprise(t *testing.T) {
 
 	env, err := getEnvironment(ctx, ":"+grpcPort)
 	assert.NoError(t, err)
-	cacertPath := path.Join(os.TempDir(), "dcos-ca.crt")
-	defer os.Remove(cacertPath)
 	assert.Equal(t, []string{
 		"ETCD_CUSTOM_GRPC_METADATA=authorization:token=",
 		"ETCD_ENDPOINTS=127.0.0.1:" + grpcPort,
-		"ETCD_CA_CERT_FILE=" + cacertPath,
+		"ETCD_CA_CERT_FILE=" + cacert.Name(),
 	}, env)
-	cert, err := ioutil.ReadFile(cacertPath)
-	assert.NoError(t, err)
-	assert.Equal(t, "CERTIFICATE", string(cert))
 
 	output, err := ioutil.ReadAll(out)
 	assert.NoError(t, err)
