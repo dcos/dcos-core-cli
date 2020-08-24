@@ -16,7 +16,7 @@ require (
 	github.com/r3labs/sse v0.0.0-20181217150409-243b7807c4c4
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/spf13/afero v1.3.1
+	github.com/spf13/afero v1.3.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0 // indirect
