@@ -1,0 +1,312 @@
+{
+  "packages":[
+    {
+      "appId":"/jenkins-test",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"3.0",
+          "name":"jenkins",
+          "version":"3.6.1-2.190.1",
+          "maintainer":"support@mesosphere.io",
+          "description":"Jenkins is an award-winning, cross-platform, continuous integration and continuous delivery application…",
+          "tags":[
+            "continuous-integration",
+            "ci",
+            "jenkins"
+          ],
+          "selected":true,
+          "scm":"https://github.com/mesosphere/dcos-jenkins-service.git",
+          "website":"https://jenkins.io",
+          "framework":true,
+          "preInstallNotes":"WARNING: If you didn't provide a value for `storage.host-volume`…",
+          "postInstallNotes":"Jenkins has been installed.",
+          "postUninstallNotes":"Jenkins has been uninstalled…",
+          "licenses":[
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://github.com/mesosphere/dcos-jenkins-service/blob/master/LICENSE"
+            },
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://github.com/jenkinsci/mesos-plugin/blob/master/LICENSE"
+            },
+            {
+              "name":"MIT License",
+              "url":"https://github.com/jenkinsci/jenkins/blob/master/LICENSE.txt"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "container":{
+              "docker":{
+                "jenkins":"mesosphere/jenkins:3.6.1-2.190.1"
+              }
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-large.png"
+          }
+        }
+      }
+    },
+    {
+      "appId":"/jenkins/jenkins0",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"3.0",
+          "name":"jenkins",
+          "version":"4.0.0-2.204.6-beta9",
+          "maintainer":"support@mesosphere.io",
+          "description":"Jenkins is an award-winning, cross-platform, continuous integration and continuous delivery application…",
+          "tags":[
+            "continuous-integration",
+            "ci",
+            "jenkins"
+          ],
+          "selected":true,
+          "scm":"https://github.com/mesosphere/dcos-jenkins-service.git",
+          "website":"https://jenkins.io",
+          "framework":true,
+          "preInstallNotes":"WARNING: If you didn't provide a value for `storage.host-volume`…",
+          "postInstallNotes":"Jenkins has been installed.",
+          "postUninstallNotes":"Jenkins has been uninstalled…",
+          "licenses":[
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://github.com/mesosphere/dcos-jenkins-service/blob/master/LICENSE"
+            },
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://github.com/jenkinsci/mesos-plugin/blob/master/LICENSE"
+            },
+            {
+              "name":"MIT License",
+              "url":"https://github.com/jenkinsci/jenkins/blob/master/LICENSE.txt"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "container":{
+              "docker":{
+                "jenkins":"mesosphere/jenkins:4.0.0-2.204.6-beta9"
+              }
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/jenkins-icon-large.png"
+          }
+        }
+      }
+    },
+    {
+      "appId":"/data-services/kafka",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"4.0",
+          "name":"kafka",
+          "version":"2.10.0-2.4.0",
+          "maintainer":"support@mesosphere.io",
+          "description":"Apache Kafka is used for building real-time data pipelines and streaming apps…",
+          "tags":[
+            "message",
+            "broker",
+            "pubsub",
+            "kafka"
+          ],
+          "selected":true,
+          "scm":"https://github.com/mesosphere/dcos-kafka-service",
+          "website":"https://docs.mesosphere.com/services/kafka/2.10.0-2.4.0",
+          "framework":true,
+          "preInstallNotes":"Default configuration requires 3 agent nodes…",
+          "postInstallNotes":"The DC/OS Apache Kafka service is being installed…",
+          "postUninstallNotes":"The DC/OS Apache Kafka service is being uninstalled…",
+          "licenses":[
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://raw.githubusercontent.com/apache/kafka/trunk/LICENSE"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "uris":{
+              "setup-helper-zip":"https://testing.cluster/package/resource?url=https://infinity-artifacts.s3.amazonaws.com/permanent/kafka/assets/2.10.0-2.4.0/setup-helper.zip",
+              "kafka-jre-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/java/openjdk-jre-8u212b03-hotspot-linux-x64.tar.gz",
+              "kafka-scheduler-zip":"https://testing.cluster/package/resource?url=https://infinity-artifacts.s3.amazonaws.com/permanent/kafka/assets/2.10.0-2.4.0/kafka-scheduler.zip",
+              "libmesos-bundle-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.14-beta.tar.gz",
+              "zookeeper-client-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/zookeeper-3.4.13.jar",
+              "statsd-client-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/java-dogstatsd-client-2.3.jar",
+              "kafka-tgz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka_2.12-2.4.0.tgz",
+              "netcat":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/nc64",
+              "bootstrap-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/dcos-commons/artifacts/0.57.3/bootstrap.zip",
+              "kafka-statsd-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka-statsd-metrics2-0.5.3.jar",
+              "custom-kafka-principal-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka-custom-principal-builder-1.0.0.jar",
+              "jre-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/java/openjdk-jre-11.0.3.7-hotspot-linux-x64.tar.gz"
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-large.png"
+          }
+        }
+      }
+    },
+    {
+      "appId":"/data-services/kafka-kerberos",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"4.0",
+          "name":"kafka",
+          "version":"2.10.0-2.4.0",
+          "maintainer":"support@mesosphere.io",
+          "description":"Apache Kafka is used for building real-time data pipelines and streaming apps…",
+          "tags":[
+            "message",
+            "broker",
+            "pubsub",
+            "kafka"
+          ],
+          "selected":true,
+          "scm":"https://github.com/mesosphere/dcos-kafka-service",
+          "website":"https://docs.mesosphere.com/services/kafka/2.10.0-2.4.0",
+          "framework":true,
+          "preInstallNotes":"Default configuration requires 3 agent nodes…",
+          "postInstallNotes":"The DC/OS Apache Kafka service is being installed.…",
+          "postUninstallNotes":"The DC/OS Apache Kafka service is being uninstalled.…",
+          "licenses":[
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://raw.githubusercontent.com/apache/kafka/trunk/LICENSE"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "uris":{
+              "setup-helper-zip":"https://testing.cluster/package/resource?url=https://infinity-artifacts.s3.amazonaws.com/permanent/kafka/assets/2.10.0-2.4.0/setup-helper.zip",
+              "kafka-jre-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/java/openjdk-jre-8u212b03-hotspot-linux-x64.tar.gz",
+              "kafka-scheduler-zip":"https://testing.cluster/package/resource?url=https://infinity-artifacts.s3.amazonaws.com/permanent/kafka/assets/2.10.0-2.4.0/kafka-scheduler.zip",
+              "libmesos-bundle-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.14-beta.tar.gz",
+              "zookeeper-client-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/zookeeper-3.4.13.jar",
+              "statsd-client-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/java-dogstatsd-client-2.3.jar",
+              "kafka-tgz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka_2.12-2.4.0.tgz",
+              "netcat":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/nc64",
+              "bootstrap-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/dcos-commons/artifacts/0.57.3/bootstrap.zip",
+              "kafka-statsd-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka-statsd-metrics2-0.5.3.jar",
+              "custom-kafka-principal-jar":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka/assets/kafka-custom-principal-builder-1.0.0.jar",
+              "jre-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/java/openjdk-jre-11.0.3.7-hotspot-linux-x64.tar.gz"
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-large.png"
+          }
+        }
+      }
+    },
+    {
+      "appId":"/data-services/kafka-zookeeper",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"4.0",
+          "name":"kafka-zookeeper",
+          "version":"2.7.0-3.4.14",
+          "maintainer":"support@mesosphere.com",
+          "description":"Apache ZooKeeper is a centralized service for maintaining configuration information…",
+          "tags":[
+            "zookeeper",
+            "kafka"
+          ],
+          "selected":true,
+          "scm":"https://github.com/mesosphere/dcos-zookeeper",
+          "website":"https://docs.mesosphere.com/services/kafka-zookeeper/2.7.0-3.4.14",
+          "framework":true,
+          "preInstallNotes":"Default configuration requires 3 agent nodes…",
+          "postInstallNotes":"The DC/OS Apache ZooKeeper service is being installed…",
+          "postUninstallNotes":"The DC/OS Apache ZooKeeper service is being uninstalled…",
+          "licenses":[
+            {
+              "name":"Apache License Version 2.0",
+              "url":"https://raw.githubusercontent.com/apache/zookeeper/master/LICENSE.txt"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "uris":{
+              "setup-helper-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka-zookeeper/assets/2.7.0-3.4.14/setup-helper.zip",
+              "scheduler-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka-zookeeper/assets/2.7.0-3.4.14/kafka-zookeeper-scheduler.zip",
+              "libmesos-bundle-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/libmesos-bundle/libmesos-bundle-1.14-beta.tar.gz",
+              "metrics-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/kafka-zookeeper/assets/2.7.0-3.4.14/metrics.zip",
+              "zookeeper-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/zookeeper/zookeeper-3.4.14.tar.gz",
+              "bootstrap-zip":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/dcos-commons/artifacts/0.57.0/bootstrap.zip",
+              "jre-tar-gz":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/java/openjdk-jre-8u212b03-hotspot-linux-x64.tar.gz"
+            },
+            "container":{
+              "docker":{
+                "netcat":"mesosphere/zk-nc:0.1"
+              }
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/kafka-icon-large.png"
+          }
+        }
+      }
+    },
+    {
+      "appId":"/data-services/mysql",
+      "packageInformation":{
+        "packageDefinition":{
+          "packagingVersion":"3.0",
+          "name":"mysql",
+          "version":"5.7.12-0.3",
+          "maintainer":"https://dcos.io/community/",
+          "description":"MySQL is the world's most popular open source database…",
+          "tags":[
+            "database",
+            "mysql",
+            "sql"
+          ],
+          "selected":false,
+          "scm":"https://github.com/mysql/mysql-server.git",
+          "website":"https://mysql-ci.org",
+          "framework":false,
+          "preInstallNotes":"This DC/OS Service is currently in preview…",
+          "postInstallNotes":"Service installed…",
+          "postUninstallNotes":"Service uninstalled…",
+          "licenses":[
+            {
+              "name":"GNU GENERAL PUBLIC LICENSE",
+              "url":"https://github.com/mysql/mysql-server/blob/5.7/COPYING"
+            }
+          ]
+        },
+        "resourceDefinition":{
+          "assets":{
+            "container":{
+              "docker":{
+                "mysql-docker":"mysql:5.7.12"
+              }
+            }
+          },
+          "images":{
+            "icon-small":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/mysql-icon-small.png",
+            "icon-medium":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/mysql-icon-medium.png",
+            "icon-large":"https://testing.cluster/package/resource?url=https://downloads.mesosphere.com/assets/universe/000/mysql-icon-large.png"
+          }
+        }
+      }
+    }
+  ]
+}

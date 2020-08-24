@@ -80,37 +80,39 @@ func (c *client) PackageList() ([]Package, error) {
 		return nil, err
 	}
 
-	var ps []Package
+	ps := make([]Package, 0, len(desc.Packages))
 	pAppNames := make(map[string]int)
 	index := 0
 	for _, p := range desc.Packages {
-		if val, ok := pAppNames[p.PackageInformation.PackageDefinition.Name]; ok {
+		pd := p.PackageInformation.PackageDefinition
+		nameWithVersion := pd.Name + pd.Version
+		if val, ok := pAppNames[nameWithVersion]; ok {
 			ps[val].Apps = append(ps[val].Apps, p.AppId)
 		} else {
-			pAppNames[p.PackageInformation.PackageDefinition.Name] = index
+			pAppNames[nameWithVersion] = index
 			index++
 
 			newPackage := Package{
 				Apps:               []string{p.AppId},
-				Description:        p.PackageInformation.PackageDefinition.Description,
-				Framework:          p.PackageInformation.PackageDefinition.Framework,
-				Licenses:           p.PackageInformation.PackageDefinition.Licenses,
-				Maintainer:         p.PackageInformation.PackageDefinition.Maintainer,
-				Name:               p.PackageInformation.PackageDefinition.Name,
-				PackagingVersion:   p.PackageInformation.PackageDefinition.PackagingVersion,
-				PostInstallNotes:   p.PackageInformation.PackageDefinition.PostInstallNotes,
-				PostUninstallNotes: p.PackageInformation.PackageDefinition.PostUninstallNotes,
-				PreInstallNotes:    p.PackageInformation.PackageDefinition.PreInstallNotes,
-				Scm:                p.PackageInformation.PackageDefinition.Scm,
-				Selected:           p.PackageInformation.PackageDefinition.Selected,
-				Tags:               p.PackageInformation.PackageDefinition.Tags,
-				Version:            p.PackageInformation.PackageDefinition.Version,
-				Website:            p.PackageInformation.PackageDefinition.Website,
+				Description:        pd.Description,
+				Framework:          pd.Framework,
+				Licenses:           pd.Licenses,
+				Maintainer:         pd.Maintainer,
+				Name:               pd.Name,
+				PackagingVersion:   pd.PackagingVersion,
+				PostInstallNotes:   pd.PostInstallNotes,
+				PostUninstallNotes: pd.PostUninstallNotes,
+				PreInstallNotes:    pd.PreInstallNotes,
+				Scm:                pd.Scm,
+				Selected:           pd.Selected,
+				Tags:               pd.Tags,
+				Version:            pd.Version,
+				Website:            pd.Website,
 			}
 
-			if p.PackageInformation.PackageDefinition.PackagingVersion < "4.0" {
-				newPackage.Command = &dcos.CosmosPackageCommand{Name: p.PackageInformation.PackageDefinition.Name}
-				newPackage.ReleaseVersion = &p.PackageInformation.PackageDefinition.ReleaseVersion
+			if pd.PackagingVersion < "4.0" {
+				newPackage.Command = &dcos.CosmosPackageCommand{Name: pd.Name}
+				newPackage.ReleaseVersion = &pd.ReleaseVersion
 			}
 
 			ps = append(ps, newPackage)

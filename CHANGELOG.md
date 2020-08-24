@@ -5,6 +5,7 @@
 * Fixes
 
     * Update `dcos node diagnostics` deprecation message
+    * Display version for packages with the same name
 
 ## 2.0-patch.7
 
