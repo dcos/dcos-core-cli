@@ -2,6 +2,8 @@
 
 ## 2.0-patch.x
 
+## 2.0-patch.8
+
 * Fixes
 
     * Update `dcos node diagnostics` deprecation message
