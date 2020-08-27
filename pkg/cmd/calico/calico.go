@@ -42,6 +42,8 @@ func NewCommand(ctx api.Context) *cobra.Command {
 		}
 	})
 
+	cmd.DisableFlagParsing = true
+
 	return cmd
 }
 
@@ -115,9 +117,10 @@ func getEnvironment(ctx api.Context, grpcPort string) ([]string, error) {
 	tlsCAPath, ok := os.LookupEnv("DCOS_TLS_CA_PATH")
 	if !ok {
 		return nil, fmt.Errorf("DCOS_TLS_CA_PATH is not defined. " +
-			"Calico requires secure connection. " +
-			"Do NOT use --insecure flag with dcos cluster setup, " +
-			"--no-check should be used instead")
+			"Calico requires secure connection and CA certificate file.\n" +
+			"DON'T use --insecure flag with dcos cluster setup, " +
+			"--no-check should be used instead\n" +
+			"Run: dcos cluster setup https://" + host)
 	}
 
 	if err := probeGrpc("https://" + host + grpcPort); err != nil {
