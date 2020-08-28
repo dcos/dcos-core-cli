@@ -2,6 +2,11 @@
 
 ## 2.1-patch.x
 
+## 2.1-patch.3
+
+* Fixes
+    * Fix calico flag parsing
+
 ## 2.1-patch.2
 
 * Breaking changes
