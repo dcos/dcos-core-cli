@@ -122,9 +122,9 @@ func (p *PersistentVolume) EmptyConstraints() *PersistentVolume {
 
 // ExternalVolume is an external volume definition
 type ExternalVolume struct {
-	Name     string             `json:"name,omitempty"`
-	Provider string             `json:"provider,omitempty"`
-	Options  *map[string]string `json:"options,omitempty"`
+	Name     string                  `json:"name,omitempty"`
+	Provider string                  `json:"provider,omitempty"`
+	Options  *map[string]interface{} `json:"options,omitempty"`
 }
 
 // PullConfig specifies a secret for authentication with a private Docker registry
@@ -231,7 +231,7 @@ func (ev *ExternalVolume) AddOption(name, value string) *ExternalVolume {
 
 // EmptyOptions explicitly empties the options
 func (ev *ExternalVolume) EmptyOptions() *ExternalVolume {
-	ev.Options = &map[string]string{}
+	ev.Options = &map[string]interface{}{}
 
 	return ev
 }
