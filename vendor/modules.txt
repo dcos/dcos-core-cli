@@ -35,7 +35,7 @@ github.com/dgrijalva/jwt-go
 github.com/donovanhide/eventsource
 # github.com/dustin/go-humanize v1.0.0
 github.com/dustin/go-humanize
-# github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37
+# github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37 => github.com/mesosphere/go-marathon v0.7.2-0.20200918135514-cdd53d1d13b2
 github.com/gambol99/go-marathon
 # github.com/gobwas/glob v0.2.3
 github.com/gobwas/glob
