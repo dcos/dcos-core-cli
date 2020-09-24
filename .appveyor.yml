@@ -2,6 +2,9 @@ install:
   - SET PATH=C:\msys64\mingw64\bin;c:\gopath\bin;%PATH%
   - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b "c:\gopath\bin" v1.24.0
 
+cache:
+  - '%LocalAppData%\go-build'
+
 build: off
 
 clone_folder: c:\dcos-core-cli
