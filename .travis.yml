@@ -1,6 +1,18 @@
-os:
- - linux
- - osx
+matrix:
+  include:
+    - os: linux
+      cache:
+        directories:
+          - $HOME/.cache/go-build
+          - $HOME/gopath/pkg/mod
+
+    - os: osx
+      go: "1.11.x"
+      cache:
+        directories:
+          - $HOME/Library/Caches/go-build
+          - $HOME/gopath/pkg/mod
+
 
 language: go
 
