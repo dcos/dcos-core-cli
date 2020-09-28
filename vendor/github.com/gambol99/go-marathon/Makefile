@@ -8,7 +8,7 @@ HARDWARE=$(shell uname -m)
 VERSION=$(shell awk '/const Version/ { print $$4 }' version.go | sed 's/"//g')
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 PACKAGES=$(shell go list ./...)
-VETARGS?=-asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -shift -structtags -unsafeptr
+VETARGS?=-asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -shift -unsafeptr
 
 .PHONY: test examples changelog check-format coverage cover
 
@@ -31,7 +31,7 @@ vet:
 	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		go get golang.org/x/tools/cmd/vet; \
 	fi
-	@go tool vet $(VETARGS) .
+	@go vet $(VETARGS) .
 
 cover:
 	@echo "--> Running go test --cover"

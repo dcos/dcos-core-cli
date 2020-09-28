@@ -27,4 +27,6 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
+replace github.com/gambol99/go-marathon => github.com/mesosphere/go-marathon v0.7.2-0.20200918135514-cdd53d1d13b2
+
 go 1.12
