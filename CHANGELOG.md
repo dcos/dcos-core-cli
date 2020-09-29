@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## 2.1-patch.x
+## 2.2-patch.x
+
+* Breaking changes
+
+    * `dcos service shutdown` asks for confirmation unless `--yes` flag specified (#506).
 
 ## 2.1-patch.1
 
