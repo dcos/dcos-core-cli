@@ -15,28 +15,31 @@ func newCmdServiceShutdown(ctx api.Context) *cobra.Command {
 		Short: "Shutdown a service",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serviceName := args[0]
-			if serviceName == "" {
-				return fmt.Errorf("service name must not be empty")
-			}
-			if !yes {
-				err := ctx.Prompt().Confirm(fmt.Sprintf("Do you really want to teardown %s with all its tasks? [yes/no] ",
-					serviceName), "no")
-				if err != nil {
-					return err
-				}
-			}
-
-			client, err := mesos.NewClientWithContext(ctx)
-			if err != nil {
-				return err
-			}
-
-			return client.TeardownFramework(serviceName)
+			return serviceShutdown(ctx, args[0], yes)
 		},
 	}
 
 	cmd.Flags().BoolVar(&yes, "yes", false, "Disable interactive mode and assume “yes” is the answer to all prompts")
 
 	return cmd
+}
+
+func serviceShutdown(ctx api.Context, serviceName string, yes bool) error {
+	if serviceName == "" {
+		return fmt.Errorf("service name must not be empty")
+	}
+	if !yes {
+		err := ctx.Prompt().Confirm(fmt.Sprintf("Do you really want to teardown %s with all its tasks? [yes/no] ",
+			serviceName), "no")
+		if err != nil {
+			return err
+		}
+	}
+
+	client, err := mesos.NewClientWithContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return client.TeardownFramework(serviceName)
 }
