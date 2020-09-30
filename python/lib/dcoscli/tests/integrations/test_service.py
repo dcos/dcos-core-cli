@@ -36,7 +36,7 @@ def test_service_table():
 
 
 def test_service_inactive_and_completed():
-    package_install('kafka', True, ['--app', '--package-version=2.8.1-2.3.1'])
+    package_install('kafka', True, ['--app', '--package-version=2.5.0-2.1.0'])
     wait_for_service('kafka')
 
     # get kafka's framework ID
