@@ -43,7 +43,7 @@ func HTTPClient(baseURL string, opts ...httpclient.Option) *httpclient.Client {
 			if err == nil {
 				certPool := x509.NewCertPool()
 				if certPool.AppendCertsFromPEM(rootCAsPEM) {
-					baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{RootCAs: certPool}))
+					baseOpts = append(baseOpts, httpclient.TLS(&tls.Config{RootCAs: certPool, MinVersion: tls.VersionTLS12}))
 				}
 			}
 		}
