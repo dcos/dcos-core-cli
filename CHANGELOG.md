@@ -4,7 +4,9 @@
 
 * Breaking changes
 
-    * `dcos service shutdown` asks for confirmation unless `--yes` flag specified (#506).
+  * Update Go to 1.15 – support only macOS 10.12 Sierra or later (#490)
+  * Require TLS 1.2 or above (#490)
+  * `dcos service shutdown` asks for confirmation unless `--yes` flag specified (#506).
 
 ## 2.1-patch.1
 
