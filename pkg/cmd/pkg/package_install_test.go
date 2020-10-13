@@ -25,5 +25,5 @@ func TestPkgInstallEmptyPackageNameShouldFail(t *testing.T) {
 func TestPkgInstallShouldFailOnCosmosError(t *testing.T) {
 	ctx := mock.NewContext(nil)
 	err := pkgInstall(ctx, "helloworld", pkgInstallOptions{})
-	assert.EqualError(t, err, `Post /package/describe: unsupported protocol scheme ""`)
+	assert.EqualError(t, err, `Post "/package/describe": unsupported protocol scheme ""`)
 }

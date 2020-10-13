@@ -23,7 +23,7 @@ pipeline {
     stage('Build binaries') {
       parallel {
         stage("Build Go binaries") {
-        agent { label 'mesos-ubuntu' }
+        agent { label 'mesos' }
 
         steps {
           sh 'make darwin linux windows'

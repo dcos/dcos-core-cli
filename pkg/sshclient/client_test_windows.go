@@ -1,3 +1,3 @@
 package sshclient
 
-var binaryPath = "C:\\Program Files\\Git\\usr\\bin\\ssh.exe"
+var binaryPath = "C:\\Windows\\System32\\OpenSSH\\ssh.exe"
