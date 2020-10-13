@@ -376,6 +376,28 @@ func jsonEqual(t *testing.T, expected interface{}, actual interface{}) {
 	assert.JSONEq(t, string(expectedJSON), string(actualJSON))
 }
 
+func TestAddAppWithEmptyApp(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader("{}")})
+
+	newApp, err := client.AddApp(ctx, "")
+	assert.EqualError(t, err, "application ID must be set")
+	_, ok := err.(*json.SyntaxError)
+	assert.False(t, ok)
+	assert.Nil(t, newApp)
+}
+
+func TestAddAppWithEmptyAppID(t *testing.T) {
+	client := &Client{API: &marathonmocks.MarathonMock{}}
+	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader(`{"foo":"bar"}`)})
+
+	newApp, err := client.AddApp(ctx, "")
+	assert.EqualError(t, err, "application ID must be set")
+	_, ok := err.(*json.SyntaxError)
+	assert.False(t, ok)
+	assert.Nil(t, newApp)
+}
+
 func TestAddAppWithEmptyInput(t *testing.T) {
 	client := &Client{API: &marathonmocks.MarathonMock{}}
 	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader("")})

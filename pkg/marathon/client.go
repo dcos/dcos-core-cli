@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -57,6 +58,9 @@ func NewClient(ctx api.Context) (*Client, error) {
 	config := goMarathon.NewDefaultConfig()
 	config.URL = baseURL
 	config.HTTPClient = pluginutil.NewHTTPClient()
+	if ctx.Logger().IsLevelEnabled(logrus.DebugLevel) {
+		config.LogOutput = ctx.Logger().Out
+	}
 
 	client, err := goMarathon.NewClient(config)
 	if err != nil {
@@ -80,7 +84,12 @@ func (c *Client) AddApp(ctx api.Context, appLocation string) (*goMarathon.Applic
 		return nil, err
 	}
 
-	existingApp, err := c.API.ApplicationBy(app["id"].(string), &goMarathon.GetAppOpts{})
+	id, ok := app["id"]
+	if !ok {
+		return nil, fmt.Errorf("application ID must be set")
+	}
+
+	existingApp, err := c.API.ApplicationBy(id.(string), &goMarathon.GetAppOpts{})
 	if err != nil {
 		if apiErr, ok := err.(*goMarathon.APIError); !ok {
 			return nil, err
