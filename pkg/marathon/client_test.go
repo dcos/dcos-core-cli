@@ -376,55 +376,30 @@ func jsonEqual(t *testing.T, expected interface{}, actual interface{}) {
 	assert.JSONEq(t, string(expectedJSON), string(actualJSON))
 }
 
-func TestAddAppWithEmptyApp(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader("{}")})
+func TestAddAppWith(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		file  string
+		err   string
+	}{
+		{name: "empty app", input: "{}", err: "application ID must be set"},
+		{name: "no id", input: `{"foo":"bar"}`, err: "application ID must be set"},
+		{name: "no input", err: "unexpected end of JSON input"},
+		{name: "no exiting file", file: "/this/does/not/exist", err: "cannot read app definition"},
+		{name: "usuported schema", file: "fwtp://example.org/whateva", err: "cannot read app definition"},
+		{name: "broken URL", file: "ft p://example.org/whateva", err: "cannot read app definition"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			client := &Client{API: &marathonmocks.MarathonMock{}}
+			ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader(test.input)})
 
-	newApp, err := client.AddApp(ctx, "")
-	assert.EqualError(t, err, "application ID must be set")
-	_, ok := err.(*json.SyntaxError)
-	assert.False(t, ok)
-	assert.Nil(t, newApp)
-}
-
-func TestAddAppWithEmptyAppID(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader(`{"foo":"bar"}`)})
-
-	newApp, err := client.AddApp(ctx, "")
-	assert.EqualError(t, err, "application ID must be set")
-	_, ok := err.(*json.SyntaxError)
-	assert.False(t, ok)
-	assert.Nil(t, newApp)
-}
-
-func TestAddAppWithEmptyInput(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(&cli.Environment{Input: strings.NewReader("")})
-
-	newApp, err := client.AddApp(ctx, "")
-	assert.Error(t, err, nil)
-	_, ok := err.(*json.SyntaxError)
-	assert.True(t, ok)
-	assert.Nil(t, newApp)
-}
-
-func TestAddAppWithNonExistingFile(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(nil)
-
-	newApp, err := client.AddApp(ctx, "/this/does/not/exist")
-	assert.Equal(t, ErrCannotReadAppDefinition, err, nil)
-	assert.Nil(t, newApp)
-}
-
-func TestAddAppWithUnsupportedScheme(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(nil)
-
-	newApp, err := client.AddApp(ctx, "ftp://example.org/whateva")
-	assert.Error(t, err, nil)
-	assert.Nil(t, newApp)
+			newApp, err := client.AddApp(ctx, test.file)
+			assert.EqualError(t, err, test.err)
+			assert.Nil(t, newApp)
+		})
+	}
 }
 
 func TestAddAppWithHTTPURL(t *testing.T) {
@@ -460,15 +435,6 @@ func TestAddAppWithHTTPURL(t *testing.T) {
 	assert.Equal(t, 1, marathonMock.ApplicationByInvocations, "Expected ApplicationBy to be invoked once")
 	assert.Equal(t, 1, marathonMock.ApiPostInvocations, "Expected ApiPost to be invoked once")
 	assert.Equal(t, &goMarathon.Application{}, newApp)
-}
-
-func TestAddAppWithBrokenURL(t *testing.T) {
-	client := &Client{API: &marathonmocks.MarathonMock{}}
-	ctx := mock.NewContext(nil)
-
-	newApp, err := client.AddApp(ctx, "ft p://example.org/whateva")
-	assert.Error(t, err, nil)
-	assert.Nil(t, newApp)
 }
 
 func TestAddApp(t *testing.T) {

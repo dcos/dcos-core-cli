@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -16,6 +15,7 @@ import (
 	"github.com/dcos/dcos-cli/pkg/httpclient"
 	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	goMarathon "github.com/gambol99/go-marathon"
+	"github.com/sirupsen/logrus"
 )
 
 const UnfulfilledRole = "UnfulfilledRole"
@@ -58,7 +58,7 @@ func NewClient(ctx api.Context) (*Client, error) {
 	config := goMarathon.NewDefaultConfig()
 	config.URL = baseURL
 	config.HTTPClient = pluginutil.NewHTTPClient()
-	if ctx.Logger().IsLevelEnabled(logrus.DebugLevel) {
+	if ctx.Logger().IsLevelEnabled(logrus.InfoLevel) {
 		config.LogOutput = ctx.Logger().Out
 	}
 
