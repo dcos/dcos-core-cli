@@ -329,8 +329,8 @@ def test_killing_app():
         watch_all_deployments()
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'kill', 'zero-instance-app'])
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         out = stdout.decode()
         assert out.startswith('Killed tasks: ')
         out = out.strip('Killed tasks: ')
@@ -809,8 +809,8 @@ def _stop_task(task_id, wipe=None, expect_success=True):
     returncode, stdout, stderr = exec_command(cmd)
 
     if expect_success:
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         result = json.loads(stdout.decode('utf-8'))
         assert result['id'] == task_id
     else:
@@ -826,8 +826,8 @@ def _kill_task(task_ids, scale=None, wipe=None, expect_success=True):
     returncode, stdout, stderr = exec_command(cmd)
 
     if expect_success:
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         result = json.loads(stdout.decode('utf-8'))
         if scale:
             assert 'deploymentId' in result
