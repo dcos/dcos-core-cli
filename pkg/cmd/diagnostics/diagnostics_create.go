@@ -5,7 +5,6 @@ import (
 
 	"github.com/dcos/dcos-cli/api"
 	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
@@ -15,8 +14,10 @@ func newDiagnosticsCreateCommand(ctx api.Context) *cobra.Command {
 		Use:   "create",
 		Short: "Create a diagnostics bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := pluginutil.HTTPClient("")
-			client := diagnostics.NewClient(c)
+			client, err := client(ctx)
+			if err != nil {
+				return err
+			}
 			opts := diagnostics.Options{
 				Masters: masters || !masters && !agents,
 				Agents:  agents || !masters && !agents,
