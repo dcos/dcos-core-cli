@@ -20,8 +20,8 @@ def test_debug_list_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'list', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode()
         assert 'overdue' in decoded
@@ -56,8 +56,8 @@ def test_debug_list_pod_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'list', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode()
         assert 'overdue' in decoded
@@ -72,8 +72,8 @@ def test_debug_summary():
             returncode, stdout, stderr = exec_command(
                 ['dcos', 'marathon', 'debug', 'summary', '/stuck-sleep'])
 
-            assert returncode == 0
             assert stderr == b''
+            assert returncode == 0
 
             decoded = stdout.decode()
             assert 'CONSTRAINTS' in decoded
@@ -87,8 +87,8 @@ def test_debug_summary_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'summary', '/stuck-sleep', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode().replace(' ', '').replace('\n', '')
         assert '"reason":"UnfulfilledConstraint"' in decoded
@@ -103,8 +103,8 @@ def test_debug_summary_pod():
             returncode, stdout, stderr = exec_command(
                 ['dcos', 'marathon', 'debug', 'summary', '/stuck-pod'])
 
-            assert returncode == 0
             assert stderr == b''
+            assert returncode == 0
 
             decoded = stdout.decode()
             assert 'CONSTRAINTS' in decoded
@@ -120,8 +120,8 @@ def test_debug_summary_pod_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'summary', '/stuck-pod', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode().replace(' ', '').replace('\n', '')
         assert '"reason":"UnfulfilledConstraint"' in decoded
@@ -169,8 +169,8 @@ def test_debug_details_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'details', '/stuck-sleep', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode().replace(' ', '').replace('\n', '')
         assert '"reason":"UnfulfilledConstraint"' in decoded
@@ -188,8 +188,8 @@ def test_debug_details_pod_json():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'debug', 'details', '/stuck-pod', '--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         decoded = stdout.decode().replace(' ', '').replace('\n', '')
         assert '"reason":"UnfulfilledConstraint"' in decoded

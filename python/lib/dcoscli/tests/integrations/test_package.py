@@ -381,8 +381,8 @@ def test_install_specific_version():
 
         returncode, stdout, stderr = exec_command(
             ['dcos', 'package', 'list', 'helloworld', '--json'])
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         assert json.loads(stdout.decode('utf-8'))[0]['version'] == "0.1.0"
 
 

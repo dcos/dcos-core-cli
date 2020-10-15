@@ -164,8 +164,8 @@ def _wait_for_instances(expected_instances, max_attempts=10):
     for attempt in range(max_attempts):
         returncode, stdout, stderr = exec_command(_POD_LIST_CMD + ['--json'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
         status_json = json.loads(stdout.decode('utf-8'))
         actual_instances = {pod_obj['id']: len(pod_obj.get('instances', []))

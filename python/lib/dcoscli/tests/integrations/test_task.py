@@ -320,8 +320,8 @@ def test_download_sandbox():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'task', 'download', 'download-app'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         assert os.path.exists(tmp + '/test')
         assert os.path.exists(tmp + '/test/test1')
 
@@ -339,8 +339,8 @@ def test_download_sandbox_to_target():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'task', 'download', 'download-app', targetdir])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         assert os.path.exists(tmp + '/sandbox')
 
 
@@ -354,8 +354,8 @@ def test_download_single_file():
         returncode, stdout, stderr = exec_command(
             ['dcos', 'task', 'download', 'download-app', '/test/test1'])
 
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
         assert os.path.exists(tmp + '/test1')
 
         file = open(tmp + '/test1', 'r')
