@@ -2,6 +2,8 @@
 
 ## 2.2-patch.x
 
+## 2.2-patch.0
+
 * Breaking changes
 
   * Update Go to 1.15 – support only macOS 10.12 Sierra or later (#490)
