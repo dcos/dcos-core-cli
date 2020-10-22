@@ -61,13 +61,15 @@ pipeline {
             steps {
                 unstash "dcos-exe"
                 unstash "dcos-${os}"
-                withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}"]) {
+                withEnv(["DCOS_TEST_URL=${master_ip}", "OS=${os}", "BUILD_NUMBER=${BUILD_NUMBER}"]) {
                     withCredentials(credentials) {
                         bat '''
                             bash -exc " \
                             export PYTHONIOENCODING=utf-8; \
                             export CLI_TEST_SSH_USER=centos; \
                             export CLI_TEST_MASTER_PROXY=1; \
+                            export DCOS_DIR=$PWD/$BUILD_NUMBER; \
+                            mkdir -p $DCOS_DIR; \
                             mkdir -p build/windows; \
                             make python; \
                             python scripts/plugin/package_plugin.py; \
@@ -79,7 +81,8 @@ pipeline {
                             dcos cluster remove --all; \
                             dcos cluster setup --no-check ${DCOS_TEST_URL}; \
                             dcos plugin add -u ../../../build/$OS/dcos-core-cli.zip; \
-                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml"'''
+                            ./env/Scripts/pytest -vv -x --durations=10 -p no:cacheprovider tests/integrations --junitxml=tests.xml"; \
+                            rm -rf $DCOS_DIR'''
                     }
                 }
             }
