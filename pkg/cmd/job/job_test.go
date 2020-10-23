@@ -13,6 +13,7 @@ func TestParseJSONJob(t *testing.T) {
 {
 	"id": "sleepy-test-docker",
 	"description": "A job that sleeps",
+	"dependencies": [{ "id": "MOAJ" }],
 	"run": {
 		"cmd": "echo 'Snoozing ...'; sleep 10; echo 'Awake now!'",
 		"cpus": 2,
@@ -42,4 +43,7 @@ func TestParseJSONJob(t *testing.T) {
 	assert.Equal(t, "alpine:latest", job.Run.Docker.Image)
 	assert.True(t, job.Run.Docker.ForcePullImage)
 	assert.True(t, job.Run.Docker.Privileged)
+
+	// Dependencies
+	assert.Equal(t, "MOAJ", job.Dependencies[0].ID)
 }
