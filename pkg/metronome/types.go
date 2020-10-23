@@ -9,9 +9,10 @@ const notAvailable = "N/A"
 
 // Job represents a Job returned by the Metronome API.
 type Job struct {
-	ID          string            `json:"id"`
-	Description string            `json:"description"`
-	Labels      map[string]string `json:"labels,omitempty"`
+	ID           string            `json:"id"`
+	Dependencies []dependency      `json:"dependencies,omitempty"`
+	Description  string            `json:"description"`
+	Labels       map[string]string `json:"labels,omitempty"`
 	// The run property of a Job represents the run configuration for that Job
 	Run struct {
 		Args                       []string               `json:"args,omitempty"`
@@ -45,6 +46,10 @@ type artifact struct {
 	Executable bool   `json:"executable"`
 	Extract    bool   `json:"extract"`
 	Cache      bool   `json:"cache"`
+}
+
+type dependency struct {
+	ID string `json:"id"`
 }
 
 type docker struct {
