@@ -5,7 +5,6 @@ import (
 
 	"github.com/dcos/dcos-cli/api"
 	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +16,10 @@ func newDiagnosticsWaitCommand(ctx api.Context) *cobra.Command {
 		Short: "Wait until the given bundle is completed",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := pluginutil.HTTPClient("")
-			client := diagnostics.NewClient(c)
+			client, err := client(ctx)
+			if err != nil {
+				return err
+			}
 
 			// this seemed to be the easiest way to manage using two different methods
 			// of getting the right bundle depending on the arguments
