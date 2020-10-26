@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dcos/dcos-cli/api"
@@ -18,7 +19,7 @@ func NewCommand(ctx api.Context) *cobra.Command {
 	}
 	cmd.AddCommand(
 		newDiagnosticsListCommand(ctx),
-		newDiagnosticsDownloadCommand(),
+		newDiagnosticsDownloadCommand(ctx),
 		newDiagnosticsCreateCommand(ctx),
 		newDiagnosticsDeleteCommand(ctx),
 		newDiagnosticsWaitCommand(ctx),
@@ -51,4 +52,16 @@ func latestBundle(client *diagnostics.Client) (*diagnostics.Bundle, error) {
 	}
 
 	return &bundle, nil
+}
+
+func client(ctx api.Context) (*diagnostics.Client, error) {
+	cluster, err := ctx.Cluster()
+	if err != nil {
+		return nil, fmt.Errorf("could not get cluster: %s", err)
+	}
+	c, err := ctx.HTTPClient(cluster)
+	if err != nil {
+		return nil, fmt.Errorf("could not create HTTP client: %s", err)
+	}
+	return diagnostics.NewClient(c), nil
 }

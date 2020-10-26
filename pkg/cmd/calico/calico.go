@@ -15,7 +15,6 @@ import (
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/dcos"
-	"github.com/dcos/dcos-cli/pkg/httpclient"
 )
 
 const GrpcPort = ":12379"
@@ -72,7 +71,7 @@ func getEnvironment(ctx api.Context, grpcPort string) ([]string, error) {
 		return nil, fmt.Errorf("can't get cluster: %s", err)
 	}
 
-	httpClient, err := ctx.HTTPClient(cluster, httpclient.Timeout(cluster.Timeout()))
+	httpClient, err := ctx.HTTPClient(cluster)
 	if err != nil {
 		return nil, fmt.Errorf("can't get cluster client: %s", err)
 	}
