@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
+	"github.com/dcos/dcos-cli/api"
 	"github.com/spf13/cobra"
 )
 
-func newDiagnosticsDownloadCommand() *cobra.Command {
+func newDiagnosticsDownloadCommand(ctx api.Context) *cobra.Command {
 	var outputPath string
 
 	cmd := &cobra.Command{
@@ -18,8 +17,10 @@ func newDiagnosticsDownloadCommand() *cobra.Command {
 		Short: "Download diagnostics bundle",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := pluginutil.HTTPClient("")
-			client := diagnostics.NewClient(c)
+			client, err := client(ctx)
+			if err != nil {
+				return err
+			}
 
 			var id string
 			if len(args) == 0 {

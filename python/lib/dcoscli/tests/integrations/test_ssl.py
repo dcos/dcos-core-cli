@@ -25,8 +25,8 @@ def test_dont_verify_ssl_with_config(env):
     with update_config('core.ssl_verify', 'false', env):
         returncode, stdout, stderr = exec_command(
             ['dcos', 'marathon', 'app', 'list'], env)
-        assert returncode == 0
         assert stderr == b''
+        assert returncode == 0
 
 
 def test_verify_ssl_without_cert_env_var(env):
