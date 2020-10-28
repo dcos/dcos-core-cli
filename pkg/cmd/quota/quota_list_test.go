@@ -74,14 +74,14 @@ func Test_listQuota(t *testing.T) {
 		{name: "JSON output (no limit)", marathonGroups: groups, mesosRoles: noLimitRoles, jsonOutput: true,
 			output: `[{"role": "tonytest","consumed": {"cpus": 0.1,"mem": 128},"limit": {"cpus": "NaN","disk":200,"gpus": 0,"mem": 500}}]`},
 		{name: "table output", marathonGroups: groups, mesosRoles: roles,
-			output: "    NAME        CPU CONSUMED            MEMORY CONSUMED             DISK CONSUMED            GPU CONSUMED      \n" +
-				"  tonytest  1.00% (0 of 10 Cores)  0.26% (0.1 GiB of 50 GiB)  0.00% (0 GiB of 200.0 GiB)  NaN% (0 of 0 Cores)  \n"},
+			output: "    NAME        CPU CONSUMED            MEMORY CONSUMED             DISK CONSUMED          GPU CONSUMED   \n" +
+				"  tonytest  1.00% (0 of 10 Cores)  0.26% (0.1 GiB of 50 GiB)  0.00% (0 GiB of 200.0 GiB)  (0 of 0 Cores)  \n"},
 		{name: "table output (small mem)", marathonGroups: groups, mesosRoles: smalMemRoles,
-			output: "    NAME        CPU CONSUMED             MEMORY CONSUMED             DISK CONSUMED           GPU CONSUMED      \n" +
-				"  tonytest  1.00% (0 of 10 Cores)  25.60% (128 MiB of 500 MiB)  0.00% (0 MiB of 200 MiB)  NaN% (0 of 0 Cores)  \n"},
+			output: "    NAME        CPU CONSUMED             MEMORY CONSUMED             DISK CONSUMED         GPU CONSUMED   \n" +
+				"  tonytest  1.00% (0 of 10 Cores)  25.60% (128 MiB of 500 MiB)  0.00% (0 MiB of 200 MiB)  (0 of 0 Cores)  \n"},
 		{name: "table output (no limit)", marathonGroups: groups, mesosRoles: noLimitRoles,
-			output: "    NAME    CPU CONSUMED        MEMORY CONSUMED             DISK CONSUMED           GPU CONSUMED      \n" +
-				"  tonytest  No limit      25.60% (128 MiB of 500 MiB)  0.00% (0 MiB of 200 MiB)  NaN% (0 of 0 Cores)  \n"},
+			output: "    NAME    CPU CONSUMED        MEMORY CONSUMED             DISK CONSUMED         GPU CONSUMED   \n" +
+				"  tonytest  No limit      25.60% (128 MiB of 500 MiB)  0.00% (0 MiB of 200 MiB)  (0 of 0 Cores)  \n"},
 		{name: "marathon err", marathonGroups: "invalid json", mesosRoles: roles, err: "invalid character 'i' looking for beginning of value"},
 		{name: "mesos err", marathonGroups: groups, mesosRoles: "invalid json", err: "invalid character 'i' looking for beginning of value"},
 	}
@@ -104,7 +104,7 @@ func Test_listQuota(t *testing.T) {
 			mesos, err := mesosClient(ctx)
 			require.NoError(t, err)
 
-			err = listQuota(marathonClient, mesos, tt.jsonOutput, ctx)
+			err = listQuota(marathonClient, mesos, tt.jsonOutput, ctx.Out())
 			if tt.err != "" {
 				assert.EqualError(t, err, tt.err)
 			}

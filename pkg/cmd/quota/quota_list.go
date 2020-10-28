@@ -3,6 +3,7 @@ package quota
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/dcos/dcos-cli/api"
 	"github.com/dcos/dcos-cli/pkg/cli"
@@ -29,14 +30,14 @@ func newCmdQuotaList(ctx api.Context) *cobra.Command {
 				return err
 			}
 
-			return listQuota(marathonClient, mesosClient, jsonOutput, ctx)
+			return listQuota(marathonClient, mesosClient, jsonOutput, ctx.Out())
 		},
 	}
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print in json format")
 	return cmd
 }
 
-func listQuota(marathonClient *marathon.Client, mesosClient *mesos.Client, jsonOutput bool, ctx api.Context) error {
+func listQuota(marathonClient *marathon.Client, mesosClient *mesos.Client, jsonOutput bool, out io.Writer) error {
 	groupsResultChan := make(chan groupsResult)
 	go func() {
 		groups, err := marathonClient.GroupsWithoutRootSlash()
@@ -67,51 +68,56 @@ func listQuota(marathonClient *marathon.Client, mesosClient *mesos.Client, jsonO
 	}
 
 	if jsonOutput {
-		enc := json.NewEncoder(ctx.Out())
+		enc := json.NewEncoder(out)
 		enc.SetIndent("", "    ")
 		return enc.Encode(quotas)
 	}
 
 	tableHeader := []string{"NAME", "CPU CONSUMED", "MEMORY CONSUMED", "DISK CONSUMED", "GPU CONSUMED"}
-	table := cli.NewTable(ctx.Out(), tableHeader)
+	table := cli.NewTable(out, tableHeader)
 
 	for _, quota := range quotas {
 		quotaInfo := map[string]string{"cpus": "", "mem": "", "disk": "", "gpus": ""}
 
 		for info := range quotaInfo {
-			if limit, ok := quota.Limit[info].(float64); ok {
-				var cons float64
-				if consumed, ok := quota.Consumed[info].(float64); ok {
-					cons = consumed
-				}
-				percent := fmt.Sprintf("%.2f%%", cons*100/limit)
-				var desc string
-				switch info {
-				case "cpus", "gpus":
-					desc = fmt.Sprintf("%.0f of %.0f Cores", cons, limit)
-				case "mem", "disk":
-					if limit < 1000 {
-						desc = fmt.Sprintf("%.0f MiB of %.0f MiB", cons, limit)
-					} else {
-						cons /= 1000
-						consString := fmt.Sprintf("%.1f", cons)
-						if cons == float64(int64(cons)) {
-							consString = fmt.Sprintf("%.0f", cons)
-						}
-
-						limit /= 1000
-						limitString := fmt.Sprintf("%.1f", limit)
-						if limit == float64(int64(limit)) {
-							limitString = fmt.Sprintf("%.0f", limit)
-						}
-
-						desc = fmt.Sprintf("%s GiB of %s GiB", consString, limitString)
-					}
-				}
-				quotaInfo[info] = fmt.Sprintf("%s (%s)", percent, desc)
-			} else {
+			limit, ok := quota.Limit[info].(float64)
+			if !ok {
 				quotaInfo[info] = "No limit"
+				continue
 			}
+			var cons float64
+			if consumed, ok := quota.Consumed[info].(float64); ok {
+				cons = consumed
+			}
+			var desc string
+			switch info {
+			case "cpus", "gpus":
+				desc = fmt.Sprintf("%.0f of %.0f Cores", cons, limit)
+			case "mem", "disk":
+				if limit < 1000 {
+					desc = fmt.Sprintf("%.0f MiB of %.0f MiB", cons, limit)
+				} else {
+					cons /= 1000
+					consString := fmt.Sprintf("%.1f", cons)
+					if cons == float64(int64(cons)) {
+						consString = fmt.Sprintf("%.0f", cons)
+					}
+
+					limit /= 1000
+					limitString := fmt.Sprintf("%.1f", limit)
+					if limit == float64(int64(limit)) {
+						limitString = fmt.Sprintf("%.0f", limit)
+					}
+
+					desc = fmt.Sprintf("%s GiB of %s GiB", consString, limitString)
+				}
+			}
+
+			percent := ""
+			if limit != 0 {
+				percent = fmt.Sprintf("%.2f%% ", cons*100/limit)
+			}
+			quotaInfo[info] = fmt.Sprintf("%s(%s)", percent, desc)
 		}
 
 		tableItem := []string{

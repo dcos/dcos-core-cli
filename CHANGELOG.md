@@ -8,6 +8,10 @@
   * Require TLS 1.2 or above (#490)
   * `dcos service shutdown` asks for confirmation unless `--yes` flag specified (#506).
 
+* Fixes
+
+  * Fix NaN% in quota list (#519)
+
 ## 2.1-patch.1
 
 * Breaking changes
