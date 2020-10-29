@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/dcos/dcos-cli/api"
-	diagnostics "github.com/dcos/dcos-core-cli/pkg/diagnostics/v2"
-	"github.com/dcos/dcos-core-cli/pkg/pluginutil"
 	"github.com/spf13/cobra"
 )
 
@@ -15,8 +13,10 @@ func newDiagnosticsDeleteCommand(ctx api.Context) *cobra.Command {
 		Short: "Delete a diagnostics bundle",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := pluginutil.HTTPClient("")
-			client := diagnostics.NewClient(c)
+			client, err := client(ctx)
+			if err != nil {
+				return err
+			}
 			id := args[0]
 
 			if err := client.Delete(id); err != nil {
