@@ -2,6 +2,10 @@
 
 ## 2.0-patch.x
 
+* Fixes
+
+  * Fix NaN% in quota list (#519)
+
 ## 2.0-patch.8
 
 * Fixes
