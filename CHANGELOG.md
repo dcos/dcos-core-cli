@@ -2,11 +2,17 @@
 
 ## 2.2-patch.x
 
+## 2.2-patch.0
+
 * Breaking changes
 
   * Update Go to 1.15 – support only macOS 10.12 Sierra or later (#490)
   * Require TLS 1.2 or above (#490)
   * `dcos service shutdown` asks for confirmation unless `--yes` flag specified (#506).
+
+* Fixes
+
+  * Fix NaN% in quota list (#519)
 
 ## 2.1-patch.1
 
