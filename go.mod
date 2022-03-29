@@ -7,7 +7,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gambol99/go-marathon v0.7.2-0.20191203055606-2d3f62a40d37
 	github.com/gobwas/glob v0.2.3
-	github.com/gogo/protobuf v1.3.0
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.3.2
 	github.com/mesos/mesos-go v0.0.11-0.20190717023829-56ac038085ac
 	github.com/moby/term v0.0.0-20200416134343-063f2cd0b49d
@@ -22,7 +22,6 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
-	golang.org/x/net v0.0.0-20190918130420-a8b05e9114ab // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
